@@ -1,0 +1,3 @@
+include README.md
+recursive-include ace_editor/templates *
+recursive-include ace_editor/static *

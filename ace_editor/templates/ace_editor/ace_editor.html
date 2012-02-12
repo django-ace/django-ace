@@ -1,0 +1,4 @@
+<div class="ace-editor-widget">
+    <div id="{{ attrs.id }}_editor" class="ace_editor" data-target="{{ attrs.id }}"{% if mode %} data-mode="{{ mode }}"{% endif %}>{{ value }}</div>
+    <textarea style="display:none;" name="{{ name }}"{% if required %} required{% endif %}{% include "ace_editor/attrs.html" %}>{{ value }}</textarea>
+</div>
