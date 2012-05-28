@@ -12,7 +12,6 @@ class AceWidget(forms.Textarea):
 
     @property
     def media(self):
-        css = {'all': ['django_ace/widget.css']}
         js = [
             "django_ace/ace/ace.js",
             "django_ace/widget.js",
@@ -21,7 +20,7 @@ class AceWidget(forms.Textarea):
             js.append("django_ace/ace/mode-%s.js" % self.mode)
         if self.theme:
             js.append("django_ace/ace/theme-%s.js" % self.theme)
-        return forms.Media(js=js, css=css)
+        return forms.Media(js=js)
 
     def render(self, name, value, attrs=None):
         attrs = attrs or {}
