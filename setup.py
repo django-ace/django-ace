@@ -1,15 +1,21 @@
+from os.path import join
+import re
 from setuptools import setup, find_packages
 
 
+# dynamically pull the version from django_ace/__init__.py
+version = re.search('^__version__ = "(.+?)"$',
+                    open(join('django_ace', '__init__.py')).read(), re.MULTILINE).group(1)
+
 setup(
     name='django-ace',
-    version="0.1.0",
+    version=version,
     description='django-ace provides integration for ajax.org ACE with Django',
     long_description=open('README.rst').read(),
 
     author='Bradley Ayers',
     author_email='bradley.ayers@gmail.com',
-    license="BSD",
+    license="Simplified BSD",
     url='https://github.com/bradleyayers/django-ace',
 
     packages=find_packages(exclude=["example", "example.*"]),
