@@ -1,3 +1,2 @@
-include README.md
-recursive-include ace_editor/templates *
-recursive-include ace_editor/static *
+include README.rst LICENCE
+recursive-include django_ace/static *

@@ -1,6 +1,0 @@
-.ace_editor{
-    /* Starts out as absolute for some reason. */
-    position: relative !important;
-    width: 610px;
-    height: 400px;
-}

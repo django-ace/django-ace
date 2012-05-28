@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>An simple example with django-ace</title>
+    {{ form.media }}
+</head>
+<body>
+    <form action="" method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <input type="submit"/>
+    </form>
+
+    {% for snippet in snippets %}
+    <hr/>
+    <pre>{{ snippet.text }}</pre>
+    {% endfor %}
+</body>
+</html>

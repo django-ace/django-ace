@@ -1,1 +1,7 @@
 *.pyc
+.DS_Store
+/*.sublime-*
+/*.egg-info
+/example/.env
+/example/example/database.sqlite3
+/dist
