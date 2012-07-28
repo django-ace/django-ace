@@ -1,7 +1,16 @@
 .django-ace-widget {
-    display: block;
+    display: inline-block;
     height: 300px;
-    width: 600px;
+    position: relative;
+    width: 500px;
+}
+
+.django-ace-widget > div {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
 }
 
 .django-ace-widget.loading {

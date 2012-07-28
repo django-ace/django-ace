@@ -1,1 +1,194 @@
-define("ace/theme/dawn",["require","exports","module"],function(a,b,c){var d=a("pilot/dom"),e=".ace-dawn .ace_editor {\n  border: 2px solid rgb(159, 159, 159);\n}\n\n.ace-dawn .ace_editor.ace_focus {\n  border: 2px solid #327fbd;\n}\n\n.ace-dawn .ace_gutter {\n  width: 50px;\n  background: #e8e8e8;\n  color: #333;\n  overflow : hidden;\n}\n\n.ace-dawn .ace_gutter-layer {\n  width: 100%;\n  text-align: right;\n}\n\n.ace-dawn .ace_gutter-layer .ace_gutter-cell {\n  padding-right: 6px;\n}\n\n.ace-dawn .ace_print_margin {\n  width: 1px;\n  background: #e8e8e8;\n}\n\n.ace-dawn .ace_scroller {\n  background-color: #F9F9F9;\n}\n\n.ace-dawn .ace_text-layer {\n  cursor: text;\n  color: #080808;\n}\n\n.ace-dawn .ace_cursor {\n  border-left: 2px solid #000000;\n}\n\n.ace-dawn .ace_cursor.ace_overwrite {\n  border-left: 0px;\n  border-bottom: 1px solid #000000;\n}\n \n.ace-dawn .ace_marker-layer .ace_selection {\n  background: rgba(39, 95, 255, 0.30);\n}\n\n.ace-dawn .ace_marker-layer .ace_step {\n  background: rgb(198, 219, 174);\n}\n\n.ace-dawn .ace_marker-layer .ace_bracket {\n  margin: -1px 0 0 -1px;\n  border: 1px solid rgba(75, 75, 126, 0.50);\n}\n\n.ace-dawn .ace_marker-layer .ace_active_line {\n  background: rgba(36, 99, 180, 0.12);\n}\n\n       \n.ace-dawn .ace_invisible {\n  color: rgba(75, 75, 126, 0.50);\n}\n\n.ace-dawn .ace_keyword {\n  color:#794938;\n}\n\n.ace-dawn .ace_keyword.ace_operator {\n  \n}\n\n.ace-dawn .ace_constant {\n  color:#811F24;\n}\n\n.ace-dawn .ace_constant.ace_language {\n  \n}\n\n.ace-dawn .ace_constant.ace_library {\n  \n}\n\n.ace-dawn .ace_constant.ace_numeric {\n  \n}\n\n.ace-dawn .ace_invalid {\n  \n}\n\n.ace-dawn .ace_invalid.ace_illegal {\n  text-decoration:underline;\nfont-style:italic;\ncolor:#F8F8F8;\nbackground-color:#B52A1D;\n}\n\n.ace-dawn .ace_invalid.ace_deprecated {\n  text-decoration:underline;\nfont-style:italic;\ncolor:#B52A1D;\n}\n\n.ace-dawn .ace_support {\n  color:#691C97;\n}\n\n.ace-dawn .ace_support.ace_function {\n  color:#693A17;\n}\n\n.ace-dawn .ace_function.ace_buildin {\n  \n}\n\n.ace-dawn .ace_string {\n  color:#0B6125;\n}\n\n.ace-dawn .ace_string.ace_regexp {\n  color:#CF5628;\n}\n\n.ace-dawn .ace_comment {\n  font-style:italic;\ncolor:#5A525F;\n}\n\n.ace-dawn .ace_comment.ace_doc {\n  \n}\n\n.ace-dawn .ace_comment.ace_doc.ace_tag {\n  \n}\n\n.ace-dawn .ace_variable {\n  color:#234A97;\n}\n\n.ace-dawn .ace_variable.ace_language {\n  \n}\n\n.ace-dawn .ace_xml_pe {\n  \n}";d.importCssString(e),b.cssClass="ace-dawn"})
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Ajax.org Code Editor (ACE).
+ *
+ * The Initial Developer of the Original Code is
+ * Ajax.org B.V.
+ * Portions created by the Initial Developer are Copyright (C) 2010
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *      Fabian Jakobs <fabian AT ajax DOT org>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+define('ace/theme/dawn', ['require', 'exports', 'module', 'ace/lib/dom'], function(require, exports, module) {
+
+exports.isDark = false;
+exports.cssClass = "ace-dawn";
+exports.cssText = "\
+.ace-dawn .ace_editor {\
+  border: 2px solid rgb(159, 159, 159);\
+}\
+\
+.ace-dawn .ace_editor.ace_focus {\
+  border: 2px solid #327fbd;\
+}\
+\
+.ace-dawn .ace_gutter {\
+  background: #ebebeb;\
+  color: #333;\
+}\
+\
+.ace-dawn .ace_print_margin {\
+  width: 1px;\
+  background: #e8e8e8;\
+}\
+\
+.ace-dawn .ace_scroller {\
+  background-color: #F9F9F9;\
+}\
+\
+.ace-dawn .ace_text-layer {\
+  color: #080808;\
+}\
+\
+.ace-dawn .ace_cursor {\
+  border-left: 2px solid #000000;\
+}\
+\
+.ace-dawn .ace_cursor.ace_overwrite {\
+  border-left: 0px;\
+  border-bottom: 1px solid #000000;\
+}\
+\
+.ace-dawn .ace_marker-layer .ace_selection {\
+  background: rgba(39, 95, 255, 0.30);\
+}\
+\
+.ace-dawn.multiselect .ace_selection.start {\
+  box-shadow: 0 0 3px 0px #F9F9F9;\
+  border-radius: 2px;\
+}\
+\
+.ace-dawn .ace_marker-layer .ace_step {\
+  background: rgb(255, 255, 0);\
+}\
+\
+.ace-dawn .ace_marker-layer .ace_bracket {\
+  margin: -1px 0 0 -1px;\
+  border: 1px solid rgba(75, 75, 126, 0.50);\
+}\
+\
+.ace-dawn .ace_marker-layer .ace_active_line {\
+  background: rgba(36, 99, 180, 0.12);\
+}\
+\
+.ace-dawn .ace_gutter_active_line {\
+  background-color : #dcdcdc;\
+}\
+\
+.ace-dawn .ace_marker-layer .ace_selected_word {\
+  border: 1px solid rgba(39, 95, 255, 0.30);\
+}\
+\
+.ace-dawn .ace_invisible {\
+  color: rgba(75, 75, 126, 0.50);\
+}\
+\
+.ace-dawn .ace_keyword, .ace-dawn .ace_meta {\
+  color:#794938;\
+}\
+\
+.ace-dawn .ace_constant, .ace-dawn .ace_constant.ace_other {\
+  color:#811F24;\
+}\
+\
+.ace-dawn .ace_constant.ace_character,  {\
+  color:#811F24;\
+}\
+\
+.ace-dawn .ace_constant.ace_character.ace_escape,  {\
+  color:#811F24;\
+}\
+\
+.ace-dawn .ace_invalid.ace_illegal {\
+  text-decoration:underline;\
+font-style:italic;\
+color:#F8F8F8;\
+background-color:#B52A1D;\
+}\
+\
+.ace-dawn .ace_invalid.ace_deprecated {\
+  text-decoration:underline;\
+font-style:italic;\
+color:#B52A1D;\
+}\
+\
+.ace-dawn .ace_support {\
+  color:#691C97;\
+}\
+\
+.ace-dawn .ace_support.ace_constant {\
+  color:#B4371F;\
+}\
+\
+.ace-dawn .ace_fold {\
+    background-color: #794938;\
+    border-color: #080808;\
+}\
+\
+.ace-dawn .ace_support.ace_function {\
+  color:#693A17;\
+}\
+\
+.ace-dawn .ace_storage {\
+  font-style:italic;\
+color:#A71D5D;\
+}\
+\
+.ace-dawn .ace_string {\
+  color:#0B6125;\
+}\
+\
+.ace-dawn .ace_string.ace_regexp {\
+  color:#CF5628;\
+}\
+\
+.ace-dawn .ace_comment {\
+  font-style:italic;\
+color:#5A525F;\
+}\
+\
+.ace-dawn .ace_variable {\
+  color:#234A97;\
+}\
+\
+.ace-dawn .ace_markup.ace_underline {\
+    text-decoration:underline;\
+}\
+\
+.ace-dawn .ace_markup.ace_heading {\
+  color:#19356D;\
+}\
+\
+.ace-dawn .ace_markup.ace_list {\
+  color:#693A17;\
+}";
+
+    var dom = require("../lib/dom");
+    dom.importCssString(exports.cssText, exports.cssClass);
+});

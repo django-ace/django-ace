@@ -1,1 +1,367 @@
-define("ace/keyboard/keybinding/emacs",["require","exports","module","ace/keyboard/state_handler"],function(a,b,c){var d=a("ace/keyboard/state_handler").StateHandler,e=a("ace/keyboard/state_handler").matchCharacterOnly,f={start:[{key:"ctrl-x",then:"c-x"},{regex:["(?:command-([0-9]*))*","(down|ctrl-n)"],exec:"golinedown",params:[{name:"times",match:1,type:"number",defaultValue:1}]},{regex:["(?:command-([0-9]*))*","(right|ctrl-f)"],exec:"gotoright",params:[{name:"times",match:1,type:"number",defaultValue:1}]},{regex:["(?:command-([0-9]*))*","(up|ctrl-p)"],exec:"golineup",params:[{name:"times",match:1,type:"number",defaultValue:1}]},{regex:["(?:command-([0-9]*))*","(left|ctrl-b)"],exec:"gotoleft",params:[{name:"times",match:1,type:"number",defaultValue:1}]},{comment:"This binding matches all printable characters except numbers as long as they are no numbers and print them n times.",regex:["(?:command-([0-9]*))","([^0-9]+)*"],match:e,exec:"inserttext",params:[{name:"times",match:1,type:"number",defaultValue:"1"},{name:"text",match:2}]},{comment:"This binding matches numbers as long as there is no meta_number in the buffer.",regex:["(command-[0-9]*)*","([0-9]+)"],match:e,disallowMatches:[1],exec:"inserttext",params:[{name:"text",match:2,type:"text"}]},{regex:["command-([0-9]*)","(command-[0-9]|[0-9])"],comment:"Stops execution if the regex /meta_[0-9]+/ matches to avoid resetting the buffer."}],"c-x":[{key:"ctrl-g",then:"start"},{key:"ctrl-s",exec:"save",then:"start"}]};b.Emacs=new d(f)}),define("ace/keyboard/state_handler",["require","exports","module"],function(a,b,c){function e(a){this.keymapping=this.$buildKeymappingRegex(a)}var d=!1;e.prototype={$buildKeymappingRegex:function(a){for(state in a)this.$buildBindingsRegex(a[state]);return a},$buildBindingsRegex:function(a){a.forEach(function(a){a.key?a.key=new RegExp("^"+a.key+"$"):Array.isArray(a.regex)?(a.key=new RegExp("^"+a.regex[1]+"$"),a.regex=new RegExp(a.regex.join("")+"$")):a.regex&&(a.regex=new RegExp(a.regex+"$"))})},$composeBuffer:function(a,b,c){if(a.state==null||a.buffer==null)a.state="start",a.buffer="";var d=[];b&1&&d.push("ctrl"),b&8&&d.push("command"),b&2&&d.push("option"),b&4&&d.push("shift"),c&&d.push(c);var e=d.join("-"),f=a.buffer+e;b!=2&&(a.buffer=f);return{bufferToUse:f,symbolicName:e}},$find:function(a,b,c,e,f){var g={};this.keymapping[a.state].some(function(h){var i;if(h.key&&!h.key.test(c))return!1;if(h.regex&&!(i=h.regex.exec(b)))return!1;if(h.match&&!h.match(b,e,f,c))return!1;if(h.disallowMatches)for(var j=0;j<h.disallowMatches.length;j++)if(!!i[h.disallowMatches[j]])return!1;if(h.exec){g.command=h.exec;if(h.params){var k;g.args={},h.params.forEach(function(a){a.match!=null&&i!=null?k=i[a.match]||a.defaultValue:k=a.defaultValue,a.type==="number"&&(k=parseInt(k)),g.args[a.name]=k})}a.buffer=""}h.then&&(a.state=h.then,a.buffer=""),g.command==null&&(g.command="null"),d&&console.log("KeyboardStateMapper#find",h);return!0});if(g.command)return g;a.buffer="";return!1},handleKeyboard:function(a,b,c){if(b==0||c!=""&&c!=String.fromCharCode(0)){var e=this.$composeBuffer(a,b,c),f=e.bufferToUse,g=e.symbolicName;e=this.$find(a,f,g,b,c),d&&console.log("KeyboardStateMapper#match",f,g,e);return e}return null}},b.matchCharacterOnly=function(a,b,c,d){return b==0?!0:b==4&&c.length==1?!0:!1},b.StateHandler=e})
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla Skywriter.
+ *
+ * The Initial Developer of the Original Code is
+ * Mozilla.
+ * Portions created by the Initial Developer are Copyright (C) 2009
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Julian Viereck (julian.viereck@gmail.com)
+ *   Harutyun Amirjanyan (harutyun@c9.io)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+define('ace/keyboard/emacs', ['require', 'exports', 'module' , 'ace/lib/dom', 'ace/keyboard/hash_handler', 'ace/lib/keys'], function(require, exports, module) {
+
+
+var dom = require("../lib/dom");
+
+var screenToTextBlockCoordinates = function(pageX, pageY) {
+    var canvasPos = this.scroller.getBoundingClientRect();
+
+    var col = Math.floor(
+        (pageX + this.scrollLeft - canvasPos.left - this.$padding - dom.getPageScrollLeft()) / this.characterWidth
+    );
+    var row = Math.floor(
+        (pageY + this.scrollTop - canvasPos.top - dom.getPageScrollTop()) / this.lineHeight
+    );
+
+    return this.session.screenToDocumentPosition(row, col);
+};
+
+var HashHandler = require("./hash_handler").HashHandler;
+exports.handler = new HashHandler();
+
+var initialized = false;
+exports.handler.attach = function(editor) {
+    if (!initialized) {
+        initialized = true;
+        dom.importCssString('\
+            .emacs-mode .ace_cursor{\
+                border: 2px rgba(50,250,50,0.8) solid!important;\
+                -moz-box-sizing: border-box!important;\
+                box-sizing: border-box!important;\
+                background-color: rgba(0,250,0,0.9);\
+                opacity: 0.5;\
+            }\
+            .emacs-mode .ace_cursor.ace_hidden{\
+                opacity: 1;\
+                background-color: transparent;\
+            }\
+            .emacs-mode .ace_cursor.ace_overwrite {\
+                opacity: 1;\
+                background-color: transparent;\
+                border-width: 0 0 2px 2px !important;\
+            }\
+            .emacs-mode .ace_text-layer {\
+                z-index: 4\
+            }\
+            .emacs-mode .ace_cursor-layer {\
+                z-index: 2\
+            }', 'emacsMode'
+        );
+    }
+
+    editor.renderer.screenToTextCoordinates = screenToTextBlockCoordinates;
+    editor.setStyle("emacs-mode");
+};
+
+exports.handler.detach = function(editor) {
+    delete editor.renderer.screenToTextCoordinates;
+    editor.unsetStyle("emacs-mode");
+};
+
+
+var keys = require("../lib/keys").KEY_MODS;
+var eMods = {
+    C: "ctrl", S: "shift", M: "alt"
+};
+["S-C-M", "S-C", "S-M", "C-M", "S", "C", "M"].forEach(function(c) {
+    var hashId = 0;
+    c.split("-").forEach(function(c){
+        hashId = hashId | keys[eMods[c]];
+    });
+    eMods[hashId] = c.toLowerCase() + "-";
+});
+
+exports.handler.bindKey = function(key, command) {
+    if (!key)
+        return;
+
+    var ckb = this.commmandKeyBinding;
+    key.split("|").forEach(function(keyPart) {
+        keyPart = keyPart.toLowerCase();
+        ckb[keyPart] = command;
+        keyPart = keyPart.split(" ")[0];
+        if (!ckb[keyPart])
+            ckb[keyPart] = "null";
+    }, this);
+};
+
+
+exports.handler.handleKeyboard = function(data, hashId, key, keyCode) {
+    if (hashId == -1) {
+        if (data.count) {
+            var str = Array(data.count + 1).join(key);
+            data.count = null;
+            return {command: "insertstring", args: str};
+        }
+    }
+
+    if (key == "\x00")
+        return;
+
+    var modifier = eMods[hashId];
+    if (modifier == "c-" || data.universalArgument) {
+        var count = parseInt(key[key.length - 1]);
+        if (count) {
+            data.count = count;
+            return {command: "null"};
+        }
+    }
+    data.universalArgument = false;
+
+    if (modifier)
+        key = modifier + key;
+
+    if (data.keyChain)
+        key = data.keyChain += " " + key;
+
+    var command = this.commmandKeyBinding[key];
+    data.keyChain = command == "null" ? key : "";
+
+    if (!command)
+        return;
+
+    if (command == "null")
+        return {command: "null"};
+
+    if (command == "universalArgument") {
+        data.universalArgument = true;
+        return {command: "null"};
+    }
+
+    if (typeof command != "string") {
+        var args = command.args;
+        command = command.command;
+    }
+
+    if (typeof command == "string") {
+        command = this.commands[command] || data.editor.commands.commands[command];
+    }
+
+    if (!command.readonly && !command.isYank)
+        data.lastCommand = null;
+
+    if (data.count) {
+        var count = data.count;
+        data.count = 0;
+        return {
+            args: args,
+            command: {
+                exec: function(editor, args) {
+                    for (var i = 0; i < count; i++)
+                        command.exec(editor, args);
+                }
+            }
+        };
+    }
+
+    return {command: command, args: args};
+};
+
+exports.emacsKeys = {
+    // movement
+    "Up|C-p"      : "golineup",
+    "Down|C-n"    : "golinedown",
+    "Left|C-b"    : "gotoleft",
+    "Right|C-f"   : "gotoright",
+    "C-Left|M-b"  : "gotowordleft",
+    "C-Right|M-f" : "gotowordright",
+    "Home|C-a"    : "gotolinestart",
+    "End|C-e"     : "gotolineend",
+    "C-Home|S-M-,": "gotostart",
+    "C-End|S-M-." : "gotoend",
+
+    // selection
+    "S-Up|S-C-p"      : "selectup",
+    "S-Down|S-C-n"    : "selectdown",
+    "S-Left|S-C-b"    : "selectleft",
+    "S-Right|S-C-f"   : "selectright",
+    "S-C-Left|S-M-b"  : "selectwordleft",
+    "S-C-Right|S-M-f" : "selectwordright",
+    "S-Home|S-C-a"    : "selecttolinestart",
+    "S-End|S-C-e"     : "selecttolineend",
+    "S-C-Home"        : "selecttostart",
+    "S-C-End"         : "selecttoend",
+
+    "C-l|M-s" : "centerselection",
+    "M-g": "gotoline",
+    "C-x C-p": "selectall",
+
+    // todo fix these
+    "C-Down": "gotopagedown",
+    "C-Up": "gotopageup",
+    "PageDown|C-v": "gotopagedown",
+    "PageUp|M-v": "gotopageup",
+    "S-C-Down": "selectpagedown",
+    "S-C-Up": "selectpageup",
+    "C-s": "findnext",
+    "C-r": "findprevious",
+    "M-C-s": "findnext",
+    "M-C-r": "findprevious",
+    "S-M-5": "replace",
+
+    // basic editing
+    "Backspace": "backspace",
+    "Delete|C-d": "del",
+    "Return|C-m": {command: "insertstring", args: "\n"}, // "newline"
+    "C-o": "splitline",
+
+    "M-d|C-Delete": {command: "killWord", args: "right"},
+    "C-Backspace|M-Backspace|M-Delete": {command: "killWord", args: "left"},
+    "C-k": "killLine",
+
+    "C-y|S-Delete": "yank",
+    "M-y": "yankRotate",
+    "C-g": "keyboardQuit",
+
+    "C-w": "killRegion",
+    "M-w": "killRingSave",
+
+    "C-Space": "setMark",
+    "C-x C-x": "exchangePointAndMark",
+
+    "C-t": "transposeletters",
+
+    "M-u": "touppercase",
+    "M-l": "tolowercase",
+    "M-/": "autocomplete",
+    "C-u": "universalArgument",
+    "M-;": "togglecomment",
+
+    "C-/|C-x u|S-C--|C-z": "undo",
+    "S-C-/|S-C-x u|C--|S-C-z": "redo", //infinite undo?
+    // vertical editing
+    "C-x r":  "selectRectangularRegion"
+
+    // todo
+    // "M-x" "C-x C-t" "M-t" "M-c" "F11" "C-M- "M-q"
+};
+
+
+exports.handler.bindKeys(exports.emacsKeys);
+
+exports.handler.addCommands({
+    selectRectangularRegion:  function(editor) {
+        editor.multiSelect.toggleBlockSelection();
+    },
+    setMark:  function() {
+    },
+    exchangePointAndMark: {
+        exec: function(editor) {
+            var range = editor.selection.getRange();
+            editor.selection.setSelectionRange(range, !editor.selection.isBackwards());
+        },
+        readonly: true,
+        multiselectAction: "forEach"
+    },
+    killWord: {
+        exec: function(editor, dir) {
+            editor.clearSelection();
+            if (dir == "left")
+                editor.selection.selectWordLeft();
+            else
+                editor.selection.selectWordRight();
+
+            var range = editor.getSelectionRange();
+            var text = editor.session.getTextRange(range);
+            exports.killRing.add(text);
+
+            editor.session.remove(range);
+            editor.clearSelection();
+        },
+        multiselectAction: "forEach"
+    },
+    killLine: function(editor) {
+        editor.selection.selectLine();
+        var range = editor.getSelectionRange();
+        var text = editor.session.getTextRange(range);
+        exports.killRing.add(text);
+
+        editor.session.remove(range);
+        editor.clearSelection();
+    },
+    yank: function(editor) {
+        editor.onPaste(exports.killRing.get());
+        editor.keyBinding.$data.lastCommand = "yank";
+    },
+    yankRotate: function(editor) {
+        if (editor.keyBinding.$data.lastCommand != "yank")
+            return;
+
+        editor.undo();
+        editor.onPaste(exports.killRing.rotate());
+        editor.keyBinding.$data.lastCommand = "yank";
+    },
+    killRegion: function(editor) {
+        exports.killRing.add(editor.getCopyText());
+        editor.cut();
+    },
+    killRingSave: function(editor) {
+        exports.killRing.add(editor.getCopyText());
+    }
+});
+
+var commands = exports.handler.commands;
+commands.yank.isYank = true;
+commands.yankRotate.isYank = true;
+
+exports.killRing = {
+    $data: [],
+    add: function(str) {
+        str && this.$data.push(str);
+        if (this.$data.length > 30)
+            this.$data.shift();
+    },
+    get: function() {
+        return this.$data[this.$data.length - 1] || "";
+    },
+    pop: function() {
+        if (this.$data.length > 1)
+            this.$data.pop();
+        return this.get();
+    },
+    rotate: function() {
+        this.$data.unshift(this.$data.pop());
+        return this.get();
+    }
+};
+
+
+});

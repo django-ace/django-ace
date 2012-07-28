@@ -9,41 +9,38 @@
     }
 
     function init() {
-        var divs = document.getElementsByClassName('django-ace-widget');
+        var widgets = document.getElementsByClassName('django-ace-widget');
 
-        for (var i = 0; i < divs.length; i++) {
-            var div = divs[i];
-            div.className = "django-ace-widget"; // remove `loading`
-            var textarea = next(div),
+        for (var i = 0; i < widgets.length; i++) {
+            var widget = widgets[i];
+            widget.className = "django-ace-widget"; // remove `loading` class
+
+            var div = widget.firstChild,
+                textarea = next(widget),
                 editor = ace.edit(div),
-                session = editor.getSession(),
-                mode = div.getAttribute('data-mode'),
-                theme = div.getAttribute('data-theme'),
-                wordwrap = div.getAttribute('data-wordwrap');
+                mode = widget.getAttribute('data-mode'),
+                theme = widget.getAttribute('data-theme'),
+                wordwrap = widget.getAttribute('data-wordwrap');
 
-            session.setValue(textarea.value);
+            editor.getSession().setValue(textarea.value);
 
             // the editor is initially absolute positioned
-            div.style.position = "relative";
             textarea.style.display = "none";
 
             // options
             if (mode) {
                 var Mode = require("ace/mode/" + mode).Mode;
-                session.setMode(new Mode());
+                editor.getSession().setMode(new Mode());
             }
             if (theme) {
                 editor.setTheme("ace/theme/" + theme);
             }
             if (wordwrap == "true") {
-                session.setUseWrapMode(true);
+                editor.getSession().setUseWrapMode(true);
             }
 
-            session.on('change', function() {
-                var value = editor.getSession().getValue();
-                var textNode = document.createTextNode(value);
-                textarea.innerHTML = "";
-                textarea.appendChild(textNode);
+            editor.getSession().on('change', function() {
+                textarea.value = editor.getSession().getValue();
             });
         }
     }

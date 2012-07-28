@@ -1,1 +1,191 @@
-define("ace/theme/merbivore_soft",["require","exports","module"],function(a,b,c){var d=a("pilot/dom"),e=".ace-merbivore-soft .ace_editor {\n  border: 2px solid rgb(159, 159, 159);\n}\n\n.ace-merbivore-soft .ace_editor.ace_focus {\n  border: 2px solid #327fbd;\n}\n\n.ace-merbivore-soft .ace_gutter {\n  width: 50px;\n  background: #e8e8e8;\n  color: #333;\n  overflow : hidden;\n}\n\n.ace-merbivore-soft .ace_gutter-layer {\n  width: 100%;\n  text-align: right;\n}\n\n.ace-merbivore-soft .ace_gutter-layer .ace_gutter-cell {\n  padding-right: 6px;\n}\n\n.ace-merbivore-soft .ace_print_margin {\n  width: 1px;\n  background: #e8e8e8;\n}\n\n.ace-merbivore-soft .ace_scroller {\n  background-color: #1C1C1C;\n}\n\n.ace-merbivore-soft .ace_text-layer {\n  cursor: text;\n  color: #E6E1DC;\n}\n\n.ace-merbivore-soft .ace_cursor {\n  border-left: 2px solid #FFFFFF;\n}\n\n.ace-merbivore-soft .ace_cursor.ace_overwrite {\n  border-left: 0px;\n  border-bottom: 1px solid #FFFFFF;\n}\n \n.ace-merbivore-soft .ace_marker-layer .ace_selection {\n  background: #494949;\n}\n\n.ace-merbivore-soft .ace_marker-layer .ace_step {\n  background: rgb(198, 219, 174);\n}\n\n.ace-merbivore-soft .ace_marker-layer .ace_bracket {\n  margin: -1px 0 0 -1px;\n  border: 1px solid #FCE94F;\n}\n\n.ace-merbivore-soft .ace_marker-layer .ace_active_line {\n  background: #333435;\n}\n\n       \n.ace-merbivore-soft .ace_invisible {\n  color: #404040;\n}\n\n.ace-merbivore-soft .ace_keyword {\n  color:#FC803A;\n}\n\n.ace-merbivore-soft .ace_keyword.ace_operator {\n  \n}\n\n.ace-merbivore-soft .ace_constant {\n  color:#68C1D8;\n}\n\n.ace-merbivore-soft .ace_constant.ace_language {\n  color:#E1C582;\n}\n\n.ace-merbivore-soft .ace_constant.ace_library {\n  color:#8EC65F;\n}\n\n.ace-merbivore-soft .ace_constant.ace_numeric {\n  color:#7FC578;\n}\n\n.ace-merbivore-soft .ace_invalid {\n  color:#FFFFFF;\n  background-color:#FE3838;\n}\n\n.ace-merbivore-soft .ace_invalid.ace_illegal {\n  \n}\n\n.ace-merbivore-soft .ace_invalid.ace_deprecated {\n  color:#FFFFFF;\n  background-color:#FE3838;\n}\n\n.ace-merbivore-soft .ace_support {\n  \n}\n\n.ace-merbivore-soft .ace_support.ace_function {\n  color:#FC803A;\n}\n\n.ace-merbivore-soft .ace_function.ace_buildin {\n  \n}\n\n.ace-merbivore-soft .ace_string {\n  color:#8EC65F;\n}\n\n.ace-merbivore-soft .ace_string.ace_regexp {\n  \n}\n\n.ace-merbivore-soft .ace_comment {\n  color:#AC4BB8;\n}\n\n.ace-merbivore-soft .ace_comment.ace_doc {\n  \n}\n\n.ace-merbivore-soft .ace_comment.ace_doc.ace_tag {\n  \n}\n\n.ace-merbivore-soft .ace_variable {\n  \n}\n\n.ace-merbivore-soft .ace_variable.ace_language {\n  \n}\n\n.ace-merbivore-soft .ace_xml_pe {\n  \n}";d.importCssString(e),b.cssClass="ace-merbivore-soft"})
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Ajax.org Code Editor (ACE).
+ *
+ * The Initial Developer of the Original Code is
+ * Ajax.org B.V.
+ * Portions created by the Initial Developer are Copyright (C) 2010
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *      Fabian Jakobs <fabian AT ajax DOT org>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+define('ace/theme/merbivore_soft', ['require', 'exports', 'module', 'ace/lib/dom'], function(require, exports, module) {
+
+exports.isDark = true;
+exports.cssClass = "ace-merbivore-soft";
+exports.cssText = "\
+.ace-merbivore-soft .ace_editor {\
+  border: 2px solid rgb(159, 159, 159);\
+}\
+\
+.ace-merbivore-soft .ace_editor.ace_focus {\
+  border: 2px solid #327fbd;\
+}\
+\
+.ace-merbivore-soft .ace_gutter {\
+  background: #262424;\
+  color: #E6E1DC;\
+}\
+\
+.ace-merbivore-soft .ace_print_margin {\
+  width: 1px;\
+  background: #262424;\
+}\
+\
+.ace-merbivore-soft .ace_scroller {\
+  background-color: #1C1C1C;\
+}\
+\
+.ace-merbivore-soft .ace_text-layer {\
+  color: #E6E1DC;\
+}\
+\
+.ace-merbivore-soft .ace_cursor {\
+  border-left: 2px solid #FFFFFF;\
+}\
+\
+.ace-merbivore-soft .ace_cursor.ace_overwrite {\
+  border-left: 0px;\
+  border-bottom: 1px solid #FFFFFF;\
+}\
+\
+.ace-merbivore-soft .ace_marker-layer .ace_selection {\
+  background: #494949;\
+}\
+\
+.ace-merbivore-soft.multiselect .ace_selection.start {\
+  box-shadow: 0 0 3px 0px #1C1C1C;\
+  border-radius: 2px;\
+}\
+\
+.ace-merbivore-soft .ace_marker-layer .ace_step {\
+  background: rgb(102, 82, 0);\
+}\
+\
+.ace-merbivore-soft .ace_marker-layer .ace_bracket {\
+  margin: -1px 0 0 -1px;\
+  border: 1px solid #404040;\
+}\
+\
+.ace-merbivore-soft .ace_marker-layer .ace_active_line {\
+  background: #333435;\
+}\
+\
+.ace-merbivore-soft .ace_gutter_active_line {\
+  background-color: #333435;\
+}\
+\
+.ace-merbivore-soft .ace_marker-layer .ace_selected_word {\
+  border: 1px solid #494949;\
+}\
+\
+.ace-merbivore-soft .ace_invisible {\
+  color: #404040;\
+}\
+\
+.ace-merbivore-soft .ace_keyword, .ace-merbivore-soft .ace_meta {\
+  color:#FC803A;\
+}\
+\
+.ace-merbivore-soft .ace_constant, .ace-merbivore-soft .ace_constant.ace_other {\
+  color:#68C1D8;\
+}\
+\
+.ace-merbivore-soft .ace_constant.ace_character,  {\
+  color:#68C1D8;\
+}\
+\
+.ace-merbivore-soft .ace_constant.ace_character.ace_escape,  {\
+  color:#68C1D8;\
+}\
+\
+.ace-merbivore-soft .ace_constant.ace_language {\
+  color:#E1C582;\
+}\
+\
+.ace-merbivore-soft .ace_constant.ace_library {\
+  color:#8EC65F;\
+}\
+\
+.ace-merbivore-soft .ace_constant.ace_numeric {\
+  color:#7FC578;\
+}\
+\
+.ace-merbivore-soft .ace_invalid {\
+  color:#FFFFFF;\
+background-color:#FE3838;\
+}\
+\
+.ace-merbivore-soft .ace_invalid.ace_deprecated {\
+  color:#FFFFFF;\
+background-color:#FE3838;\
+}\
+\
+.ace-merbivore-soft .ace_support.ace_constant {\
+  color:#8EC65F;\
+}\
+\
+.ace-merbivore-soft .ace_fold {\
+    background-color: #FC803A;\
+    border-color: #E6E1DC;\
+}\
+\
+.ace-merbivore-soft .ace_storage {\
+  color:#FC803A;\
+}\
+\
+.ace-merbivore-soft .ace_string {\
+  color:#8EC65F;\
+}\
+\
+.ace-merbivore-soft .ace_comment {\
+  font-style:italic;\
+color:#AC4BB8;\
+}\
+\
+.ace-merbivore-soft .ace_meta {\
+  font-style:italic;\
+color:#AC4BB8;\
+}\
+\
+.ace-merbivore-soft .ace_meta.ace_tag {\
+  color:#FC803A;\
+}\
+\
+.ace-merbivore-soft .ace_entity.ace_other.ace_attribute-name {\
+  color:#EAF1A3;\
+}\
+\
+.ace-merbivore-soft .ace_markup.ace_underline {\
+    text-decoration:underline;\
+}";
+
+    var dom = require("../lib/dom");
+    dom.importCssString(exports.cssText, exports.cssClass);
+});

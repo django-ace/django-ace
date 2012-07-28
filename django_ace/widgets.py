@@ -29,16 +29,16 @@ class AceWidget(forms.Textarea):
     def render(self, name, value, attrs=None):
         attrs = attrs or {}
 
-        div_attrs = {
+        ace_attrs = {
             "class": "django-ace-widget loading",
         }
         if self.mode:
-            div_attrs["data-mode"] = self.mode
+            ace_attrs["data-mode"] = self.mode
         if self.theme:
-            div_attrs["data-theme"] = self.theme
+            ace_attrs["data-theme"] = self.theme
         if self.wordwrap:
-            div_attrs["data-wordwrap"] = "true"
+            ace_attrs["data-wordwrap"] = "true"
 
-        ace = '<div%s></div>' % flatatt(div_attrs)
         textarea = super(AceWidget, self).render(name, value, attrs)
-        return mark_safe(ace + textarea)
+        return mark_safe('<div%s><div></div></div>%s' % (
+                flatatt(ace_attrs), textarea))
