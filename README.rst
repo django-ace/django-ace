@@ -9,7 +9,7 @@ Usage
 ::
 
     from django import forms
-    form django_ace import AceWidget
+    from django_ace import AceWidget
 
     class EditorForm(forms.Form):
         text = forms.CharField(widget=AceWidget)

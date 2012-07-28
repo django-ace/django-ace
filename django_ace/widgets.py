@@ -20,14 +20,16 @@ class AceWidget(forms.Textarea):
             js.append("django_ace/ace/mode-%s.js" % self.mode)
         if self.theme:
             js.append("django_ace/ace/theme-%s.js" % self.theme)
-        return forms.Media(js=js)
+        css = {
+            "screen": ["django_ace/widget.css"],
+        }
+        return forms.Media(js=js, css=css)
 
     def render(self, name, value, attrs=None):
         attrs = attrs or {}
 
         div_attrs = {
-            "class": "django-ace-widget",
-            "style": "display: none",
+            "class": "django-ace-widget loading",
         }
         if self.mode:
             div_attrs["data-mode"] = self.mode

@@ -1,0 +1,9 @@
+.django-ace-widget {
+    display: block;
+    height: 300px;
+    width: 600px;
+}
+
+.django-ace-widget.loading {
+    display: none;
+}

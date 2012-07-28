@@ -13,17 +13,16 @@
 
         for (var i = 0; i < divs.length; i++) {
             var div = divs[i];
+            div.className = "django-ace-widget"; // remove `loading`
             var textarea = next(div),
                 editor = ace.edit(div),
                 mode = div.getAttribute('data-mode'),
                 theme = div.getAttribute('data-theme');
 
-            editor.getSession().setValue(textarea.innerHTML);
+            editor.getSession().setValue(textarea.value);
 
+            // the editor is initially absolute positioned
             div.style.position = "relative";
-            div.style.display = "inline-block";
-            div.style.width = textarea.scrollWidth + "px";
-            div.style.height = textarea.scrollHeight + "px";
             textarea.style.display = "none";
 
             if (mode) {
