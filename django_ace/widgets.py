@@ -5,9 +5,10 @@ from django.utils.safestring import mark_safe
 
 
 class AceWidget(forms.Textarea):
-    def __init__(self, mode=None, theme=None, *args, **kwargs):
+    def __init__(self, mode=None, theme=None, wordwrap=False, *args, **kwargs):
         self.mode = mode
         self.theme = theme
+        self.wordwrap = wordwrap
         super(AceWidget, self).__init__(*args, **kwargs)
 
     @property
@@ -35,6 +36,8 @@ class AceWidget(forms.Textarea):
             div_attrs["data-mode"] = self.mode
         if self.theme:
             div_attrs["data-theme"] = self.theme
+        if self.wordwrap:
+            div_attrs["data-wordwrap"] = "true"
 
         ace = '<div%s></div>' % flatatt(div_attrs)
         textarea = super(AceWidget, self).render(name, value, attrs)

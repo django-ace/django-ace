@@ -16,24 +16,30 @@
             div.className = "django-ace-widget"; // remove `loading`
             var textarea = next(div),
                 editor = ace.edit(div),
+                session = editor.getSession(),
                 mode = div.getAttribute('data-mode'),
-                theme = div.getAttribute('data-theme');
+                theme = div.getAttribute('data-theme'),
+                wordwrap = div.getAttribute('data-wordwrap');
 
-            editor.getSession().setValue(textarea.value);
+            session.setValue(textarea.value);
 
             // the editor is initially absolute positioned
             div.style.position = "relative";
             textarea.style.display = "none";
 
+            // options
             if (mode) {
                 var Mode = require("ace/mode/" + mode).Mode;
-                editor.getSession().setMode(new Mode());
+                session.setMode(new Mode());
             }
             if (theme) {
                 editor.setTheme("ace/theme/" + theme);
             }
+            if (wordwrap == "true") {
+                session.setUseWrapMode(true);
+            }
 
-            editor.getSession().on('change', function() {
+            session.on('change', function() {
                 var value = editor.getSession().getValue();
                 var textNode = document.createTextNode(value);
                 textarea.innerHTML = "";
