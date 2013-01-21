@@ -1,4 +1,22 @@
 (function() {
+    function getDocHeight() {
+        var D = document;
+        return Math.max(
+            Math.max(D.body.scrollHeight, D.documentElement.scrollHeight),
+            Math.max(D.body.offsetHeight, D.documentElement.offsetHeight),
+            Math.max(D.body.clientHeight, D.documentElement.clientHeight)
+        );
+    }
+
+    function getDocWidth() {
+        var D = document;
+        return Math.max(
+            Math.max(D.body.scrollWidth, D.documentElement.scrollWidth),
+            Math.max(D.body.offsetWidth, D.documentElement.offsetWidth),
+            Math.max(D.body.clientWidth, D.documentElement.clientWidth)
+        );
+    }
+
     function next(elem) {
         // Credit to John Resig for this function
         // taken from Pro JavaScript techniques
@@ -15,6 +33,9 @@
             mode = widget.getAttribute('data-mode'),
             theme = widget.getAttribute('data-theme'),
             wordwrap = widget.getAttribute('data-wordwrap');
+
+
+        var scroller = div.getElementsByClassName('ace_scroller');
 
         editor.getSession().setValue(textarea.value);
 
@@ -36,6 +57,39 @@
         editor.getSession().on('change', function() {
             textarea.value = editor.getSession().getValue();
         });
+
+        editor.commands.addCommand({
+            name: 'Full screen',
+            bindKey: {win: 'Ctrl-F11',  mac: 'Command-F11'},
+            exec: function(editor) {                
+                if (window.fullscreen == true) {
+                    widget.style.position = 'relative';
+                    widget.style.width = window.ace_widget.width + 'px';
+                    widget.style.height = window.ace_widget.height + 'px';
+                    widget.style.zIndex = 1;
+                    window.fullscreen = false;
+                }
+                else {
+                    window.ace_widget = { 
+                        'width': widget.offsetWidth,
+                        'height': widget.offsetHeight,
+                    }
+
+                    widget.style.position = 'absolute';
+                    widget.style.left = '0px';
+                    widget.style.top = '0px';
+                    widget.style.height = getDocHeight() + 'px';
+                    widget.style.width = getDocWidth() + 'px';
+                    widget.style.zIndex = 999;
+
+                    scroller[0].style.height = getDocHeight() + 'px';
+
+                    window.scrollTo(0, 0);
+                    window.fullscreen = true;
+                }
+            },
+            readOnly: true // false if this command should not apply in readOnly mode
+        });        
     }
 
     function init() {
