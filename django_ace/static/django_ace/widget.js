@@ -35,7 +35,6 @@
             wordwrap = widget.getAttribute('data-wordwrap');
 
 
-        var scroller = div.getElementsByClassName('ace_scroller');
 
         editor.getSession().setValue(textarea.value);
 
@@ -61,7 +60,8 @@
         editor.commands.addCommand({
             name: 'Full screen',
             bindKey: {win: 'Ctrl-F11',  mac: 'Command-F11'},
-            exec: function(editor) {                
+            exec: function(editor) {
+
                 if (window.fullscreen == true) {
                     widget.style.position = 'relative';
                     widget.style.width = window.ace_widget.width + 'px';
@@ -82,10 +82,9 @@
                     widget.style.width = getDocWidth() + 'px';
                     widget.style.zIndex = 999;
 
-                    scroller[0].style.height = getDocHeight() + 'px';
-
                     window.scrollTo(0, 0);
                     window.fullscreen = true;
+                    editor.resize();
                 }
             },
             readOnly: true // false if this command should not apply in readOnly mode
