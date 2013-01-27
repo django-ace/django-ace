@@ -5,12 +5,12 @@ from django.utils.safestring import mark_safe
 
 
 class AceWidget(forms.Textarea):
-    def __init__(self, mode=None, theme=None, wordwrap=False, width="500px", heigth="300px", *args, **kwargs):
+    def __init__(self, mode=None, theme=None, wordwrap=False, width="500px", height="300px", *args, **kwargs):
         self.mode = mode
         self.theme = theme
         self.wordwrap = wordwrap
         self.width = width
-        self.heigth = heigth
+        self.height = height
         super(AceWidget, self).__init__(*args, **kwargs)
 
     @property
@@ -18,14 +18,14 @@ class AceWidget(forms.Textarea):
         js = [
             "django_ace/ace/ace.js",
             "django_ace/widget.js",
-        ]
+            ]
         if self.mode:
             js.append("django_ace/ace/mode-%s.js" % self.mode)
         if self.theme:
             js.append("django_ace/ace/theme-%s.js" % self.theme)
         css = {
             "screen": ["django_ace/widget.css"],
-        }
+            }
         return forms.Media(js=js, css=css)
 
     def render(self, name, value, attrs=None):
@@ -33,7 +33,7 @@ class AceWidget(forms.Textarea):
 
         ace_attrs = {
             "class": "django-ace-widget loading",
-            "style": "width:%s; height:%s" % (self.width, self.heigth)
+            "style": "width:%s; height:%s" % (self.width, self.height)
         }
         if self.mode:
             ace_attrs["data-mode"] = self.mode
@@ -44,4 +44,4 @@ class AceWidget(forms.Textarea):
 
         textarea = super(AceWidget, self).render(name, value, attrs)
         return mark_safe('<div%s><div></div></div>%s' % (
-                flatatt(ace_attrs), textarea))
+            flatatt(ace_attrs), textarea))
