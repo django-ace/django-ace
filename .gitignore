@@ -5,3 +5,4 @@
 /example/.env
 /example/example/database.sqlite3
 /dist
+.idea/

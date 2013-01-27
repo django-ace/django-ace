@@ -1,8 +1,6 @@
 .django-ace-widget {
     display: inline-block;
-    height: 300px;
     position: relative;
-    width: 500px;
 }
 
 .django-ace-widget > div {
