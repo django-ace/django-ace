@@ -43,5 +43,11 @@ class AceWidget(forms.Textarea):
             ace_attrs["data-wordwrap"] = "true"
 
         textarea = super(AceWidget, self).render(name, value, attrs)
-        return mark_safe('<div%s><div></div></div>%s' % (
-            flatatt(ace_attrs), textarea))
+
+
+        html = '<div%s><div></div></div>%s' % (flatatt(ace_attrs), textarea)
+
+        # add toolbar
+        html = '<div><div class="django-ace-toolbar"><a href="./" class="django-ace-max_min">MAX</a></div>%s</div>' % html
+
+        return mark_safe(html)

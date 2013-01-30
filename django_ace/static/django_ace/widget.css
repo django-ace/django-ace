@@ -3,7 +3,7 @@
     position: relative;
 }
 
-.django-ace-widget > div {
+.django-ace-widget > div  {
     position: absolute;
     top: 0;
     left: 0;
@@ -13,4 +13,25 @@
 
 .django-ace-widget.loading {
     display: none;
+}
+
+.django-ace-toolbar {
+    width: 480px;
+    overflow: hidden;
+    padding: 5px 10px;
+    font-size: 12px;
+    height: 18px;
+    text-align: left;
+    color: #555;
+    text-shadow: 0 1px 0 #fff;
+    border-bottom: 1px solid #d8d8d8;
+    background-color: #eaeaea;
+    background-image: -moz-linear-gradient(#fafafa, #eaeaea);
+    background-image: -webkit-linear-gradient(#fafafa, #eaeaea);
+    background-image: linear-gradient(#fafafa, #eaeaea);
+    background-repeat: repeat-x;    
+}
+
+.django-ace-max_min {
+    float: right;
 }

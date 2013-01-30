@@ -26,15 +26,58 @@
         return elem;
     }
 
+    function prev(elem) {
+        // Credit to John Resig for this function
+        // taken from Pro JavaScript techniques
+        do {
+            elem = elem.previousSibling;
+        } while (elem && elem.nodeType != 1);
+        return elem;
+    }
+
+    function minimizeMaximize(widget, editor) {
+        if (window.fullscreen == true) {
+            widget.style.position = 'relative';
+            widget.style.width = window.ace_widget.width + 'px';
+            widget.style.height = window.ace_widget.height + 'px';
+            widget.style.zIndex = 1;
+            window.fullscreen = false;
+        }
+        else {
+            window.ace_widget = { 
+                'width': widget.offsetWidth,
+                'height': widget.offsetHeight,
+            }
+
+            widget.style.position = 'absolute';
+            widget.style.left = '0px';
+            widget.style.top = '0px';
+            widget.style.height = getDocHeight() + 'px';
+            widget.style.width = getDocWidth() + 'px';
+            widget.style.zIndex = 999;
+
+            window.scrollTo(0, 0);
+            window.fullscreen = true;
+            editor.resize();
+        }                
+    }
+
     function apply_widget(widget) {
         var div = widget.firstChild,
             textarea = next(widget),
             editor = ace.edit(div),
             mode = widget.getAttribute('data-mode'),
             theme = widget.getAttribute('data-theme'),
-            wordwrap = widget.getAttribute('data-wordwrap');
+            wordwrap = widget.getAttribute('data-wordwrap'),
+            toolbar = prev(widget);
 
 
+        // Toolbar maximize/minimize button
+        var min_max = toolbar.getElementsByClassName('django-ace-max_min');
+        min_max[0].onclick = function() {
+            minimizeMaximize(widget, editor);
+            return false;
+        };
 
         editor.getSession().setValue(textarea.value);
 
@@ -61,31 +104,7 @@
             name: 'Full screen',
             bindKey: {win: 'Ctrl-F11',  mac: 'Command-F11'},
             exec: function(editor) {
-
-                if (window.fullscreen == true) {
-                    widget.style.position = 'relative';
-                    widget.style.width = window.ace_widget.width + 'px';
-                    widget.style.height = window.ace_widget.height + 'px';
-                    widget.style.zIndex = 1;
-                    window.fullscreen = false;
-                }
-                else {
-                    window.ace_widget = { 
-                        'width': widget.offsetWidth,
-                        'height': widget.offsetHeight,
-                    }
-
-                    widget.style.position = 'absolute';
-                    widget.style.left = '0px';
-                    widget.style.top = '0px';
-                    widget.style.height = getDocHeight() + 'px';
-                    widget.style.width = getDocWidth() + 'px';
-                    widget.style.zIndex = 999;
-
-                    window.scrollTo(0, 0);
-                    window.fullscreen = true;
-                    editor.resize();
-                }
+                minimizeMaximize(widget, editor);
             },
             readOnly: true // false if this command should not apply in readOnly mode
         });        
