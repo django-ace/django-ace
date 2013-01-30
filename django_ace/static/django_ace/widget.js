@@ -68,15 +68,16 @@
             editor = ace.edit(div),
             mode = widget.getAttribute('data-mode'),
             theme = widget.getAttribute('data-theme'),
-            wordwrap = widget.getAttribute('data-wordwrap');
+            wordwrap = widget.getAttribute('data-wordwrap'),
+            toolbar = prev(widget);
 
 
         // Toolbar maximize/minimize button
-        // var min_max = toolbar.getElementsByClassName('django-ace-max_min');
-        // min_max[0].onclick = function() {
-        //     minimizeMaximize(widget, editor);
-        //     return false;
-        // };
+        var min_max = toolbar.getElementsByClassName('django-ace-max_min');
+        min_max[0].onclick = function() {
+            minimizeMaximize(widget, editor);
+            return false;
+        };
 
         editor.getSession().setValue(textarea.value);
 
