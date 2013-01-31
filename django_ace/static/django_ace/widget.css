@@ -16,10 +16,7 @@
 }
 
 .django-ace-toolbar {
-    width: 480px;
-    overflow: hidden;
     font-size: 12px;
-    height: 18px;
     text-align: left;
     color: #555;
     text-shadow: 0 1px 0 #fff;
@@ -33,4 +30,13 @@
 
 .django-ace-max_min {
     float: right;
+}
+
+.django-ace-editor {
+    position: relative;
+}
+
+.django-ace-editor-fullscreen {
+    position: absolute;
+    top: 0px; left: 0px;
 }
