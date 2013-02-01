@@ -47,7 +47,6 @@
         if (window.fullscreen == true) {
             main_block.className = 'django-ace-editor';
 
-            //widget.style.position = 'relative';
             widget.style.width = window.ace_widget.width + 'px';
             widget.style.height = window.ace_widget.height + 'px';
             widget.style.zIndex = 1;
@@ -61,9 +60,6 @@
 
             main_block.className = 'django-ace-editor-fullscreen';
 
-            //widget.style.position = 'absolute';
-            //widget.style.left = '0px';
-            //widget.style.top = '0px';
             widget.style.height = getDocHeight() + 'px';
             widget.style.width = getDocWidth() + 'px';
             widget.style.zIndex = 999;

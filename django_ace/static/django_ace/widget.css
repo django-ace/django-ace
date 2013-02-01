@@ -26,10 +26,20 @@
     background-image: -webkit-linear-gradient(#fafafa, #eaeaea);
     background-image: linear-gradient(#fafafa, #eaeaea);
     background-repeat: repeat-x;    
+
+    overflow: hidden;
 }
 
 .django-ace-max_min {
     float: right;
+    background-position:5px 5px;
+    background-repeat:no-repeat;
+    padding: 5px;
+
+    background-image:url(img/expand.png);
+    display:block;
+    height: 16px;
+    width: 16px;
 }
 
 .django-ace-editor {
