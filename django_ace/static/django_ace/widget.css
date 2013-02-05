@@ -26,7 +26,7 @@
     background-image: -webkit-linear-gradient(#fafafa, #eaeaea);
     background-image: linear-gradient(#fafafa, #eaeaea);
     background-repeat: repeat-x;    
-
+    clear: both;
     overflow: hidden;
 }
 
