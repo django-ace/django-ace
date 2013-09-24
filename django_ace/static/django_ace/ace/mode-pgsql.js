@@ -1,98 +1,78 @@
 /* ***** BEGIN LICENSE BLOCK *****
-* The Original Code is Ajax.org Code Editor (ACE).
-*
-* Contributor(s):
-*      Jonathan Camile <jonathan.camile AT gmail DOT com>
-*
-* Alternatively, the contents of this file may be used under the terms of
-* either the GNU General Public License Version 2 or later (the "GPL"), or
-* the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
-* in which case the provisions of the GPL or the LGPL are applicable instead
-* of those above. If you wish to allow use of your version of this file only
-* under the terms of either the GPL or the LGPL, and not to allow others to
-* use your version of this file under the terms of the MPL, indicate your
-* decision by deleting the provisions above and replace them with the notice
-* and other provisions required by the GPL or the LGPL. If you do not delete
-* the provisions above, a recipient may use your version of this file under
-* the terms of any one of the MPL, the GPL or the LGPL.
-*
-* ***** END LICENSE BLOCK ***** */
+ * Distributed under the BSD license:
+ *
+ * Copyright (c) 2010, Ajax.org B.V.
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *     * Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in the
+ *       documentation and/or other materials provided with the distribution.
+ *     * Neither the name of Ajax.org B.V. nor the
+ *       names of its contributors may be used to endorse or promote products
+ *       derived from this software without specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL AJAX.ORG B.V. BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * ***** END LICENSE BLOCK ***** */
 
 define('ace/mode/pgsql', ['require', 'exports', 'module' , 'ace/lib/oop', 'ace/mode/text', 'ace/tokenizer', 'ace/mode/pgsql_highlight_rules', 'ace/range'], function(require, exports, module) {
 
-    var oop = require("ace/lib/oop");
-    var TextMode = require("ace/mode/text").Mode;
-    var Tokenizer = require("ace/tokenizer").Tokenizer;
-    var PgsqlHighlightRules = require("ace/mode/pgsql_highlight_rules").PgsqlHighlightRules;
-    var Range = require("ace/range").Range;
-    // var EditSession = require("ace/edit_session").EditSession;
+var oop = require("../lib/oop");
+var TextMode = require("../mode/text").Mode;
+var Tokenizer = require("../tokenizer").Tokenizer;
+var PgsqlHighlightRules = require("./pgsql_highlight_rules").PgsqlHighlightRules;
+var Range = require("../range").Range;
 
-    var Mode = function() {
-        this.$tokenizer = new Tokenizer(new PgsqlHighlightRules().getRules());
-    };
-    oop.inherits(Mode, TextMode);
+var Mode = function() {
+    var highlighter = new PgsqlHighlightRules();
 
-    (function() {
+    this.$tokenizer = new Tokenizer(highlighter.getRules());
+    this.$keywordList = highlighter.$keywordList;
+};
+oop.inherits(Mode, TextMode);
 
-        this.toggleCommentLines = function(state, doc, startRow, endRow) {
-            var outdent = true;
-            // var outentedRows = [];
-            var re = /^(\s*)--/;
+(function() {
+    this.lineCommentStart = "--";
+    this.blockComment = {start: "/*", end: "*/"};
 
-            for (var i=startRow; i<= endRow; i++) {
-                if (!re.test(doc.getLine(i))) {
-                    outdent = false;
-                    break;
-                }
-            }
-
-            if (outdent) {
-                var deleteRange = new Range(0, 0, 0, 0);
-                for (var i=startRow; i<= endRow; i++)
-                {
-                    var line = doc.getLine(i);
-                    var m = line.match(re);
-                    deleteRange.start.row = i;
-                    deleteRange.end.row = i;
-                    deleteRange.end.column = m[0].length;
-                    doc.replace(deleteRange, m[1]);
-                }
-            }
-            else {
-                doc.indentRows(startRow, endRow, "--");
-            }
-        };
-
-
-        this.getNextLineIndent = function(state, line, tab) { 
-            if (state == "start" || state == "keyword.statementEnd") {
-                return "";
-            } else {
-                return this.$getIndent(line); // Keep whatever indent the previous line has
-            }
+    this.getNextLineIndent = function(state, line, tab) { 
+        if (state == "start" || state == "keyword.statementEnd") {
+            return "";
+        } else {
+            return this.$getIndent(line); // Keep whatever indent the previous line has
         }
+    }
 
-    }).call(Mode.prototype);
+}).call(Mode.prototype);
 
-    exports.Mode = Mode;
+exports.Mode = Mode;
 });
-
 
 define('ace/mode/pgsql_highlight_rules', ['require', 'exports', 'module' , 'ace/lib/oop', 'ace/lib/lang', 'ace/mode/doc_comment_highlight_rules', 'ace/mode/text_highlight_rules', 'ace/mode/perl_highlight_rules', 'ace/mode/python_highlight_rules'], function(require, exports, module) {
 
-var oop = require("ace/lib/oop");
-var lang = require("ace/lib/lang");
+var oop = require("../lib/oop");
+var lang = require("../lib/lang");
 var DocCommentHighlightRules = require("./doc_comment_highlight_rules").DocCommentHighlightRules;
 var TextHighlightRules = require("./text_highlight_rules").TextHighlightRules;
-// Supporting perl and python for now -- both in pg core and ace
 var PerlHighlightRules = require("./perl_highlight_rules").PerlHighlightRules;
 var PythonHighlightRules = require("./python_highlight_rules").PythonHighlightRules;
 
 var PgsqlHighlightRules = function() {
-    
-    // Keywords, functions, operators last updated for pg 9.1.
-    var keywords = lang.arrayToMap(
-        ("abort|absolute|abstime|access|aclitem|action|add|admin|after|aggregate|all|also|alter|always|" +
+    var keywords = (
+        "abort|absolute|abstime|access|aclitem|action|add|admin|after|aggregate|all|also|alter|always|" +
         "analyse|analyze|and|any|anyarray|anyelement|anyenum|anynonarray|array|as|asc|assertion|" +
         "assignment|asymmetric|at|attribute|authorization|backward|before|begin|between|bigint|" +
         "binary|bit|bool|boolean|both|box|bpchar|by|bytea|cache|called|cascade|cascaded|case|cast|" +
@@ -131,12 +111,12 @@ var PgsqlHighlightRules = function() {
         "unlogged|until|update|user|using|uuid|vacuum|valid|validate|validator|value|values|varbit|" +
         "varchar|variadic|varying|verbose|version|view|void|volatile|when|where|whitespace|window|" +
         "with|without|work|wrapper|write|xid|xml|xmlattributes|xmlconcat|xmlelement|xmlexists|" +
-        "xmlforest|xmlparse|xmlpi|xmlroot|xmlserialize|year|yes|zone").split("|")
+        "xmlforest|xmlparse|xmlpi|xmlroot|xmlserialize|year|yes|zone"
     );
-    
-    
-    var builtinFunctions = lang.arrayToMap(
-        ("RI_FKey_cascade_del|RI_FKey_cascade_upd|RI_FKey_check_ins|RI_FKey_check_upd|" +
+
+
+    var builtinFunctions = (
+        "RI_FKey_cascade_del|RI_FKey_cascade_upd|RI_FKey_check_ins|RI_FKey_check_upd|" +
         "RI_FKey_noaction_del|RI_FKey_noaction_upd|RI_FKey_restrict_del|RI_FKey_restrict_upd|" +
         "RI_FKey_setdefault_del|RI_FKey_setdefault_upd|RI_FKey_setnull_del|" +
         "RI_FKey_setnull_upd|abbrev|abs|abstime|abstimeeq|abstimege|abstimegt|abstimein|abstimele|" +
@@ -449,11 +429,16 @@ var PgsqlHighlightRules = function() {
         "win866_to_mic|win866_to_win1251|win_to_utf8|xideq|xideqint4|xidin|xidout|xidrecv|xidsend|" +
         "xml|xml_in|xml_is_well_formed|xml_is_well_formed_content|xml_is_well_formed_document|" +
         "xml_out|xml_recv|xml_send|xmlagg|xmlcomment|xmlconcat2|xmlexists|xmlvalidate|xpath|" +
-        "xpath_exists").split("|")
+        "xpath_exists"
     );
-    
-    var sqlRules = [
-        {
+
+    var keywordMapper = this.createKeywordMapper({
+        "support.function": builtinFunctions,
+        "keyword": keywords
+    }, "identifier", true);
+
+
+    var sqlRules = [{
             token : "string", // single line string -- assume dollar strings if multi-line for now
             regex : "['](?:(?:\\\\.)|(?:[^'\\\\]))*?[']"
         }, {
@@ -463,46 +448,35 @@ var PgsqlHighlightRules = function() {
             token : "constant.numeric", // float
             regex : "[+-]?\\d+(?:(?:\\.\\d*)?(?:[eE][+-]?\\d+)?)?\\b"
         }, {
-            token : function(value) {
-                value = value.toLowerCase();
-                if (keywords.hasOwnProperty(value)) {
-                    return "keyword";
-                } else if (builtinFunctions.hasOwnProperty(value)) {
-                    return "support.function";
-                } else {
-                    return "identifier";
-                }
-              },
-              regex : "[a-zA-Z_][a-zA-Z0-9_$]*\\b" // TODO - Unicode in identifiers
-          }, {
-              token : "keyword.operator",
-              regex : "!|!!|!~|!~\\*|!~~|!~~\\*|#|##|#<|#<=|#<>|#=|#>|#>=|%|\\&|\\&\\&|\\&<|\\&<\\||\\&>|\\*|\\+|" +
-                      "\\-|/|<|<#>|<\\->|<<|<<=|<<\\||<=|<>|<\\?>|<@|<\\^|=|>|>=|>>|>>=|>\\^|\\?#|\\?\\-|\\?\\-\\||" +
-                      "\\?\\||\\?\\|\\||@|@\\-@|@>|@@|@@@|\\^|\\||\\|\\&>|\\|/|\\|>>|\\|\\||\\|\\|/|~|~\\*|~<=~|~<~|" +
-                      "~=|~>=~|~>~|~~|~~\\*"
-          }, {
-              token : "paren.lparen",
-              regex : "[\\(]"
-          }, {
-              token : "paren.rparen",
-              regex : "[\\)]"
-          }, {
-              token : "text",
-              regex : "\\s+"
-          }
+            token : keywordMapper,
+            regex : "[a-zA-Z_][a-zA-Z0-9_$]*\\b" // TODO - Unicode in identifiers
+        }, {
+            token : "keyword.operator",
+            regex : "!|!!|!~|!~\\*|!~~|!~~\\*|#|##|#<|#<=|#<>|#=|#>|#>=|%|\\&|\\&\\&|\\&<|\\&<\\||\\&>|\\*|\\+|" +
+                    "\\-|/|<|<#>|<\\->|<<|<<=|<<\\||<=|<>|<\\?>|<@|<\\^|=|>|>=|>>|>>=|>\\^|\\?#|\\?\\-|\\?\\-\\||" +
+                    "\\?\\||\\?\\|\\||@|@\\-@|@>|@@|@@@|\\^|\\||\\|\\&>|\\|/|\\|>>|\\|\\||\\|\\|/|~|~\\*|~<=~|~<~|" +
+                    "~=|~>=~|~>~|~~|~~\\*"
+        }, {
+            token : "paren.lparen",
+            regex : "[\\(]"
+        }, {
+            token : "paren.rparen",
+            regex : "[\\)]"
+        }, {
+            token : "text",
+            regex : "\\s+"
+        }
     ];
-           
+
 
     this.$rules = {
-        "start" : [
-            {
+        "start" : [{
                 token : "comment",
                 regex : "--.*$"
-            }, 
+            },
             DocCommentHighlightRules.getStartRule("doc-start"),
             {
                 token : "comment", // multi-line comment
-                merge : true,
                 regex : "\\/\\*",
                 next : "comment"
             },{
@@ -514,14 +488,12 @@ var PgsqlHighlightRules = function() {
                 regex : "^\\\\[\\S]+.*$"
             }
         ],
-        
-        "statement" : [
-            {
+
+        "statement" : [{
                 token : "comment",
                 regex : "--.*$"
             }, {
                 token : "comment", // multi-line comment
-                merge : true,
                 regex : "\\/\\*",
                 next : "commentStatement"
             }, {
@@ -546,14 +518,12 @@ var PgsqlHighlightRules = function() {
                 next : "dollarStatementString"
             }
         ].concat(sqlRules),
-        
-        "dollarSql" : [
-            {
+
+        "dollarSql" : [{
                 token : "comment",
                 regex : "--.*$"
             }, {
                 token : "comment", // multi-line comment
-                merge : true,
                 regex : "\\/\\*",
                 next : "commentDollarSql"
             }, {
@@ -566,68 +536,58 @@ var PgsqlHighlightRules = function() {
                 next : "dollarSqlString"
             }
         ].concat(sqlRules),
-        
-        "comment" : [
-            {
+
+        "comment" : [{
                 token : "comment", // closing comment
                 regex : ".*?\\*\\/",
                 next : "start"
             }, {
                 token : "comment", // comment spanning whole line
-                merge : true,
                 regex : ".+"
             }
         ],
-        
-        "commentStatement" : [
-            {
+
+        "commentStatement" : [{
                 token : "comment", // closing comment
                 regex : ".*?\\*\\/",
                 next : "statement"
             }, {
                 token : "comment", // comment spanning whole line
-                merge : true,
                 regex : ".+"
             }
         ],
-        
-        "commentDollarSql" : [
-            {
+
+        "commentDollarSql" : [{
                 token : "comment", // closing comment
                 regex : ".*?\\*\\/",
                 next : "dollarSql"
             }, {
                 token : "comment", // comment spanning whole line
-                merge : true,
                 regex : ".+"
             }
         ],
-        
-        "dollarStatementString" : [
-            {
+
+        "dollarStatementString" : [{
                 token : "string", // closing dollarstring
                 regex : ".*?\\$[\\w_0-9]*\\$",
                 next : "statement"
             }, {
                 token : "string", // dollarstring spanning whole line
-                merge : true,
                 regex : ".+"
             }
         ],
-        
-        "dollarSqlString" : [
-            {
+
+        "dollarSqlString" : [{
                 token : "string", // closing dollarstring
                 regex : ".*?\\$[\\w_0-9]*\\$",
                 next : "dollarSql"
             }, {
                 token : "string", // dollarstring spanning whole line
-                merge : true,
                 regex : ".+"
             }
         ]
     };
-    
+
     this.embedRules(DocCommentHighlightRules, "doc-", [ DocCommentHighlightRules.getEndRule("start") ]);
     this.embedRules(PerlHighlightRules, "perl-", [{token : "string", regex : "\\$perl\\$", next : "statement"}]);
     this.embedRules(PythonHighlightRules, "python-", [{token : "string", regex : "\\$python\\$", next : "statement"}]);
@@ -651,21 +611,10 @@ var DocCommentHighlightRules = function() {
             token : "comment.doc.tag",
             regex : "@[\\w\\d_]+" // TODO: fix email addresses
         }, {
-            token : "comment.doc",
-            merge : true,
-            regex : "\\s+"
+            token : "comment.doc.tag",
+            regex : "\\bTODO\\b"
         }, {
-            token : "comment.doc",
-            merge : true,
-            regex : "TODO"
-        }, {
-            token : "comment.doc",
-            merge : true,
-            regex : "[^@\\*]+"
-        }, {
-            token : "comment.doc",
-            merge : true,
-            regex : "."
+            defaultToken : "comment.doc"
         }]
     };
 };
@@ -675,7 +624,6 @@ oop.inherits(DocCommentHighlightRules, TextHighlightRules);
 DocCommentHighlightRules.getStartRule = function(start) {
     return {
         token : "comment.doc", // doc comment
-        merge : true,
         regex : "\\/\\*(?=\\*)",
         next  : start
     };
@@ -684,7 +632,6 @@ DocCommentHighlightRules.getStartRule = function(start) {
 DocCommentHighlightRules.getEndRule = function (start) {
     return {
         token : "comment.doc", // closing comment
-        merge : true,
         regex : "\\*\\/",
         next  : start
     };
@@ -695,26 +642,23 @@ exports.DocCommentHighlightRules = DocCommentHighlightRules;
 
 });
 
-define('ace/mode/perl_highlight_rules', ['require', 'exports', 'module' , 'ace/lib/oop', 'ace/lib/lang', 'ace/mode/text_highlight_rules'], function(require, exports, module) {
+define('ace/mode/perl_highlight_rules', ['require', 'exports', 'module' , 'ace/lib/oop', 'ace/mode/text_highlight_rules'], function(require, exports, module) {
 
 
 var oop = require("../lib/oop");
-var lang = require("../lib/lang");
 var TextHighlightRules = require("./text_highlight_rules").TextHighlightRules;
 
 var PerlHighlightRules = function() {
 
-    var keywords = lang.arrayToMap(
-        ("base|constant|continue|else|elsif|for|foreach|format|goto|if|last|local|my|next|" +
-         "no|package|parent|redo|require|scalar|sub|unless|until|while|use|vars").split("|")
+    var keywords = (
+        "base|constant|continue|else|elsif|for|foreach|format|goto|if|last|local|my|next|" +
+         "no|package|parent|redo|require|scalar|sub|unless|until|while|use|vars"
     );
 
-    var buildinConstants = lang.arrayToMap(
-        ("ARGV|ENV|INC|SIG").split("|")
-    );
+    var buildinConstants = ("ARGV|ENV|INC|SIG");
 
-    var builtinFunctions = lang.arrayToMap(
-        ("getprotobynumber|getprotobyname|getservbyname|gethostbyaddr|" +
+    var builtinFunctions = (
+        "getprotobynumber|getprotobyname|getservbyname|gethostbyaddr|" +
          "gethostbyname|getservbyport|getnetbyaddr|getnetbyname|getsockname|" +
          "getpeername|setpriority|getprotoent|setprotoent|getpriority|" +
          "endprotoent|getservent|setservent|endservent|sethostent|socketpair|" +
@@ -735,17 +679,21 @@ var PerlHighlightRules = function() {
          "join|open|tell|pipe|exit|glob|warn|each|bind|sort|pack|eval|push|" +
          "keys|getc|kill|seek|sqrt|send|wait|rand|tied|read|time|exec|recv|" +
          "eof|chr|int|ord|exp|pos|pop|sin|log|abs|oct|hex|tie|cos|vec|END|ref|" +
-         "map|die|uc|lc|do").split("|")
+         "map|die|uc|lc|do"
     );
 
-    // regexp must not have capturing parentheses. Use (?:) instead.
-    // regexps are ordered -> the first match is used
+    var keywordMapper = this.createKeywordMapper({
+        "keyword": keywords,
+        "constant.language": buildinConstants,
+        "support.function": builtinFunctions
+    }, "identifier");
 
     this.$rules = {
         "start" : [
             {
-                token : "comment",
-                regex : "#.*$"
+                token : "comment.doc",
+                regex : "^=(?:begin|item)\\b",
+                next : "block_comment"
             }, {
                 token : "string.regexp",
                 regex : "[/](?:(?:\\[(?:\\\\]|[^\\]])+\\])|(?:\\\\/|[^\\]/]))*[/]\\w*\\s*(?=[).,;]|$)"
@@ -754,7 +702,6 @@ var PerlHighlightRules = function() {
                 regex : '["](?:(?:\\\\.)|(?:[^"\\\\]))*?["]'
             }, {
                 token : "string", // multi line string start
-                merge : true,
                 regex : '["].*\\\\$',
                 next : "qqstring"
             }, {
@@ -762,7 +709,6 @@ var PerlHighlightRules = function() {
                 regex : "['](?:(?:\\\\.)|(?:[^'\\\\]))*?[']"
             }, {
                 token : "string", // multi line string start
-                merge : true,
                 regex : "['].*\\\\$",
                 next : "qstring"
             }, {
@@ -772,20 +718,14 @@ var PerlHighlightRules = function() {
                 token : "constant.numeric", // float
                 regex : "[+-]?\\d+(?:(?:\\.\\d*)?(?:[eE][+-]?\\d+)?)?\\b"
             }, {
-                token : function(value) {
-                    if (keywords.hasOwnProperty(value))
-                        return "keyword";
-                    else if (buildinConstants.hasOwnProperty(value))
-                        return "constant.language";
-                    else if (builtinFunctions.hasOwnProperty(value))
-                        return "support.function";
-                    else
-                        return "identifier";
-                },
+                token : keywordMapper,
                 regex : "[a-zA-Z_$][a-zA-Z0-9_$]*\\b"
             }, {
                 token : "keyword.operator",
-                regex : "\\.\\.\\.|\\|\\|=|>>=|<<=|<=>|&&=|=>|!~|\\^=|&=|\\|=|\\.=|x=|%=|\\/=|\\*=|\\-=|\\+=|=~|\\*\\*|\\-\\-|\\.\\.|\\|\\||&&|\\+\\+|\\->|!=|==|>=|<=|>>|<<|,|=|\\?\\:|\\^|\\||x|%|\\/|\\*|<|&|\\\\|~|!|>|\\.|\\-|\\+|\\-C|\\-b|\\-S|\\-u|\\-t|\\-p|\\-l|\\-d|\\-f|\\-g|\\-s|\\-z|\\-k|\\-e|\\-O|\\-T|\\-B|\\-M|\\-A|\\-X|\\-W|\\-c|\\-R|\\-o|\\-x|\\-w|\\-r|\\b(?:and|cmp|eq|ge|gt|le|lt|ne|not|or|xor)"
+                regex : "%#|\\$#|\\.\\.\\.|\\|\\|=|>>=|<<=|<=>|&&=|=>|!~|\\^=|&=|\\|=|\\.=|x=|%=|\\/=|\\*=|\\-=|\\+=|=~|\\*\\*|\\-\\-|\\.\\.|\\|\\||&&|\\+\\+|\\->|!=|==|>=|<=|>>|<<|,|=|\\?\\:|\\^|\\||x|%|\\/|\\*|<|&|\\\\|~|!|>|\\.|\\-|\\+|\\-C|\\-b|\\-S|\\-u|\\-t|\\-p|\\-l|\\-d|\\-f|\\-g|\\-s|\\-z|\\-k|\\-e|\\-O|\\-T|\\-B|\\-M|\\-A|\\-X|\\-W|\\-c|\\-R|\\-o|\\-x|\\-w|\\-r|\\b(?:and|cmp|eq|ge|gt|le|lt|ne|not|or|xor)"
+            }, {
+                token : "comment",
+                regex : "#.*$"
             }, {
                 token : "lparen",
                 regex : "[[({]"
@@ -804,7 +744,6 @@ var PerlHighlightRules = function() {
                 next : "start"
             }, {
                 token : "string",
-                merge : true,
                 regex : '.+'
             }
         ],
@@ -815,8 +754,17 @@ var PerlHighlightRules = function() {
                 next : "start"
             }, {
                 token : "string",
-                merge : true,
                 regex : '.+'
+            }
+        ],
+        "block_comment": [
+            {
+                token: "comment.doc", 
+                regex: "^=cut\\b",
+                next: "start"
+            },
+            {
+                defaultToken: "comment.doc"
             }
         ]
     };
@@ -827,39 +775,40 @@ oop.inherits(PerlHighlightRules, TextHighlightRules);
 exports.PerlHighlightRules = PerlHighlightRules;
 });
 
-define('ace/mode/python_highlight_rules', ['require', 'exports', 'module' , 'ace/lib/oop', 'ace/lib/lang', 'ace/mode/text_highlight_rules'], function(require, exports, module) {
+define('ace/mode/python_highlight_rules', ['require', 'exports', 'module' , 'ace/lib/oop', 'ace/mode/text_highlight_rules'], function(require, exports, module) {
 
 
 var oop = require("../lib/oop");
-var lang = require("../lib/lang");
 var TextHighlightRules = require("./text_highlight_rules").TextHighlightRules;
 
 var PythonHighlightRules = function() {
 
-    var keywords = lang.arrayToMap(
-        ("and|as|assert|break|class|continue|def|del|elif|else|except|exec|" +
+    var keywords = (
+        "and|as|assert|break|class|continue|def|del|elif|else|except|exec|" +
         "finally|for|from|global|if|import|in|is|lambda|not|or|pass|print|" +
-        "raise|return|try|while|with|yield").split("|")
+        "raise|return|try|while|with|yield"
     );
 
-    var builtinConstants = lang.arrayToMap(
-        ("True|False|None|NotImplemented|Ellipsis|__debug__").split("|")
+    var builtinConstants = (
+        "True|False|None|NotImplemented|Ellipsis|__debug__"
     );
 
-    var builtinFunctions = lang.arrayToMap(
-        ("abs|divmod|input|open|staticmethod|all|enumerate|int|ord|str|any|" +
+    var builtinFunctions = (
+        "abs|divmod|input|open|staticmethod|all|enumerate|int|ord|str|any|" +
         "eval|isinstance|pow|sum|basestring|execfile|issubclass|print|super|" +
         "binfile|iter|property|tuple|bool|filter|len|range|type|bytearray|" +
         "float|list|raw_input|unichr|callable|format|locals|reduce|unicode|" +
         "chr|frozenset|long|reload|vars|classmethod|getattr|map|repr|xrange|" +
         "cmp|globals|max|reversed|zip|compile|hasattr|memoryview|round|" +
         "__import__|complex|hash|min|set|apply|delattr|help|next|setattr|" +
-        "buffer|dict|hex|object|slice|coerce|dir|id|oct|sorted|intern").split("|")
+        "buffer|dict|hex|object|slice|coerce|dir|id|oct|sorted|intern"
     );
-
-    var futureReserved = lang.arrayToMap(
-        ("").split("|")
-    );
+    var keywordMapper = this.createKeywordMapper({
+        "invalid.deprecated": "debugger",
+        "support.function": builtinFunctions,
+        "constant.language": builtinConstants,
+        "keyword": keywords
+    }, "identifier");
 
     var strPre = "(?:r|u|ur|R|U|UR|Ur|uR)?";
 
@@ -876,32 +825,28 @@ var PythonHighlightRules = function() {
     var exponentFloat = "(?:(?:" + pointFloat + "|" +  intPart + ")" + exponent + ")";
     var floatNumber = "(?:" + exponentFloat + "|" + pointFloat + ")";
 
+    var stringEscape =  "\\\\(x[0-9A-Fa-f]{2}|[0-7]{3}|[\\\\abfnrtv'\"]|U[0-9A-Fa-f]{8}|u[0-9A-Fa-f]{4})";
+
     this.$rules = {
         "start" : [ {
             token : "comment",
             regex : "#.*$"
         }, {
-            token : "string",           // """ string
-            regex : strPre + '"{3}(?:[^\\\\]|\\\\.)*?"{3}'
-        }, {
             token : "string",           // multi line """ string start
-            merge : true,
-            regex : strPre + '"{3}.*$',
-            next : "qqstring"
+            regex : strPre + '"{3}',
+            next : "qqstring3"
         }, {
             token : "string",           // " string
-            regex : strPre + '"(?:[^\\\\]|\\\\.)*?"'
-        }, {
-            token : "string",           // ''' string
-            regex : strPre + "'{3}(?:[^\\\\]|\\\\.)*?'{3}"
+            regex : strPre + '"(?=.)',
+            next : "qqstring"
         }, {
             token : "string",           // multi line ''' string start
-            merge : true,
-            regex : strPre + "'{3}.*$",
-            next : "qstring"
+            regex : strPre + "'{3}",
+            next : "qstring3"
         }, {
             token : "string",           // ' string
-            regex : strPre + "'(?:[^\\\\]|\\\\.)*?'"
+            regex : strPre + "'(?=.)",
+            next : "qstring"
         }, {
             token : "constant.numeric", // imaginary
             regex : "(?:" + floatNumber + "|\\d+)[jJ]\\b"
@@ -915,20 +860,7 @@ var PythonHighlightRules = function() {
             token : "constant.numeric", // integer
             regex : integer + "\\b"
         }, {
-            token : function(value) {
-                if (keywords.hasOwnProperty(value))
-                    return "keyword";
-                else if (builtinConstants.hasOwnProperty(value))
-                    return "constant.language";
-                else if (futureReserved.hasOwnProperty(value))
-                    return "invalid.illegal";
-                else if (builtinFunctions.hasOwnProperty(value))
-                    return "support.function";
-                else if (value == "debugger")
-                    return "invalid.deprecated";
-                else
-                    return "identifier";
-            },
+            token : keywordMapper,
             regex : "[a-zA-Z_$][a-zA-Z0-9_$]*\\b"
         }, {
             token : "keyword.operator",
@@ -943,24 +875,54 @@ var PythonHighlightRules = function() {
             token : "text",
             regex : "\\s+"
         } ],
-        "qqstring" : [ {
+        "qqstring3" : [ {
+            token : "constant.language.escape",
+            regex : stringEscape
+        }, {
             token : "string", // multi line """ string end
-            regex : '(?:[^\\\\]|\\\\.)*?"{3}',
+            regex : '"{3}',
             next : "start"
         }, {
-            token : "string",
-            merge : true,
-            regex : '.+'
+            defaultToken : "string"
         } ],
-        "qstring" : [ {
+        "qstring3" : [ {
+            token : "constant.language.escape",
+            regex : stringEscape
+        }, {
             token : "string",  // multi line ''' string end
-            regex : "(?:[^\\\\]|\\\\.)*?'{3}",
+            regex : "'{3}",
             next : "start"
         }, {
+            defaultToken : "string"
+        } ],
+        "qqstring" : [{
+            token : "constant.language.escape",
+            regex : stringEscape
+        }, {
             token : "string",
-            merge : true,
-            regex : '.+'
-        } ]
+            regex : "\\\\$",
+            next  : "qqstring"
+        }, {
+            token : "string",
+            regex : '"|$',
+            next  : "start"
+        }, {
+            defaultToken: "string"
+        }],
+        "qstring" : [{
+            token : "constant.language.escape",
+            regex : stringEscape
+        }, {
+            token : "string",
+            regex : "\\\\$",
+            next  : "qstring"
+        }, {
+            token : "string",
+            regex : "'|$",
+            next  : "start"
+        }, {
+            defaultToken: "string"
+        }]
     };
 };
 

@@ -1,48 +1,40 @@
 /* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ * Distributed under the BSD license:
  *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is Ajax.org Code Editor (ACE).
- *
- * The Initial Developer of the Original Code is
- * Ajax.org B.V.
- * Portions created by the Initial Developer are Copyright (C) 2010
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *      Sergi Mansilla <sergi AT c9 DOT io>
- *      Harutyun Amirjanyan <harutyun AT c9 DOT io>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
+ * Copyright (c) 2010, Ajax.org B.V.
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *     * Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in the
+ *       documentation and/or other materials provided with the distribution.
+ *     * Neither the name of Ajax.org B.V. nor the
+ *       names of its contributors may be used to endorse or promote products
+ *       derived from this software without specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL AJAX.ORG B.V. BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * ***** END LICENSE BLOCK ***** */
 
-define('ace/keyboard/vim', ['require', 'exports', 'module' , 'ace/lib/keys', 'ace/keyboard/vim/commands', 'ace/keyboard/vim/maps/util'], function(require, exports, module) {
+define('ace/keyboard/vim', ['require', 'exports', 'module' , 'ace/keyboard/vim/commands', 'ace/keyboard/vim/maps/util', 'ace/lib/useragent'], function(require, exports, module) {
 
 
-var keyUtil = require("../lib/keys");
 var cmds = require("./vim/commands");
 var coreCommands = cmds.coreCommands;
 var util = require("./vim/maps/util");
+var useragent = require("../lib/useragent");
 
 var startCommands = {
     "i": {
@@ -66,33 +58,96 @@ var startCommands = {
 };
 
 exports.handler = {
+	$id: "ace/keyboard/vim",
+    handleMacRepeat: function(data, hashId, key) {
+        if (hashId == -1) {
+            data.inputChar = key;
+            data.lastEvent = "input";
+        } else if (data.inputChar && data.$lastHash == hashId && data.$lastKey == key) {
+            if (data.lastEvent == "input") {
+                data.lastEvent = "input1";
+            } else if (data.lastEvent == "input1") {
+                return true;
+            }
+        } else {
+            data.$lastHash = hashId;
+            data.$lastKey = key;
+            data.lastEvent = "keypress";
+        }
+    },
+    updateMacCompositionHandlers: function(editor, enable) {
+        var onCompositionUpdateOverride = function(text) {
+            if (util.currentMode !== "insert") {
+                var el = this.textInput.getElement();
+                el.blur();
+                el.focus();
+                el.value = text;
+            } else {
+                this.onCompositionUpdateOrig(text);
+            }
+        };
+        var onCompositionStartOverride = function(text) {
+            if (util.currentMode === "insert") {            
+                this.onCompositionStartOrig(text);
+            }
+        }
+        if (enable) {
+            if (!editor.onCompositionUpdateOrig) {
+                editor.onCompositionUpdateOrig = editor.onCompositionUpdate;
+                editor.onCompositionUpdate = onCompositionUpdateOverride;
+                editor.onCompositionStartOrig = editor.onCompositionStart;
+                editor.onCompositionStart = onCompositionStartOverride;
+            }
+        } else {
+            if (editor.onCompositionUpdateOrig) {
+                editor.onCompositionUpdate = editor.onCompositionUpdateOrig;
+                editor.onCompositionUpdateOrig = null;
+                editor.onCompositionStart = editor.onCompositionStartOrig;
+                editor.onCompositionStartOrig = null;
+            }
+        }
+    },
+
     handleKeyboard: function(data, hashId, key, keyCode, e) {
-        // ignore command keys (shift, ctrl etc.)
         if (hashId != 0 && (key == "" || key == "\x00"))
             return null;
-
+        
+        var editor = data.editor;
+        
         if (hashId == 1)
             key = "ctrl-" + key;
-
-        if (data.state == "start") {
-            if (hashId == -1 || hashId == 1) {
+        if (key == "ctrl-c") {
+            if (!useragent.isMac && editor.getCopyText()) {
+                editor.once("copy", function() {
+                    if (data.state == "start")
+                        coreCommands.stop.exec(editor);
+                    else
+                        editor.selection.clearSelection();
+                });
+                return {command: "null", passEvent: true};
+            }
+            return {command: coreCommands.stop};            
+        } else if ((key == "esc" && hashId == 0) || key == "ctrl-[") {
+            return {command: coreCommands.stop};
+        } else if (data.state == "start") {
+            if (useragent.isMac && this.handleMacRepeat(data, hashId, key)) {
+                hashId = -1;
+                key = data.inputChar;
+            }
+            
+            if (hashId == -1 || hashId == 1 || hashId == 0 && key.length > 1) {
                 if (cmds.inputBuffer.idle && startCommands[key])
                     return startCommands[key];
-
-                return { command: {
-                    exec: function(editor) {cmds.inputBuffer.push(editor, key);}
-                } };
-            } // wait for input
-            else if (key.length == 1 && (hashId == 0 || hashId == 4)) { //no modifier || shift
+                cmds.inputBuffer.push(editor, key);
+                return {command: "null", passEvent: false}; 
+            } // if no modifier || shift: wait for input.
+            else if (key.length == 1 && (hashId == 0 || hashId == 4)) {
                 return {command: "null", passEvent: true};
-            } else if (key == "esc") {
+            } else if (key == "esc" && hashId == 0) {
                 return {command: coreCommands.stop};
             }
         } else {
-            if (key == "esc" || key == "ctrl-[") {
-                data.state = "start";
-                return {command: coreCommands.stop};
-            } else if (key == "ctrl-w") {
+            if (key == "ctrl-w") {
                 return {command: "removewordleft"};
             }
         }
@@ -102,15 +157,26 @@ exports.handler = {
         editor.on("click", exports.onCursorMove);
         if (util.currentMode !== "insert")
             cmds.coreCommands.stop.exec(editor);
+        editor.$vimModeHandler = this;
+        
+        this.updateMacCompositionHandlers(editor, true);
     },
 
     detach: function(editor) {
         editor.removeListener("click", exports.onCursorMove);
         util.noMode(editor);
         util.currentMode = "normal";
+        this.updateMacCompositionHandlers(editor, false);
     },
 
-    actions: cmds.actions
+    actions: cmds.actions,
+    getStatusText: function() {
+        if (util.currentMode == "insert")
+            return "INSERT";
+        if (util.onVisualMode)
+            return (util.onVisualLineMode ? "VISUAL LINE " : "VISUAL ") + cmds.inputBuffer.status;
+        return cmds.inputBuffer.status;
+    }
 };
 
 
@@ -121,10 +187,11 @@ exports.onCursorMove = function(e) {
 
 });
  
-define('ace/keyboard/vim/commands', ['require', 'exports', 'module' , 'ace/keyboard/vim/maps/util', 'ace/keyboard/vim/maps/motions', 'ace/keyboard/vim/maps/operators', 'ace/keyboard/vim/maps/aliases', 'ace/keyboard/vim/registers'], function(require, exports, module) {
+define('ace/keyboard/vim/commands', ['require', 'exports', 'module' , 'ace/lib/lang', 'ace/keyboard/vim/maps/util', 'ace/keyboard/vim/maps/motions', 'ace/keyboard/vim/maps/operators', 'ace/keyboard/vim/maps/aliases', 'ace/keyboard/vim/registers'], function(require, exports, module) {
 
 "never use strict";
 
+var lang = require("../../lib/lang");
 var util = require("./maps/util");
 var motions = require("./maps/motions");
 var operators = require("./maps/operators");
@@ -167,13 +234,25 @@ var actions = exports.actions = {
         fn: function(editor, range, count, param) {
             switch (param) {
                 case "z":
-                    editor.alignCursor(null, 0.5);
+                    editor.renderer.alignCursor(null, 0.5);
                     break;
                 case "t":
-                    editor.alignCursor(null, 0);
+                    editor.renderer.alignCursor(null, 0);
                     break;
                 case "b":
-                    editor.alignCursor(null, 1);
+                    editor.renderer.alignCursor(null, 1);
+                    break;
+                case "c":
+                    editor.session.onFoldWidgetClick(range.start.row, {domEvent:{target :{}}});
+                    break;
+                case "o":
+                    editor.session.onFoldWidgetClick(range.start.row, {domEvent:{target :{}}});
+                    break;
+                case "C":
+                    editor.session.foldAll();
+                    break;
+                case "O":
+                    editor.session.unfold();
                     break;
             }
         }
@@ -182,6 +261,8 @@ var actions = exports.actions = {
         param: true,
         fn: function(editor, range, count, param) {
             if (param && param.length) {
+                if (param.length > 1)
+                    param = param == "return" ? "\n" : param == "tab" ? "\t" : param;
                 repeat(function() { editor.insert(param); }, count || 1);
                 editor.navigateLeft();
             }
@@ -226,6 +307,18 @@ var actions = exports.actions = {
             editor.selection.setSelectionRange(r, true);
         }
     },
+    "m": {
+        param: true,
+        fn: function(editor, range, count, param) {
+            var s =  editor.session;
+            var markers = s.vimMarkers || (s.vimMarkers = {});
+            var c = editor.getCursorPosition();
+            if (!markers[param]) {
+                markers[param] = editor.session.doc.createAnchor(c);
+            }
+            markers[param].setPosition(c.row, c.column, true);
+        }
+    },
     "n": {
         fn: function(editor, range, count, param) {
             var options = editor.getLastSearchOptions();
@@ -264,8 +357,6 @@ var actions = exports.actions = {
     },
     "V": {
         fn: function(editor, range, count, param) {
-            //editor.selection.selectLine();
-            //editor.selection.selectLeft();
             var row = editor.getCursorPosition().row;
             editor.selection.clearSelection();
             editor.selection.moveCursorTo(row, 0);
@@ -288,13 +379,14 @@ var actions = exports.actions = {
             editor.setOverwrite(false);
             if (defaultReg.isLine) {
                 var pos = editor.getCursorPosition();
-                var lines = defaultReg.text.split("\n");
-                editor.session.getDocument().insertLines(pos.row + 1, lines);
+                pos.column = editor.session.getLine(pos.row).length;
+                var text = lang.stringRepeat("\n" + defaultReg.text, count || 1);
+                editor.session.insert(pos, text);
                 editor.moveCursorTo(pos.row + 1, 0);
             }
             else {
                 editor.navigateRight();
-                editor.insert(defaultReg.text);
+                editor.insert(lang.stringRepeat(defaultReg.text, count || 1));
                 editor.navigateLeft();
             }
             editor.setOverwrite(true);
@@ -308,12 +400,13 @@ var actions = exports.actions = {
 
             if (defaultReg.isLine) {
                 var pos = editor.getCursorPosition();
-                var lines = defaultReg.text.split("\n");
-                editor.session.getDocument().insertLines(pos.row, lines);
-                editor.moveCursorTo(pos.row, 0);
+                pos.column = 0;
+                var text = lang.stringRepeat(defaultReg.text + "\n", count || 1);
+                editor.session.insert(pos, text);
+                editor.moveCursorToPosition(pos);
             }
             else {
-                editor.insert(defaultReg.text);
+                editor.insert(lang.stringRepeat(defaultReg.text, count || 1));
             }
             editor.setOverwrite(true);
             editor.selection.clearSelection();
@@ -361,17 +454,23 @@ var actions = exports.actions = {
     },
     ":": {
         fn: function(editor, range, count, param) {
-            // not implemented
+            var val = ":";
+            if (count > 1)
+                val = ".,.+" + count + val;
+            if (editor.showCommandLine)
+                editor.showCommandLine(val);
         }
     },
     "/": {
         fn: function(editor, range, count, param) {
-            // not implemented
+            if (editor.showCommandLine)
+                editor.showCommandLine("/");
         }
     },
     "?": {
         fn: function(editor, range, count, param) {
-            // not implemented
+            if (editor.showCommandLine)
+                editor.showCommandLine("?");
         }
     },
     ".": {
@@ -381,88 +480,112 @@ var actions = exports.actions = {
             if (previous) // If there is a previous action
                 inputBuffer.exec(editor, previous.action, previous.param);
         }
+    },
+    "ctrl-x": {
+        fn: function(editor, range, count, param) {
+            editor.modifyNumber(-(count || 1));
+        }
+    },
+    "ctrl-a": {
+        fn: function(editor, range, count, param) {
+            editor.modifyNumber(count || 1);
+        }
     }
 };
 
 var inputBuffer = exports.inputBuffer = {
     accepting: [NUMBER, OPERATOR, MOTION, ACTION],
     currentCmd: null,
-    //currentMode: 0,
     currentCount: "",
-
-    // Types
+    status: "",
     operator: null,
     motion: null,
 
     lastInsertCommands: [],
 
-    push: function(editor, char, keyId) {
+    push: function(editor, ch, keyId) {
+        var status = this.status;
+        var isKeyHandled = true;
         this.idle = false;
         var wObj = this.waitingForParam;
+        if (/^numpad\d+$/i.test(ch))
+            ch = ch.substr(6);
+            
         if (wObj) {
-            this.exec(editor, wObj, char);
+            this.exec(editor, wObj, ch);
         }
-        // If input is a number (that doesn't start with 0)
-        else if (!(char === "0" && !this.currentCount.length) &&
-            (char.match(/^\d+$/) && this.isAccepting(NUMBER))) {
-            // Assuming that char is always of type String, and not Number
-            this.currentCount += char;
+        else if (!(ch === "0" && !this.currentCount.length) &&
+            (/^\d+$/.test(ch) && this.isAccepting(NUMBER))) {
+            this.currentCount += ch;
             this.currentCmd = NUMBER;
             this.accepting = [NUMBER, OPERATOR, MOTION, ACTION];
         }
-        else if (!this.operator && this.isAccepting(OPERATOR) && operators[char]) {
+        else if (!this.operator && this.isAccepting(OPERATOR) && operators[ch]) {
             this.operator = {
-                char: char,
+                ch: ch,
                 count: this.getCount()
             };
             this.currentCmd = OPERATOR;
             this.accepting = [NUMBER, MOTION, ACTION];
             this.exec(editor, { operator: this.operator });
         }
-        else if (motions[char] && this.isAccepting(MOTION)) {
+        else if (motions[ch] && this.isAccepting(MOTION)) {
             this.currentCmd = MOTION;
 
             var ctx = {
                 operator: this.operator,
                 motion: {
-                    char: char,
+                    ch: ch,
                     count: this.getCount()
                 }
             };
 
-            if (motions[char].param)
+            if (motions[ch].param)
                 this.waitForParam(ctx);
             else
                 this.exec(editor, ctx);
         }
-        else if (alias[char] && this.isAccepting(MOTION)) {
-            alias[char].operator.count = this.getCount();
-            this.exec(editor, alias[char]);
+        else if (alias[ch] && this.isAccepting(MOTION)) {
+            alias[ch].operator.count = this.getCount();
+            this.exec(editor, alias[ch]);
         }
-        else if (actions[char] && this.isAccepting(ACTION)) {
+        else if (actions[ch] && this.isAccepting(ACTION)) {
             var actionObj = {
                 action: {
-                    fn: actions[char].fn,
+                    fn: actions[ch].fn,
                     count: this.getCount()
                 }
             };
 
-            if (actions[char].param) {
+            if (actions[ch].param) {
                 this.waitForParam(actionObj);
             }
             else {
                 this.exec(editor, actionObj);
             }
 
-            if (actions[char].acceptsMotion)
+            if (actions[ch].acceptsMotion)
                 this.idle = false;
         }
         else if (this.operator) {
-            this.exec(editor, { operator: this.operator }, char);
+            this.operator.count = this.getCount();
+            this.exec(editor, { operator: this.operator }, ch);
         }
         else {
+            isKeyHandled = ch.length == 1;
             this.reset();
         }
+        
+        if (this.waitingForParam || this.motion || this.operator) {
+            this.status += ch;
+        } else if (this.currentCount) {
+            this.status = this.currentCount;
+        } else if (this.status) {
+            this.status = "";
+        }
+        if (this.status != status)
+            editor._emit("changeStatus");
+        return isKeyHandled;
     },
 
     waitForParam: function(cmd) {
@@ -491,18 +614,14 @@ var inputBuffer = exports.inputBuffer = {
         }
 
         if (o && !editor.selection.isEmpty()) {
-            if (operators[o.char].selFn) {
-                operators[o.char].selFn(editor, editor.getSelectionRange(), o.count, param);
+            if (operators[o.ch].selFn) {
+                operators[o.ch].selFn(editor, editor.getSelectionRange(), o.count, param);
                 this.reset();
             }
             return;
         }
-
-        // There is an operator, but no motion or action. We try to pass the
-        // current char to the operator to see if it responds to it (an example
-        // of this is the 'dd' operator).
         else if (!m && !a && o && param) {
-            operators[o.char].fn(editor, null, o.count, param);
+            operators[o.ch].fn(editor, null, o.count, param);
             this.reset();
         }
         else if (m) {
@@ -515,7 +634,7 @@ var inputBuffer = exports.inputBuffer = {
                 }
             };
 
-            var motionObj = motions[m.char];
+            var motionObj = motions[m.ch];
             var selectable = motionObj.sel;
 
             if (!o) {
@@ -527,7 +646,7 @@ var inputBuffer = exports.inputBuffer = {
             else if (selectable) {
                 repeat(function() {
                     run(motionObj.sel);
-                    operators[o.char].fn(editor, editor.getSelectionRange(), o.count, param);
+                    operators[o.ch].fn(editor, editor.getSelectionRange(), o.count, param);
                 }, o.count || 1);
             }
             this.reset();
@@ -547,6 +666,7 @@ var inputBuffer = exports.inputBuffer = {
         this.operator = null;
         this.motion = null;
         this.currentCount = "";
+        this.status = "";
         this.accepting = [NUMBER, OPERATOR, MOTION, ACTION];
         this.idle = true;
         this.waitingForParam = null;
@@ -571,8 +691,6 @@ exports.coreCommands = {
             setPreviousCommand(startBeginning);
         }
     },
-    // Stop Insert mode as soon as possible. Works like typing <Esc> in
-    // insert mode.
     stop: {
         exec: function stop(editor) {
             inputBuffer.reset();
@@ -643,7 +761,7 @@ define('ace/keyboard/vim/maps/util', ['require', 'exports', 'module' , 'ace/keyb
 var registers = require("../registers");
 
 var dom = require("../../../lib/dom");
-dom.importCssString('.insert-mode. ace_cursor{\
+dom.importCssString('.insert-mode .ace_cursor{\
     border-left: 2px solid #333333;\
 }\
 .ace_dark.insert-mode .ace_cursor{\
@@ -663,12 +781,11 @@ module.exports = {
         editor.unsetStyle('insert-mode');
         editor.unsetStyle('normal-mode');
         if (editor.commands.recording)
-            editor.commands.toggleRecording();
+            editor.commands.toggleRecording(editor);
         editor.setOverwrite(false);
     },
     insertMode: function(editor) {
         this.currentMode = 'insert';
-        // Switch editor to insert mode
         editor.setStyle('insert-mode');
         editor.unsetStyle('normal-mode');
 
@@ -678,20 +795,17 @@ module.exports = {
         this.onVisualMode = false;
         this.onVisualLineMode = false;
         if(this.onInsertReplaySequence) {
-            // Ok, we're apparently replaying ("."), so let's do it
             editor.commands.macro = this.onInsertReplaySequence;
             editor.commands.replay(editor);
             this.onInsertReplaySequence = null;
             this.normalMode(editor);
         } else {
-            editor._emit("vimMode", "insert");
-            // Record any movements, insertions in insert mode
+            editor._emit("changeStatus");
             if(!editor.commands.recording)
-                editor.commands.toggleRecording();
+                editor.commands.toggleRecording(editor);
         }
     },
     normalMode: function(editor) {
-        // Switch editor to normal mode
         this.currentMode = 'normal';
 
         editor.unsetStyle('insert-mode');
@@ -710,10 +824,9 @@ module.exports = {
         editor.keyBinding.$data.state = "start";
         this.onVisualMode = false;
         this.onVisualLineMode = false;
-        editor._emit("changeVimMode", "normal");
-        // Save recorded keystrokes
+        editor._emit("changeStatus");
         if (editor.commands.recording) {
-            editor.commands.toggleRecording();
+            editor.commands.toggleRecording(editor);
             return editor.commands.macro;
         }
         else {
@@ -732,7 +845,7 @@ module.exports = {
         editor.setStyle('insert-mode');
         editor.unsetStyle('normal-mode');
 
-        editor._emit("changeVimMode", "visual");
+        editor._emit("changeStatus");
         if (lineMode) {
             this.onVisualLineMode = true;
         } else {
@@ -740,24 +853,24 @@ module.exports = {
             this.onVisualLineMode = false;
         }
     },
-    getRightNthChar: function(editor, cursor, char, n) {
+    getRightNthChar: function(editor, cursor, ch, n) {
         var line = editor.getSession().getLine(cursor.row);
-        var matches = line.substr(cursor.column + 1).split(char);
+        var matches = line.substr(cursor.column + 1).split(ch);
 
-        return n < matches.length ? matches.slice(0, n).join(char).length : null;
+        return n < matches.length ? matches.slice(0, n).join(ch).length : null;
     },
-    getLeftNthChar: function(editor, cursor, char, n) {
+    getLeftNthChar: function(editor, cursor, ch, n) {
         var line = editor.getSession().getLine(cursor.row);
-        var matches = line.substr(0, cursor.column).split(char);
+        var matches = line.substr(0, cursor.column).split(ch);
 
-        return n < matches.length ? matches.slice(-1 * n).join(char).length : null;
+        return n < matches.length ? matches.slice(-1 * n).join(ch).length : null;
     },
-    toRealChar: function(char) {
-        if (char.length === 1)
-            return char;
+    toRealChar: function(ch) {
+        if (ch.length === 1)
+            return ch;
 
-        if (/^shift-./.test(char))
-            return char[char.length - 1].toUpperCase();
+        if (/^shift-./.test(ch))
+            return ch[ch.length - 1].toUpperCase();
         else
             return "";
     },
@@ -786,10 +899,10 @@ module.exports = {
 };
 
 });
- 
-"use strict"
+
 
 define('ace/keyboard/vim/maps/motions', ['require', 'exports', 'module' , 'ace/keyboard/vim/maps/util', 'ace/search', 'ace/range'], function(require, exports, module) {
+
 
 var util = require("./util");
 
@@ -801,42 +914,27 @@ var keepScrollPosition = function(editor, fn) {
     editor.renderer.scrollToRow(editor.getCursorPosition().row - diff);
 };
 
-function Motion(getRange, type){
-    if (type == 'extend')
-        var extend = true;
-    else
-        var reverse = type;
-
-    this.nav = function(editor) {
-        var r = getRange(editor);
-        if (!r)
+function Motion(m) {
+    if (typeof m == "function") {
+        var getPos = m;
+        m = this;
+    } else {
+        var getPos = m.getPos;
+    }
+    m.nav = function(editor, range, count, param) {
+        var a = getPos(editor, range, count, param, false);
+        if (!a)
             return;
-        if (!r.end)
-            var a = r;
-        else if (reverse)
-            var a = r.start;
-        else
-            var a = r.end;
-
         editor.clearSelection();
         editor.moveCursorTo(a.row, a.column);
-    }
-    this.sel = function(editor){
-        var r = getRange(editor);
-        if (!r)
+    };
+    m.sel = function(editor, range, count, param) {
+        var a = getPos(editor, range, count, param, true);
+        if (!a)
             return;
-        if (extend)
-            return editor.selection.setSelectionRange(r);
-
-        if (!r.end)
-            var a = r;
-        else if (reverse)
-            var a = r.start;
-        else
-            var a = r.end;
-
         editor.selection.selectTo(a.row, a.column);
-    }
+    };
+    return m;
 }
 
 var nonWordRe = /[\s.\/\\()\"'-:,.;<>~!@#$%^&*|+=\[\]{}`~?]/;
@@ -849,20 +947,18 @@ var StringStream = function(editor, cursor) {
     this.row = cursor.row;
     this.col = cursor.column;
     var line = editor.session.getLine(this.row);
-    var maxRow = editor.session.getLength()
-    this.ch = line[this.col] || '\n'
+    var maxRow = editor.session.getLength();
+    this.ch = line[this.col] || '\n';
     this.skippedLines = 0;
 
     this.next = function() {
         this.ch = line[++this.col] || this.handleNewLine(1);
-        //this.debug()
         return this.ch;
-    }
+    };
     this.prev = function() {
         this.ch = line[--this.col] || this.handleNewLine(-1);
-        //this.debug()
         return this.ch;
-    }
+    };
     this.peek = function(dir) {
         var ch = line[this.col + dir];
         if (ch)
@@ -872,7 +968,7 @@ var StringStream = function(editor, cursor) {
         if (this.col == line.length - 1)
             return '\n';
         return editor.session.getLine(this.row + 1)[0] || '\n';
-    }
+    };
 
     this.handleNewLine = function(dir) {
         if (dir == 1){
@@ -887,7 +983,7 @@ var StringStream = function(editor, cursor) {
             return line[0] || '\n';
         }
         if (dir == -1) {
-            if (this.row == 0)
+            if (this.row === 0)
                 return '';
             this.row --;
             line = editor.session.getLine(this.row);
@@ -895,13 +991,13 @@ var StringStream = function(editor, cursor) {
             this.skippedLines--;
             return '\n';
         }
-    }
+    };
     this.debug = function() {
         console.log(line.substring(0, this.col)+'|'+this.ch+'\''+this.col+'\''+line.substr(this.col+1));
-    }
-}
+    };
+};
 
-var Search = require("ace/search").Search;
+var Search = require("../../../search").Search;
 var search = new Search();
 
 function find(editor, needle, dir) {
@@ -910,7 +1006,9 @@ function find(editor, needle, dir) {
     return search.find(editor.session);
 }
 
-var Range = require("ace/range").Range;
+var Range = require("../../../range").Range;
+
+var LAST_SEARCH_MOTION = {};
 
 module.exports = {
     "w": new Motion(function(editor) {
@@ -938,7 +1036,7 @@ module.exports = {
         else
             str.next();
 
-        return {column: str.col, row: str.row}
+        return {column: str.col, row: str.row};
     }),
     "b": new Motion(function(editor) {
         var str = new StringStream(editor);
@@ -958,7 +1056,7 @@ module.exports = {
         return {column: str.col, row: str.row};
     }),
     "B": new Motion(function(editor) {
-        var str = new StringStream(editor)
+        var str = new StringStream(editor);
         str.prev();
         while(str.ch && !(!whiteRe.test(str.ch) && whiteRe.test(str.peek(-1))) && str.skippedLines > -2)
             str.prev();
@@ -967,7 +1065,7 @@ module.exports = {
             str.next();
 
         return {column: str.col, row: str.row};
-    }, true),
+    }),
     "e": new Motion(function(editor) {
         var str = new StringStream(editor);
 
@@ -996,15 +1094,16 @@ module.exports = {
 
     "l": {
         nav: function(editor) {
-            editor.navigateRight();
+            var pos = editor.getCursorPosition();
+            var col = pos.column;
+            var lineLen = editor.session.getLine(pos.row).length;
+            if (lineLen && col !== lineLen)
+                editor.navigateRight();
         },
         sel: function(editor) {
             var pos = editor.getCursorPosition();
             var col = pos.column;
             var lineLen = editor.session.getLine(pos.row).length;
-
-            // Solving the behavior at the end of the line due to the
-            // different 0 index-based colum positions in ACE.
             if (lineLen && col !== lineLen) //In selection mode you can select the newline
                 editor.selection.selectRight();
         }
@@ -1019,6 +1118,40 @@ module.exports = {
             var pos = editor.getCursorPosition();
             if (pos.column > 0)
                 editor.selection.selectLeft();
+        }
+    },
+    "H": {
+        nav: function(editor) {
+            var row = editor.renderer.getScrollTopRow();
+            editor.moveCursorTo(row);
+        },
+        sel: function(editor) {
+            var row = editor.renderer.getScrollTopRow();
+            editor.selection.selectTo(row);
+        }
+    },
+    "M": {
+        nav: function(editor) {
+            var topRow = editor.renderer.getScrollTopRow();
+            var bottomRow = editor.renderer.getScrollBottomRow();
+            var row = topRow + ((bottomRow - topRow) / 2);
+            editor.moveCursorTo(row);
+        },
+        sel: function(editor) {
+            var topRow = editor.renderer.getScrollTopRow();
+            var bottomRow = editor.renderer.getScrollBottomRow();
+            var row = topRow + ((bottomRow - topRow) / 2);
+            editor.selection.selectTo(row);
+        }
+    },
+    "L": {
+        nav: function(editor) {
+            var row = editor.renderer.getScrollBottomRow();
+            editor.moveCursorTo(row);
+        },
+        sel: function(editor) {
+            var row = editor.renderer.getScrollBottomRow();
+            editor.selection.selectTo(row);
         }
     },
     "k": {
@@ -1114,99 +1247,97 @@ module.exports = {
         }
     },
 
-    "f": {
+    "f": new Motion({
         param: true,
         handlesCount: true,
-        nav: function(editor, range, count, param) {
-            var ed = editor;
-            var cursor = ed.getCursorPosition();
+        getPos: function(editor, range, count, param, isSel, isRepeat) {
+            if (!isRepeat)
+                LAST_SEARCH_MOTION = {ch: "f", param: param};
+            var cursor = editor.getCursorPosition();
             var column = util.getRightNthChar(editor, cursor, param, count || 1);
 
             if (typeof column === "number") {
-                ed.selection.clearSelection(); // Why does it select in the first place?
-                ed.moveCursorTo(cursor.row, column + cursor.column + 1);
-            }
-        },
-        sel: function(editor, range, count, param) {
-            var ed = editor;
-            var cursor = ed.getCursorPosition();
-            var column = util.getRightNthChar(editor, cursor, param, count || 1);
-
-            if (typeof column === "number") {
-                ed.moveCursorTo(cursor.row, column + cursor.column + 1);
+                cursor.column += column + (isSel ? 2 : 1);
+                return cursor;
             }
         }
-    },
-    "F": {
+    }),
+    "F": new Motion({
         param: true,
         handlesCount: true,
-        nav: function(editor, range, count, param) {
-            count = parseInt(count, 10) || 1;
-            var ed = editor;
-            var cursor = ed.getCursorPosition();
-            var column = util.getLeftNthChar(editor, cursor, param, count);
-
-            if (typeof column === "number") {
-                ed.selection.clearSelection(); // Why does it select in the first place?
-                ed.moveCursorTo(cursor.row, cursor.column - column - 1);
-            }
-        },
-        sel: function(editor, range, count, param) {
-            var ed = editor;
-            var cursor = ed.getCursorPosition();
+        getPos: function(editor, range, count, param, isSel, isRepeat) {
+            if (!isRepeat)
+                LAST_SEARCH_MOTION = {ch: "F", param: param};
+            var cursor = editor.getCursorPosition();
             var column = util.getLeftNthChar(editor, cursor, param, count || 1);
 
             if (typeof column === "number") {
-                ed.moveCursorTo(cursor.row, cursor.column - column - 1);
+                cursor.column -= column + 1;
+                return cursor;
             }
         }
-    },
-    "t": {
+    }),
+    "t": new Motion({
         param: true,
         handlesCount: true,
-        nav: function(editor, range, count, param) {
-            var ed = editor;
-            var cursor = ed.getCursorPosition();
+        getPos: function(editor, range, count, param, isSel, isRepeat) {
+            if (!isRepeat)
+                LAST_SEARCH_MOTION = {ch: "t", param: param};
+            var cursor = editor.getCursorPosition();
             var column = util.getRightNthChar(editor, cursor, param, count || 1);
 
+            if (isRepeat && column == 0 && !(count > 1))
+                var column = util.getRightNthChar(editor, cursor, param, 2);
+                
             if (typeof column === "number") {
-                ed.selection.clearSelection(); // Why does it select in the first place?
-                ed.moveCursorTo(cursor.row, column + cursor.column);
-            }
-        },
-        sel: function(editor, range, count, param) {
-            var ed = editor;
-            var cursor = ed.getCursorPosition();
-            var column = util.getRightNthChar(editor, cursor, param, count || 1);
-
-            if (typeof column === "number") {
-                ed.moveCursorTo(cursor.row, column + cursor.column);
+                cursor.column += column + (isSel ? 1 : 0);
+                return cursor;
             }
         }
-    },
-    "T": {
+    }),
+    "T": new Motion({
         param: true,
         handlesCount: true,
-        nav: function(editor, range, count, param) {
-            var ed = editor;
-            var cursor = ed.getCursorPosition();
+        getPos: function(editor, range, count, param, isSel, isRepeat) {
+            if (!isRepeat)
+                LAST_SEARCH_MOTION = {ch: "T", param: param};
+            var cursor = editor.getCursorPosition();
             var column = util.getLeftNthChar(editor, cursor, param, count || 1);
 
+            if (isRepeat && column == 0 && !(count > 1))
+                var column = util.getLeftNthChar(editor, cursor, param, 2);
+            
             if (typeof column === "number") {
-                ed.selection.clearSelection(); // Why does it select in the first place?
-                ed.moveCursorTo(cursor.row, -column + cursor.column);
-            }
-        },
-        sel: function(editor, range, count, param) {
-            var ed = editor;
-            var cursor = ed.getCursorPosition();
-            var column = util.getLeftNthChar(editor, cursor, param, count || 1);
-
-            if (typeof column === "number") {
-                ed.moveCursorTo(cursor.row, -column + cursor.column);
+                cursor.column -= column;
+                return cursor;
             }
         }
-    },
+    }),
+    ";": new Motion({
+        handlesCount: true,
+        getPos: function(editor, range, count, param, isSel) {
+            var ch = LAST_SEARCH_MOTION.ch;
+            if (!ch)
+                return;
+            return module.exports[ch].getPos(
+                editor, range, count, LAST_SEARCH_MOTION.param, isSel, true
+            );
+        }
+    }),
+    ",": new Motion({
+        handlesCount: true,
+        getPos: function(editor, range, count, param, isSel) {
+            var ch = LAST_SEARCH_MOTION.ch;
+            if (!ch)
+                return;
+            var up = ch.toUpperCase();
+            ch = ch === up ? ch.toLowerCase() : up;
+            
+            return module.exports[ch].getPos(
+                editor, range, count, LAST_SEARCH_MOTION.param, isSel, true
+            );
+        }
+    }),
 
     "^": {
         nav: function(editor) {
@@ -1224,16 +1355,9 @@ module.exports = {
             editor.selection.selectLineEnd();
         }
     },
-    "0": {
-        nav: function(editor) {
-            var ed = editor;
-            ed.navigateTo(ed.selection.selectionLead.row, 0);
-        },
-        sel: function(editor) {
-            var ed = editor;
-            ed.selectTo(ed.selection.selectionLead.row, 0);
-        }
-    },
+    "0": new Motion(function(ed) {
+        return {row: ed.selection.lead.row, column: 0};
+    }),
     "G": {
         nav: function(editor, range, count, param) {
             if (!count && count !== 0) { // Stupid JS
@@ -1331,6 +1455,25 @@ module.exports = {
 
         return match;
     }),
+    "{": new Motion(function(ed) {
+        var session = ed.session;
+        var row = session.selection.lead.row;
+        while(row > 0 && !/\S/.test(session.getLine(row)))
+            row--;
+        while(/\S/.test(session.getLine(row)))
+            row--;
+        return {column: 0, row: row};
+    }),
+    "}": new Motion(function(ed) {
+        var session = ed.session;
+        var l = session.getLength();
+        var row = session.selection.lead.row;
+        while(row < l && !/\S/.test(session.getLine(row)))
+            row++;
+        while(/\S/.test(session.getLine(row)))
+            row++;
+        return {column: 0, row: row};
+    }),
     "ctrl-d": {
         nav: function(editor, range, count, param) {
             editor.selection.clearSelection();
@@ -1344,16 +1487,42 @@ module.exports = {
         nav: function(editor, range, count, param) {
             editor.selection.clearSelection();
             keepScrollPosition(editor, editor.gotoPageUp);
-
         },
         sel: function(editor, range, count, param) {
             keepScrollPosition(editor, editor.selectPageUp);
         }
     },
+    "`": new Motion({
+        param: true,
+        handlesCount: true,
+        getPos: function(editor, range, count, param, isSel) {
+            var s = editor.session;
+            var marker = s.vimMarkers && s.vimMarkers[param];
+            if (marker) {
+                return marker.getPosition();
+            }
+        }
+    }),
+    "'": new Motion({
+        param: true,
+        handlesCount: true,
+        getPos: function(editor, range, count, param, isSel) {
+            var s = editor.session;
+            var marker = s.vimMarkers && s.vimMarkers[param];
+            if (marker) {
+                var pos = marker.getPosition();
+                var line = editor.session.getLine(pos.row);                
+                pos.column = line.search(/\S/);
+                if (pos.column == -1)
+                    pos.column = line.length;
+                return pos;
+            }
+        }
+    })
 };
 
 module.exports.backspace = module.exports.left = module.exports.h;
-module.exports.right = module.exports.l;
+module.exports.space = module.exports['return'] = module.exports.right = module.exports.l;
 module.exports.up = module.exports.k;
 module.exports.down = module.exports.j;
 module.exports.pagedown = module.exports["ctrl-d"];
@@ -1363,7 +1532,7 @@ module.exports.pageup = module.exports["ctrl-u"];
  
 define('ace/keyboard/vim/maps/operators', ['require', 'exports', 'module' , 'ace/keyboard/vim/maps/util', 'ace/keyboard/vim/registers'], function(require, exports, module) {
 
-"never use strict";
+
 
 var util = require("./util");
 var registers = require("../registers");
@@ -1389,9 +1558,7 @@ module.exports = {
                         editor.selection.selectLine();
                         registers._default.text += editor.getCopyText();
                         var selRange = editor.getSelectionRange();
-                        // check if end of the document was reached
                         if (!selRange.isMultiLine()) {
-                            lastLineReached = true
                             var row = selRange.start.row - 1;
                             var col = editor.session.getLine(row).length
                             selRange.setStart(row, col);
@@ -1432,8 +1599,6 @@ module.exports = {
                     break;
                 default:
                     if (range) {
-
-                        // range.end.column ++;
                         editor.session.remove(range);
                         util.insertMode(editor);
                     }
@@ -1534,57 +1699,57 @@ define('ace/keyboard/vim/maps/aliases', ['require', 'exports', 'module' ], funct
 module.exports = {
     "x": {
         operator: {
-            char: "d",
+            ch: "d",
             count: 1
         },
         motion: {
-            char: "l",
+            ch: "l",
             count: 1
         }
     },
     "X": {
         operator: {
-            char: "d",
+            ch: "d",
             count: 1
         },
         motion: {
-            char: "h",
+            ch: "h",
             count: 1
         }
     },
     "D": {
         operator: {
-            char: "d",
+            ch: "d",
             count: 1
         },
         motion: {
-            char: "$",
+            ch: "$",
             count: 1
         }
     },
     "C": {
         operator: {
-            char: "c",
+            ch: "c",
             count: 1
         },
         motion: {
-            char: "$",
+            ch: "$",
             count: 1
         }
     },
     "s": {
         operator: {
-            char: "c",
+            ch: "c",
             count: 1
         },
         motion: {
-            char: "l",
+            ch: "l",
             count: 1
         }
     },
     "S": {
         operator: {
-            char: "c",
+            ch: "c",
             count: 1
         },
         param: "c"
