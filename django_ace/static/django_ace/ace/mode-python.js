@@ -1,40 +1,32 @@
 /* ***** BEGIN LICENSE BLOCK *****
-* Version: MPL 1.1/GPL 2.0/LGPL 2.1
-*
-* The contents of this file are subject to the Mozilla Public License Version
-* 1.1 (the "License"); you may not use this file except in compliance with
-* the License. You may obtain a copy of the License at
-* http://www.mozilla.org/MPL/
-*
-* Software distributed under the License is distributed on an "AS IS" basis,
-* WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
-* for the specific language governing rights and limitations under the
-* License.
-*
-* The Original Code is Ajax.org Code Editor (ACE).
-*
-* The Initial Developer of the Original Code is
-* Ajax.org B.V.
-* Portions created by the Initial Developer are Copyright (C) 2010
-* the Initial Developer. All Rights Reserved.
-*
-* Contributor(s):
-*      Fabian Jakobs <fabian AT ajax DOT org>
-*      Colin Gourlay <colin DOT j DOT gourlay AT gmail DOT com>
-*
-* Alternatively, the contents of this file may be used under the terms of
-* either the GNU General Public License Version 2 or later (the "GPL"), or
-* the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
-* in which case the provisions of the GPL or the LGPL are applicable instead
-* of those above. If you wish to allow use of your version of this file only
-* under the terms of either the GPL or the LGPL, and not to allow others to
-* use your version of this file under the terms of the MPL, indicate your
-* decision by deleting the provisions above and replace them with the notice
-* and other provisions required by the GPL or the LGPL. If you do not delete
-* the provisions above, a recipient may use your version of this file under
-* the terms of any one of the MPL, the GPL or the LGPL.
-*
-* ***** END LICENSE BLOCK ***** */
+ * Distributed under the BSD license:
+ *
+ * Copyright (c) 2010, Ajax.org B.V.
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *     * Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in the
+ *       documentation and/or other materials provided with the distribution.
+ *     * Neither the name of Ajax.org B.V. nor the
+ *       names of its contributors may be used to endorse or promote products
+ *       derived from this software without specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL AJAX.ORG B.V. BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * ***** END LICENSE BLOCK ***** */
 
 define('ace/mode/python', ['require', 'exports', 'module' , 'ace/lib/oop', 'ace/mode/text', 'ace/tokenizer', 'ace/mode/python_highlight_rules', 'ace/mode/folding/pythonic', 'ace/range'], function(require, exports, module) {
 
@@ -47,40 +39,16 @@ var PythonFoldMode = require("./folding/pythonic").FoldMode;
 var Range = require("../range").Range;
 
 var Mode = function() {
-    this.$tokenizer = new Tokenizer(new PythonHighlightRules().getRules());
+    var highlighter = new PythonHighlightRules();
+    this.$tokenizer = new Tokenizer(highlighter.getRules());
+    this.$keywordList = highlighter.$keywordList;
     this.foldingRules = new PythonFoldMode("\\:");
 };
 oop.inherits(Mode, TextMode);
 
 (function() {
 
-    this.toggleCommentLines = function(state, doc, startRow, endRow) {
-        var outdent = true;
-        var re = /^(\s*)#/;
-
-        for (var i=startRow; i<= endRow; i++) {
-            if (!re.test(doc.getLine(i))) {
-                outdent = false;
-                break;
-            }
-        }
-
-        if (outdent) {
-            var deleteRange = new Range(0, 0, 0, 0);
-            for (var i=startRow; i<= endRow; i++)
-            {
-                var line = doc.getLine(i);
-                var m = line.match(re);
-                deleteRange.start.row = i;
-                deleteRange.end.row = i;
-                deleteRange.end.column = m[0].length;
-                doc.replace(deleteRange, m[1]);
-            }
-        }
-        else {
-            doc.indentRows(startRow, endRow, "#");
-        }
-    };
+    this.lineCommentStart = "#";
 
     this.getNextLineIndent = function(state, line, tab) {
         var indent = this.$getIndent(line);
@@ -118,8 +86,6 @@ oop.inherits(Mode, TextMode);
         
         if (!tokens)
             return false;
-        
-        // ignore trailing comments
         do {
             var last = tokens.pop();
         } while (last && (last.type == "comment" || (last.type == "text" && last.value.match(/^\s+$/))));
@@ -131,8 +97,6 @@ oop.inherits(Mode, TextMode);
     };
 
     this.autoOutdent = function(state, doc, row) {
-        // outdenting in python is slightly different because it always applies
-        // to the next line and only of a new line is inserted
         
         row += 1;
         var indent = this.$getIndent(doc.getLine(row));
@@ -146,39 +110,40 @@ oop.inherits(Mode, TextMode);
 exports.Mode = Mode;
 });
 
-define('ace/mode/python_highlight_rules', ['require', 'exports', 'module' , 'ace/lib/oop', 'ace/lib/lang', 'ace/mode/text_highlight_rules'], function(require, exports, module) {
+define('ace/mode/python_highlight_rules', ['require', 'exports', 'module' , 'ace/lib/oop', 'ace/mode/text_highlight_rules'], function(require, exports, module) {
 
 
 var oop = require("../lib/oop");
-var lang = require("../lib/lang");
 var TextHighlightRules = require("./text_highlight_rules").TextHighlightRules;
 
 var PythonHighlightRules = function() {
 
-    var keywords = lang.arrayToMap(
-        ("and|as|assert|break|class|continue|def|del|elif|else|except|exec|" +
+    var keywords = (
+        "and|as|assert|break|class|continue|def|del|elif|else|except|exec|" +
         "finally|for|from|global|if|import|in|is|lambda|not|or|pass|print|" +
-        "raise|return|try|while|with|yield").split("|")
+        "raise|return|try|while|with|yield"
     );
 
-    var builtinConstants = lang.arrayToMap(
-        ("True|False|None|NotImplemented|Ellipsis|__debug__").split("|")
+    var builtinConstants = (
+        "True|False|None|NotImplemented|Ellipsis|__debug__"
     );
 
-    var builtinFunctions = lang.arrayToMap(
-        ("abs|divmod|input|open|staticmethod|all|enumerate|int|ord|str|any|" +
+    var builtinFunctions = (
+        "abs|divmod|input|open|staticmethod|all|enumerate|int|ord|str|any|" +
         "eval|isinstance|pow|sum|basestring|execfile|issubclass|print|super|" +
         "binfile|iter|property|tuple|bool|filter|len|range|type|bytearray|" +
         "float|list|raw_input|unichr|callable|format|locals|reduce|unicode|" +
         "chr|frozenset|long|reload|vars|classmethod|getattr|map|repr|xrange|" +
         "cmp|globals|max|reversed|zip|compile|hasattr|memoryview|round|" +
         "__import__|complex|hash|min|set|apply|delattr|help|next|setattr|" +
-        "buffer|dict|hex|object|slice|coerce|dir|id|oct|sorted|intern").split("|")
+        "buffer|dict|hex|object|slice|coerce|dir|id|oct|sorted|intern"
     );
-
-    var futureReserved = lang.arrayToMap(
-        ("").split("|")
-    );
+    var keywordMapper = this.createKeywordMapper({
+        "invalid.deprecated": "debugger",
+        "support.function": builtinFunctions,
+        "constant.language": builtinConstants,
+        "keyword": keywords
+    }, "identifier");
 
     var strPre = "(?:r|u|ur|R|U|UR|Ur|uR)?";
 
@@ -195,32 +160,28 @@ var PythonHighlightRules = function() {
     var exponentFloat = "(?:(?:" + pointFloat + "|" +  intPart + ")" + exponent + ")";
     var floatNumber = "(?:" + exponentFloat + "|" + pointFloat + ")";
 
+    var stringEscape =  "\\\\(x[0-9A-Fa-f]{2}|[0-7]{3}|[\\\\abfnrtv'\"]|U[0-9A-Fa-f]{8}|u[0-9A-Fa-f]{4})";
+
     this.$rules = {
         "start" : [ {
             token : "comment",
             regex : "#.*$"
         }, {
-            token : "string",           // """ string
-            regex : strPre + '"{3}(?:[^\\\\]|\\\\.)*?"{3}'
-        }, {
             token : "string",           // multi line """ string start
-            merge : true,
-            regex : strPre + '"{3}.*$',
-            next : "qqstring"
+            regex : strPre + '"{3}',
+            next : "qqstring3"
         }, {
             token : "string",           // " string
-            regex : strPre + '"(?:[^\\\\]|\\\\.)*?"'
-        }, {
-            token : "string",           // ''' string
-            regex : strPre + "'{3}(?:[^\\\\]|\\\\.)*?'{3}"
+            regex : strPre + '"(?=.)',
+            next : "qqstring"
         }, {
             token : "string",           // multi line ''' string start
-            merge : true,
-            regex : strPre + "'{3}.*$",
-            next : "qstring"
+            regex : strPre + "'{3}",
+            next : "qstring3"
         }, {
             token : "string",           // ' string
-            regex : strPre + "'(?:[^\\\\]|\\\\.)*?'"
+            regex : strPre + "'(?=.)",
+            next : "qstring"
         }, {
             token : "constant.numeric", // imaginary
             regex : "(?:" + floatNumber + "|\\d+)[jJ]\\b"
@@ -234,20 +195,7 @@ var PythonHighlightRules = function() {
             token : "constant.numeric", // integer
             regex : integer + "\\b"
         }, {
-            token : function(value) {
-                if (keywords.hasOwnProperty(value))
-                    return "keyword";
-                else if (builtinConstants.hasOwnProperty(value))
-                    return "constant.language";
-                else if (futureReserved.hasOwnProperty(value))
-                    return "invalid.illegal";
-                else if (builtinFunctions.hasOwnProperty(value))
-                    return "support.function";
-                else if (value == "debugger")
-                    return "invalid.deprecated";
-                else
-                    return "identifier";
-            },
+            token : keywordMapper,
             regex : "[a-zA-Z_$][a-zA-Z0-9_$]*\\b"
         }, {
             token : "keyword.operator",
@@ -262,24 +210,54 @@ var PythonHighlightRules = function() {
             token : "text",
             regex : "\\s+"
         } ],
-        "qqstring" : [ {
+        "qqstring3" : [ {
+            token : "constant.language.escape",
+            regex : stringEscape
+        }, {
             token : "string", // multi line """ string end
-            regex : '(?:[^\\\\]|\\\\.)*?"{3}',
+            regex : '"{3}',
             next : "start"
         }, {
-            token : "string",
-            merge : true,
-            regex : '.+'
+            defaultToken : "string"
         } ],
-        "qstring" : [ {
+        "qstring3" : [ {
+            token : "constant.language.escape",
+            regex : stringEscape
+        }, {
             token : "string",  // multi line ''' string end
-            regex : "(?:[^\\\\]|\\\\.)*?'{3}",
+            regex : "'{3}",
             next : "start"
         }, {
+            defaultToken : "string"
+        } ],
+        "qqstring" : [{
+            token : "constant.language.escape",
+            regex : stringEscape
+        }, {
             token : "string",
-            merge : true,
-            regex : '.+'
-        } ]
+            regex : "\\\\$",
+            next  : "qqstring"
+        }, {
+            token : "string",
+            regex : '"|$',
+            next  : "start"
+        }, {
+            defaultToken: "string"
+        }],
+        "qstring" : [{
+            token : "constant.language.escape",
+            regex : stringEscape
+        }, {
+            token : "string",
+            regex : "\\\\$",
+            next  : "qstring"
+        }, {
+            token : "string",
+            regex : "'|$",
+            next  : "start"
+        }, {
+            defaultToken: "string"
+        }]
     };
 };
 
@@ -312,85 +290,6 @@ oop.inherits(FoldMode, BaseFoldMode);
             return this.indentationBlock(session, row);
         }
     }
-
-}).call(FoldMode.prototype);
-
-});
-
-define('ace/mode/folding/fold_mode', ['require', 'exports', 'module' , 'ace/range'], function(require, exports, module) {
-
-
-var Range = require("../../range").Range;
-
-var FoldMode = exports.FoldMode = function() {};
-
-(function() {
-
-    this.foldingStartMarker = null;
-    this.foldingStopMarker = null;
-
-    // must return "" if there's no fold, to enable caching
-    this.getFoldWidget = function(session, foldStyle, row) {
-        var line = session.getLine(row);
-        if (this.foldingStartMarker.test(line))
-            return "start";
-        if (foldStyle == "markbeginend"
-                && this.foldingStopMarker
-                && this.foldingStopMarker.test(line))
-            return "end";
-        return "";
-    };
-
-    this.getFoldWidgetRange = function(session, foldStyle, row) {
-        return null;
-    };
-
-    this.indentationBlock = function(session, row, column) {
-        var re = /\S/;
-        var line = session.getLine(row);
-        var startLevel = line.search(re);
-        if (startLevel == -1)
-            return;
-
-        var startColumn = column || line.length;
-        var maxRow = session.getLength();
-        var startRow = row;
-        var endRow = row;
-
-        while (++row < maxRow) {
-            var level = session.getLine(row).search(re);
-
-            if (level == -1)
-                continue;
-
-            if (level <= startLevel)
-                break;
-
-            endRow = row;
-        }
-
-        if (endRow > startRow) {
-            var endColumn = session.getLine(endRow).length;
-            return new Range(startRow, startColumn, endRow, endColumn);
-        }
-    };
-
-    this.openingBracketBlock = function(session, bracket, row, column, typeRe) {
-        var start = {row: row, column: column + 1};
-        var end = session.$findClosingBracket(bracket, start, typeRe);
-        if (!end)
-            return;
-
-        var fw = session.foldWidgets[end.row];
-        if (fw == null)
-            fw = this.getFoldWidget(session, end.row);
-
-        if (fw == "start" && end.row > start.row) {
-            end.row --;
-            end.column = session.getLine(end.row).length;
-        }
-        return Range.fromPoints(start, end);
-    };
 
 }).call(FoldMode.prototype);
 
