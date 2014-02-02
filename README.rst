@@ -54,3 +54,17 @@ There's an example project included in the source, to try it do::
     ./manage.py runserver
 
 Then browser to ``http://localhost:8000``.
+
+
+Change log
+==========
+
+v1.0.1
+------
+
+- Add support for Django 1.7 by removing deprecated imports.
+
+v1.0.0
+------
+
+- Initial release.
