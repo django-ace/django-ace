@@ -1,6 +1,9 @@
 from __future__ import unicode_literals
 from django import forms
-from django.forms.util import flatatt
+try:
+    from django.forms.utils import flatatt
+except ImportError:
+    from django.forms.util import flatatt
 from django.utils.safestring import mark_safe
 
 
