@@ -77,6 +77,7 @@
             mode = widget.getAttribute('data-mode'),
             theme = widget.getAttribute('data-theme'),
             wordwrap = widget.getAttribute('data-wordwrap'),
+            showprintmargin = widget.getAttribute('data-showprintmargin'),
             toolbar = prev(widget),
             main_block = toolbar.parentNode;
 
@@ -102,6 +103,9 @@
         }
         if (wordwrap == "true") {
             editor.getSession().setUseWrapMode(true);
+        }
+        if (showprintmargin == "false") {
+            editor.setShowPrintMargin(false);
         }
 
         editor.getSession().on('change', function() {
