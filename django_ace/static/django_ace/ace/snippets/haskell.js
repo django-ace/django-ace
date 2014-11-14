@@ -1,5 +1,5 @@
-define('ace/snippets/haskell', ['require', 'exports', 'module' ], function(require, exports, module) {
-
+define("ace/snippets/haskell",["require","exports","module"], function(require, exports, module) {
+"use strict";
 
 exports.snippetText = "snippet lang\n\
 	{-# LANGUAGE ${1:OverloadedStrings} #-}\n\
