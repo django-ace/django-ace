@@ -25,6 +25,11 @@ Themes are also supported::
     class EditorForm(forms.Form):
         text = forms.CharField(widget=AceWidget(mode='css', theme='twilight'))
 
+Additional options are::
+
+    class EditorForm(forms.Form):
+        text = forms.CharField(widget=AceWidget(wordwrap=False, width="500px", height="300px", showprintmargin=True))
+
 
 Install
 =======
@@ -58,6 +63,12 @@ Then browser to ``http://localhost:8000``.
 
 Change log
 ==========
+
+v1.0.2
+------
+
+- Upgrade ACE editor to version 1.1.8
+- Add support for showprintmargin
 
 v1.0.1
 ------
