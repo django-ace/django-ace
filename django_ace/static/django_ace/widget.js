@@ -77,6 +77,8 @@
             mode = widget.getAttribute('data-mode'),
             theme = widget.getAttribute('data-theme'),
             wordwrap = widget.getAttribute('data-wordwrap'),
+            minlines = widget.getAttribute('data-minlines'),
+            maxlines = widget.getAttribute('data-maxlines'),
             showprintmargin = widget.getAttribute('data-showprintmargin'),
             toolbar = prev(widget),
             main_block = toolbar.parentNode;
@@ -103,6 +105,12 @@
         }
         if (wordwrap == "true") {
             editor.getSession().setUseWrapMode(true);
+        }
+        if (!!minlines) {
+            editor.setOption("minLines", minlines);
+        }
+        if (!!maxlines) {
+            editor.setOption("maxLines", maxlines=="-1" ? Infinity : maxlines);
         }
         if (showprintmargin == "false") {
             editor.setShowPrintMargin(false);
