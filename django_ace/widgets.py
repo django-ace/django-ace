@@ -8,12 +8,16 @@ from django.utils.safestring import mark_safe
 
 
 class AceWidget(forms.Textarea):
-    def __init__(self, mode=None, theme=None, wordwrap=False, width="500px", height="300px", showprintmargin=True, *args, **kwargs):
+    def __init__(self, mode=None, theme=None, wordwrap=False, width="500px",
+                 height="300px", minlines=None, maxlines=None,
+                 showprintmargin=True, *args, **kwargs):
         self.mode = mode
         self.theme = theme
         self.wordwrap = wordwrap
         self.width = width
         self.height = height
+        self.minlines = minlines
+        self.maxlines = maxlines
         self.showprintmargin = showprintmargin
         super(AceWidget, self).__init__(*args, **kwargs)
 
@@ -45,6 +49,10 @@ class AceWidget(forms.Textarea):
             ace_attrs["data-theme"] = self.theme
         if self.wordwrap:
             ace_attrs["data-wordwrap"] = "true"
+        if self.minlines:
+            ace_attrs["data-minlines"] = str(self.minlines)
+        if self.maxlines:
+            ace_attrs["data-maxlines"] = str(self.maxlines)
         ace_attrs["data-showprintmargin"] = "true" if self.showprintmargin else "false"
 
         textarea = super(AceWidget, self).render(name, value, attrs)
