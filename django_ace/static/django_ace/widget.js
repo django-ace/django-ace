@@ -83,6 +83,12 @@
             toolbar = prev(widget),
             main_block = toolbar.parentNode;
 
+        // Global registry to interact with existing editors
+        if (window.djangoAceRegistry == null ) {
+            window.djangoAceRegistry = {};
+        }
+        window.djangoAceRegistry[textarea.getAttribute('name')] = editor;
+
         // Toolbar maximize/minimize button
         var min_max = toolbar.getElementsByClassName('django-ace-max_min');
         min_max[0].onclick = function() {
