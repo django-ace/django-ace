@@ -59,7 +59,7 @@ var PascalHighlightRules = function() {
               { token: 'punctuation.definition.string.end.pascal',
                 regex: '"',
                 next: 'pop' },
-              { defaultToken: 'string.quoted.double.pascal' } ],
+              { defaultToken: 'string.quoted.double.pascal' } ]
             },
          { token: 'punctuation.definition.string.begin.pascal',
            regex: '\'',
@@ -179,6 +179,7 @@ var FoldMode = require("./folding/coffee").FoldMode;
 var Mode = function() {
     this.HighlightRules = PascalHighlightRules;
     this.foldingRules = new FoldMode();
+    this.$behaviour = this.$defaultBehaviour;
 };
 oop.inherits(Mode, TextMode);
 

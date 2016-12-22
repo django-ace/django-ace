@@ -37,6 +37,13 @@ var keywords = "always|and|assign|automatic|begin|buf|bufif0|bufif1|case|casex|c
             token : "comment",
             regex : "//.*$"
         }, {
+            token : "comment.start",
+            regex : "/\\*",
+            next : [
+                { token : "comment.end", regex : "\\*/", next: "start" },
+                { defaultToken : "comment" }
+            ]
+        }, {
             token : "string",           // " string
             regex : '".*?"'
         }, {
@@ -62,6 +69,7 @@ var keywords = "always|and|assign|automatic|begin|buf|bufif0|bufif1|case|casex|c
             regex : "\\s+"
         } ]
     };
+    this.normalizeRules();
 };
 
 oop.inherits(VerilogHighlightRules, TextHighlightRules);
@@ -79,6 +87,7 @@ var Range = require("../range").Range;
 
 var Mode = function() {
     this.HighlightRules = VerilogHighlightRules;
+    this.$behaviour = this.$defaultBehaviour;
 };
 oop.inherits(Mode, TextMode);
 

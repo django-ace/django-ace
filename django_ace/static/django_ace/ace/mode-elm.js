@@ -15,7 +15,7 @@ var ElmHighlightRules = function() {
     
     var smallRe = /[a-z_]/.source;
     var largeRe = /[A-Z]/.source;
-    var idRe = /[a-z_A-Z0-9\']/.source;
+    var idRe = /[a-z_A-Z0-9']/.source;
 
     this.$rules = {
         start: [{
@@ -29,8 +29,11 @@ var ElmHighlightRules = function() {
             regex: /0(?:[xX][0-9A-Fa-f]+|[oO][0-7]+)|\d+(\.\d+)?([eE][-+]?\d*)?/,
             token: "constant.numeric"
         }, {
+            token: "comment",
+            regex: "--.*"
+        }, {
             token : "keyword",
-            regex : /\.\.|\||:|=|\\|\"|->|<-|\u2192/
+            regex : /\.\.|\||:|=|\\|"|->|<-|\u2192/
         }, {
             token : "keyword.operator",
             regex : /[-!#$%&*+.\/<=>?@\\^|~:\u03BB\u2192]+/
@@ -69,7 +72,7 @@ var ElmHighlightRules = function() {
         }, {
             token: "paren.rparen",
             regex: /[\])}]/
-        }, ],
+        } ],
         markdown: [{
             regex: /\|\]/,
             next: "start"
@@ -100,7 +103,7 @@ var ElmHighlightRules = function() {
         }],
         string: [{
             token: "constant.language.escape",
-            regex: escapeRe,
+            regex: escapeRe
         }, {
             token: "text",
             regex: /\\(\s|$)/,
@@ -109,6 +112,8 @@ var ElmHighlightRules = function() {
             token: "string.end",
             regex: '"',
             next: "start"
+        }, {
+            defaultToken: "string"
         }],
         stringGap: [{
             token: "text",
@@ -118,7 +123,7 @@ var ElmHighlightRules = function() {
             token: "error",
             regex: "",
             next: "start"
-        }],
+        }]
     };
     
     this.normalizeRules();
@@ -149,12 +154,35 @@ var FoldMode = exports.FoldMode = function(commentRegex) {
 oop.inherits(FoldMode, BaseFoldMode);
 
 (function() {
-
+    
     this.foldingStartMarker = /(\{|\[)[^\}\]]*$|^\s*(\/\*)/;
     this.foldingStopMarker = /^[^\[\{]*(\}|\])|^[\s\*]*(\*\/)/;
+    this.singleLineBlockCommentRe= /^\s*(\/\*).*\*\/\s*$/;
+    this.tripleStarBlockCommentRe = /^\s*(\/\*\*\*).*\*\/\s*$/;
+    this.startRegionRe = /^\s*(\/\*|\/\/)#?region\b/;
+    this._getFoldWidgetBase = this.getFoldWidget;
+    this.getFoldWidget = function(session, foldStyle, row) {
+        var line = session.getLine(row);
+    
+        if (this.singleLineBlockCommentRe.test(line)) {
+            if (!this.startRegionRe.test(line) && !this.tripleStarBlockCommentRe.test(line))
+                return "";
+        }
+    
+        var fw = this._getFoldWidgetBase(session, foldStyle, row);
+    
+        if (!fw && this.startRegionRe.test(line))
+            return "start"; // lineCommentRegionStart
+    
+        return fw;
+    };
 
     this.getFoldWidgetRange = function(session, foldStyle, row, forceMultiline) {
         var line = session.getLine(row);
+        
+        if (this.startRegionRe.test(line))
+            return this.getCommentRegionBlock(session, line, row);
+        
         var match = line.match(this.foldingStartMarker);
         if (match) {
             var i = match.index;
@@ -219,6 +247,28 @@ oop.inherits(FoldMode, BaseFoldMode);
         
         return new Range(startRow, startColumn, endRow, session.getLine(endRow).length);
     };
+    this.getCommentRegionBlock = function(session, line, row) {
+        var startColumn = line.search(/\s*$/);
+        var maxRow = session.getLength();
+        var startRow = row;
+        
+        var re = /^\s*(?:\/\*|\/\/|--)#?(end)?region\b/;
+        var depth = 1;
+        while (++row < maxRow) {
+            line = session.getLine(row);
+            var m = re.exec(line);
+            if (!m) continue;
+            if (m[1]) depth--;
+            else depth++;
+
+            if (!depth) break;
+        }
+
+        var endRow = row;
+        if (endRow > startRow) {
+            return new Range(startRow, startColumn, endRow, line.length);
+        }
+    };
 
 }).call(FoldMode.prototype);
 
@@ -235,12 +285,13 @@ var FoldMode = require("./folding/cstyle").FoldMode;
 var Mode = function() {
     this.HighlightRules = HighlightRules;
     this.foldingRules = new FoldMode();
+    this.$behaviour = this.$defaultBehaviour;
 };
 oop.inherits(Mode, TextMode);
 
 (function() {
     this.lineCommentStart = "--";
-    this.blockComment = {start: "{-", end: "-}"};
+    this.blockComment = {start: "{-", end: "-}", nestable: true};
     this.$id = "ace/mode/elm";
 }).call(Mode.prototype);
 
