@@ -1,11 +1,9 @@
-from django.conf.urls import patterns, include, url
+from django.conf.urls import url
 from django.contrib import admin
+from .app.views import simple
 
 
-admin.autodiscover()
-
-
-urlpatterns = patterns('',
-    url(r'^admin/', include(admin.site.urls)),
-    url(r'^', 'example.app.views.simple')
-)
+urlpatterns = [
+    url(r'', simple),
+    url(r'^admin/', admin.site.urls)
+]
