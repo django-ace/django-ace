@@ -40,17 +40,14 @@ var LuaHighlightRules = function() {
 
     var stdLibaries = ("string|package|os|io|math|debug|table|coroutine");
 
-    var futureReserved = "";
-
     var deprecatedIn5152 = ("setn|foreach|foreachi|gcinfo|log10|maxn");
 
     var keywordMapper = this.createKeywordMapper({
         "keyword": keywords,
         "support.function": functions,
-        "invalid.deprecated": deprecatedIn5152,
+        "keyword.deprecated": deprecatedIn5152,
         "constant.library": stdLibaries,
         "constant.language": builtinConstants,
-        "invalid.illegal": futureReserved,
         "variable.language": "self"
     }, "identifier");
 
@@ -308,6 +305,7 @@ var Mode = function() {
     this.HighlightRules = LuaHighlightRules;
     
     this.foldingRules = new LuaFoldMode();
+    this.$behaviour = this.$defaultBehaviour;
 };
 oop.inherits(Mode, TextMode);
 
@@ -342,9 +340,9 @@ oop.inherits(Mode, TextMode);
                     level += indentKeywords[token.value];
                 }
             } else if (token.type == "paren.lparen") {
-                level ++;
+                level += token.value.length;
             } else if (token.type == "paren.rparen") {
-                level --;
+                level -= token.value.length;
             }
         }
         if (level < 0) {
@@ -408,11 +406,11 @@ oop.inherits(Mode, TextMode);
         var worker = new WorkerClient(["ace"], "ace/mode/lua_worker", "Worker");
         worker.attachToDocument(session.getDocument());
         
-        worker.on("error", function(e) {
-            session.setAnnotations([e.data]);
+        worker.on("annotate", function(e) {
+            session.setAnnotations(e.data);
         });
         
-        worker.on("ok", function(e) {
+        worker.on("terminate", function() {
             session.clearAnnotations();
         });
         
