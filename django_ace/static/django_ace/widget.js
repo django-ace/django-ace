@@ -80,6 +80,8 @@
             minlines = widget.getAttribute('data-minlines'),
             maxlines = widget.getAttribute('data-maxlines'),
             showprintmargin = widget.getAttribute('data-showprintmargin'),
+            showinvisibles = widget.getAttribute('data-showinvisibles'),
+            usesofttabs = widget.getAttribute('data-usesofttabs'),
             toolbar = prev(widget),
             main_block = toolbar.parentNode;
 
@@ -114,6 +116,12 @@
         }
         if (showprintmargin == "false") {
             editor.setShowPrintMargin(false);
+        }
+        if (showinvisibles == "true") {
+            editor.setShowInvisibles(true);
+        }
+        if (usesofttabs == "false") {
+            editor.getSession().setUseSoftTabs(false);
         }
 
         editor.getSession().on('change', function() {
