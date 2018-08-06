@@ -40,7 +40,7 @@ class AceWidget(forms.Textarea):
             }
         return forms.Media(js=js, css=css)
 
-    def render(self, name, value, attrs=None):
+    def render(self, name, value, attrs=None, renderer=None):
         attrs = attrs or {}
 
         ace_attrs = {
@@ -61,7 +61,7 @@ class AceWidget(forms.Textarea):
         ace_attrs["data-showinvisibles"] = "true" if self.showinvisibles else "false"
         ace_attrs["data-usesofttabs"] = "true" if self.usesofttabs else "false"
 
-        textarea = super(AceWidget, self).render(name, value, attrs)
+        textarea = super(AceWidget, self).render(name, value, attrs, renderer)
 
 
         html = '<div%s><div></div></div>%s' % (flatatt(ace_attrs), textarea)
