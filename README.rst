@@ -55,7 +55,8 @@ There's an example project included in the source, to try it do::
     virtualenv .env
     . .env/bin/activate
     pip install -e ..
-    ./manage.py syncdb
+    ./manage.py makemigrations app
+    ./manage.py migrate
     ./manage.py runserver
 
 Then browser to ``http://localhost:8000``.
@@ -63,6 +64,13 @@ Then browser to ``http://localhost:8000``.
 
 Change log
 ==========
+
+v1.0.3
+------
+
+- Upgrade ACE editor to version 1.2.6
+- Updated example for Django 1.11
+- PEP8 improvements
 
 v1.0.2
 ------
