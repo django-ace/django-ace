@@ -65,7 +65,7 @@ Then browser to ``http://localhost:8000``.
 Change log
 ==========
 
-v1.0.3
+v1.0.4
 ------
 
 - Update Django compatibility to ``>1.11,<=2.1``

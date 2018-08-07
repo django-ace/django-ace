@@ -20,7 +20,7 @@ setup(
 
     packages=find_packages(exclude=["example", "example.*"]),
     include_package_data=True,
-    install_requires=['Django'],
+    install_requires=['Django>1.11'],
 
     classifiers=[
         'Development Status :: 4 - Beta',
