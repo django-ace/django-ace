@@ -56,6 +56,9 @@ snippet imp\n\
 ##\n\
 ## Comments\n\
 snippet /*\n\
+	/*\n\
+	 * ${1}\n\
+	 */\n\
 ##\n\
 ## Constants\n\
 snippet co\n\
@@ -136,6 +139,9 @@ snippet findbyid\n\
 ##\n\
 ## Javadocs\n\
 snippet /**\n\
+	/**\n\
+	 * ${1}\n\
+	 */\n\
 snippet @au\n\
 	@author `system(\"grep \\`id -un\\` /etc/passwd | cut -d \\\":\\\" -f5 | cut -d \\\",\\\" -f1\")`\n\
 snippet @br\n\
@@ -239,3 +245,11 @@ snippet unless\n\
 exports.scope = "java";
 
 });
+                (function() {
+                    window.require(["ace/snippets/java"], function(m) {
+                        if (typeof module == "object" && typeof exports == "object" && module) {
+                            module.exports = m;
+                        }
+                    });
+                })();
+            
