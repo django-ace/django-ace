@@ -68,7 +68,9 @@ Change log
 v1.0.3
 ------
 
-- Upgrade ACE editor to version 1.2.6
+- Update Django compatibility to ``>1.11,<=2.1``
+- New widget options ``minLines``, ``maxLines``, ``showinvisibles``, ``usesofttabs``.
+- Upgrade ACE editor to version v1.4.0.
 - Updated example for Django 1.11
 - PEP8 improvements
 
