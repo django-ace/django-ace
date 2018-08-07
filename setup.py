@@ -16,7 +16,7 @@ setup(
     author='Bradley Ayers',
     author_email='bradley.ayers@gmail.com',
     license="Simplified BSD",
-    url='https://github.com/bradleyayers/django-ace',
+    url='https://github.com/django-ace/django-ace',
 
     packages=find_packages(exclude=["example", "example.*"]),
     include_package_data=True,
