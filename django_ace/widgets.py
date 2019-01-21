@@ -11,7 +11,7 @@ class AceWidget(forms.Textarea):
     def __init__(self, mode=None, theme=None, wordwrap=False, width="500px",
                  height="300px", minlines=None, maxlines=None,
                  showprintmargin=True,
-                 showinvisibles=False, usesofttabs=True,
+                 showinvisibles=False, tabsize=None, usesofttabs=True,
                  *args, **kwargs):
         self.mode = mode
         self.theme = theme
@@ -22,6 +22,7 @@ class AceWidget(forms.Textarea):
         self.maxlines = maxlines
         self.showprintmargin = showprintmargin
         self.showinvisibles = showinvisibles
+        self.tabsize = tabsize
         self.usesofttabs = usesofttabs
         super(AceWidget, self).__init__(*args, **kwargs)
 
@@ -61,6 +62,8 @@ class AceWidget(forms.Textarea):
             ace_attrs["data-minlines"] = str(self.minlines)
         if self.maxlines:
             ace_attrs["data-maxlines"] = str(self.maxlines)
+        if self.tabsize:
+            ace_attrs["data-tabsize"] = str(self.tabsize)
 
         ace_attrs["data-showprintmargin"] = "true" if self.showprintmargin else "false"
         ace_attrs["data-showinvisibles"] = "true" if self.showinvisibles else "false"

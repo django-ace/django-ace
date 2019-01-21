@@ -65,6 +65,8 @@ Then browser to ``http://localhost:8000``.
 Change log
 ==========
 
+- New widget option ``tabsize``.
+
 v1.0.4
 ------
 
