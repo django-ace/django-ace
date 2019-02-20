@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 from django import forms
+
 try:
     from django.forms.utils import flatatt
 except ImportError:
@@ -8,11 +9,22 @@ from django.utils.safestring import mark_safe
 
 
 class AceWidget(forms.Textarea):
-    def __init__(self, mode=None, theme=None, wordwrap=False, width="500px",
-                 height="300px", minlines=None, maxlines=None,
-                 showprintmargin=True,
-                 showinvisibles=False, usesofttabs=True, tabsize=None,
-                 *args, **kwargs):
+    def __init__(
+        self,
+        mode=None,
+        theme=None,
+        wordwrap=False,
+        width="500px",
+        height="300px",
+        minlines=None,
+        maxlines=None,
+        showprintmargin=True,
+        showinvisibles=False,
+        usesofttabs=True,
+        tabsize=None,
+        *args,
+        **kwargs
+    ):
         self.mode = mode
         self.theme = theme
         self.wordwrap = wordwrap
@@ -28,19 +40,14 @@ class AceWidget(forms.Textarea):
 
     @property
     def media(self):
-        js = [
-            "django_ace/ace/ace.js",
-            "django_ace/widget.js"
-        ]
+        js = ["django_ace/ace/ace.js", "django_ace/widget.js"]
 
         if self.mode:
             js.append("django_ace/ace/mode-%s.js" % self.mode)
         if self.theme:
             js.append("django_ace/ace/theme-%s.js" % self.theme)
 
-        css = {
-            "screen": ["django_ace/widget.css"]
-        }
+        css = {"screen": ["django_ace/widget.css"]}
 
         return forms.Media(js=js, css=css)
 
@@ -49,7 +56,7 @@ class AceWidget(forms.Textarea):
 
         ace_attrs = {
             "class": "django-ace-widget loading",
-            "style": "width:%s; height:%s" % (self.width, self.height)
+            "style": "width:%s; height:%s" % (self.width, self.height),
         }
 
         if self.mode:
@@ -71,13 +78,15 @@ class AceWidget(forms.Textarea):
 
         textarea = super(AceWidget, self).render(name, value, attrs, renderer)
 
-        html = '<div%s><div></div></div>%s' % (flatatt(ace_attrs), textarea)
+        html = "<div%s><div></div></div>%s" % (flatatt(ace_attrs), textarea)
 
         # add toolbar
-        toolbar = ('<div class="django-ace-editor">'
-                   '<div style="width: %s" class="django-ace-toolbar">'
-                   '<a href="./" class="django-ace-max_min"></a>'
-                   '</div>%s</div>')
+        toolbar = (
+            '<div class="django-ace-editor">'
+            '<div style="width: %s" class="django-ace-toolbar">'
+            '<a href="./" class="django-ace-max_min"></a>'
+            "</div>%s</div>"
+        )
 
         html = toolbar % (self.width, html)
 
