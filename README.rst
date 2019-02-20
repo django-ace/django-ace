@@ -65,7 +65,12 @@ Then browser to ``http://localhost:8000``.
 Change log
 ==========
 
+v1.0.5
+------
+
 - New widget option ``tabsize``.
+- Upgrade ACE editor to version v1.4.2.
+
 
 v1.0.4
 ------
