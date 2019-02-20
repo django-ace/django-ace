@@ -11,7 +11,7 @@ class AceWidget(forms.Textarea):
     def __init__(self, mode=None, theme=None, wordwrap=False, width="500px",
                  height="300px", minlines=None, maxlines=None,
                  showprintmargin=True,
-                 showinvisibles=False, tabsize=None, usesofttabs=True,
+                 showinvisibles=False, usesofttabs=True, tabsize=None,
                  *args, **kwargs):
         self.mode = mode
         self.theme = theme
