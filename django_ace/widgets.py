@@ -22,6 +22,7 @@ class AceWidget(forms.Textarea):
         showinvisibles=False,
         usesofttabs=True,
         tabsize=None,
+        fontsize=None,
         *args,
         **kwargs
     ):
@@ -35,6 +36,7 @@ class AceWidget(forms.Textarea):
         self.showprintmargin = showprintmargin
         self.showinvisibles = showinvisibles
         self.tabsize = tabsize
+        self.fontsize = fontsize
         self.usesofttabs = usesofttabs
         super(AceWidget, self).__init__(*args, **kwargs)
 
@@ -71,6 +73,8 @@ class AceWidget(forms.Textarea):
             ace_attrs["data-maxlines"] = str(self.maxlines)
         if self.tabsize:
             ace_attrs["data-tabsize"] = str(self.tabsize)
+        if self.fontsize:
+            ace_attrs["data-fontsize"] = str(self.fontsize)
 
         ace_attrs["data-showprintmargin"] = "true" if self.showprintmargin else "false"
         ace_attrs["data-showinvisibles"] = "true" if self.showinvisibles else "false"
