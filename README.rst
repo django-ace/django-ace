@@ -25,10 +25,23 @@ Themes are also supported::
     class EditorForm(forms.Form):
         text = forms.CharField(widget=AceWidget(mode='css', theme='twilight'))
 
-Additional options are::
+All options are::
 
     class EditorForm(forms.Form):
-        text = forms.CharField(widget=AceWidget(wordwrap=False, width="500px", height="300px", showprintmargin=True))
+        text = forms.CharField(widget=AceWidget(
+            mode="python",
+            theme="twilight",
+            wordwrap=False,
+            width="500px",
+            height="300px",
+            minlines=None,
+            maxlines=None,
+            showprintmargin=True,
+            showinvisibles=False,
+            usesofttabs=True,
+            tabsize=None,
+            fontsize=None,
+            toolbar=True))
 
 
 Install
