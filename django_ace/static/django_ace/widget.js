@@ -53,7 +53,7 @@
             window.fullscreen = false;
         }
         else {
-            window.ace_widget = { 
+            window.ace_widget = {
                 'width': widget.offsetWidth,
                 'height': widget.offsetHeight,
             }
@@ -67,7 +67,7 @@
             window.scrollTo(0, 0);
             window.fullscreen = true;
             editor.resize();
-        }                
+        }
     }
 
     function apply_widget(widget) {
@@ -84,15 +84,16 @@
             tabsize = widget.getAttribute('data-tabsize'),
             fontsize = widget.getAttribute('data-fontsize'),
             usesofttabs = widget.getAttribute('data-usesofttabs'),
-            toolbar = prev(widget),
-            main_block = toolbar.parentNode;
-
-        // Toolbar maximize/minimize button
-        var min_max = toolbar.getElementsByClassName('django-ace-max_min');
-        min_max[0].onclick = function() {
-            minimizeMaximize(widget, main_block, editor);
-            return false;
-        };
+            toolbar = prev(widget);
+        var main_block = div.parentNode.parentNode;
+        if (toolbar != null) {
+            // Toolbar maximize/minimize button
+            var min_max = toolbar.getElementsByClassName('django-ace-max_min');
+            min_max[0].onclick = function() {
+                minimizeMaximize(widget, main_block, editor);
+                return false;
+            };
+        }
 
         editor.getSession().setValue(textarea.value);
 
@@ -143,7 +144,7 @@
                 minimizeMaximize(widget, main_block, editor);
             },
             readOnly: true // false if this command should not apply in readOnly mode
-        });        
+        });
     }
 
     function init() {

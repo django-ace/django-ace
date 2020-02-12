@@ -23,6 +23,7 @@ class AceWidget(forms.Textarea):
         usesofttabs=True,
         tabsize=None,
         fontsize=None,
+        toolbar=True,
         *args,
         **kwargs
     ):
@@ -37,6 +38,7 @@ class AceWidget(forms.Textarea):
         self.showinvisibles = showinvisibles
         self.tabsize = tabsize
         self.fontsize = fontsize
+        self.toolbar = toolbar
         self.usesofttabs = usesofttabs
         super(AceWidget, self).__init__(*args, **kwargs)
 
@@ -82,16 +84,15 @@ class AceWidget(forms.Textarea):
 
         textarea = super(AceWidget, self).render(name, value, attrs, renderer)
 
-        html = "<div%s><div></div></div>%s" % (flatatt(ace_attrs), textarea)
+        html = "<div{}><div></div></div>{}".format(flatatt(ace_attrs), textarea)
 
-        # add toolbar
-        toolbar = (
-            '<div class="django-ace-editor">'
-            '<div style="width: %s" class="django-ace-toolbar">'
-            '<a href="./" class="django-ace-max_min"></a>'
-            "</div>%s</div>"
-        )
+        if self.toolbar:
+            toolbar = (
+                '<div style="width: {}" class="django-ace-toolbar">'
+                '<a href="./" class="django-ace-max_min"></a>'
+                "</div>"
+            ).format(self.width)
+            html = toolbar + html
 
-        html = toolbar % (self.width, html)
-
+        html = '<div class="django-ace-editor">{}</div>'.format(html)
         return mark_safe(html)
