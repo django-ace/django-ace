@@ -78,6 +78,20 @@ Then browser to ``http://localhost:8000``.
 Change log
 ==========
 
+v1.0.7
+------
+
+- New widget option ``toolbar``.
+- Update ACE editor to version v1.4.8.
+
+
+v1.0.6
+------
+
+- New widget option ``fontsize``.
+- Update ACE editor to version v1.4.7.
+
+
 v1.0.5
 ------
 
