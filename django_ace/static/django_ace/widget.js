@@ -36,12 +36,12 @@
     }
 
     function redraw(element){
-    element = $(element);
-    var n = document.createTextNode(' ');
-    element.appendChild(n);
-    (function(){n.parentNode.removeChild(n)}).defer();
-    return element;
-  }
+        element = $(element);
+        var n = document.createTextNode(' ');
+        element.appendChild(n);
+        (function(){n.parentNode.removeChild(n)}).defer();
+        return element;
+    }
 
     function minimizeMaximize(widget, main_block, editor) {
         if (window.fullscreen == true) {
@@ -85,7 +85,9 @@
             fontsize = widget.getAttribute('data-fontsize'),
             usesofttabs = widget.getAttribute('data-usesofttabs'),
             toolbar = prev(widget);
+
         var main_block = div.parentNode.parentNode;
+
         if (toolbar != null) {
             // Toolbar maximize/minimize button
             var min_max = toolbar.getElementsByClassName('django-ace-max_min');
@@ -95,6 +97,7 @@
             };
         }
 
+        // load initial data
         editor.getSession().setValue(textarea.value);
 
         // the editor is initially absolute positioned
@@ -133,6 +136,7 @@
             editor.getSession().setUseSoftTabs(false);
         }
 
+        // write data back to original textarea
         editor.getSession().on('change', function() {
             textarea.value = editor.getSession().getValue();
         });
