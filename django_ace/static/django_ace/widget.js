@@ -188,6 +188,11 @@
         }
     }
 
+    django.jQuery(document).on('formset:added', function(event, $row, formsetName) {
+        // Row added to InlineModelAdmin
+        init();
+    });
+
     if (window.addEventListener) { // W3C
         window.addEventListener('load', init);
     } else if (window.attachEvent) { // Microsoft
