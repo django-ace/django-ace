@@ -25,12 +25,21 @@ Themes are also supported::
     class EditorForm(forms.Form):
         text = forms.CharField(widget=AceWidget(mode='css', theme='twilight'))
 
+To deactivate the syntax checker completely, disable the Web Worker::
+
+    class EditorForm(forms.Form):
+        text = forms.CharField(widget=AceWidget(
+            mode='css', theme='twilight', use_worker=False
+        ))
+
+
 All options are::
 
     class EditorForm(forms.Form):
         text = forms.CharField(widget=AceWidget(
             mode="python",
-            theme="twilight",
+            theme="dawn",
+            use_worker=True,
             wordwrap=False,
             width="500px",
             height="300px",
@@ -41,7 +50,8 @@ All options are::
             usesofttabs=True,
             tabsize=None,
             fontsize=None,
-            toolbar=True))
+            toolbar=True,
+        ))
 
 
 Install
