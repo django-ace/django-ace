@@ -1,4 +1,5 @@
-from setuptools import setup, find_packages
+# -*- coding: utf-8 -*-
+from setuptools import find_packages, setup
 
 setup(
     name="django-ace",
@@ -14,11 +15,11 @@ setup(
     install_requires=["Django>1.11"],
     classifiers=[
         "Development Status :: 5 - Production/Stable",
-        "Environment :: Web Environment",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: BSD License",
-        "Operating System :: OS Independent",
         "Programming Language :: Python",
+        "Programming Language :: Python :: 2",
+        "Programming Language :: Python :: 3",
         "Framework :: Django",
     ],
 )
