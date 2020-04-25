@@ -102,7 +102,7 @@
         }
 
         // load initial data
-        editor.getSession().setValue(textarea.value);
+        editor.session.setValue(textarea.value);
 
         // the editor is initially absolute positioned
         textarea.style.display = "none";
@@ -115,7 +115,7 @@
             editor.setTheme("ace/theme/" + theme);
         }
         if (wordwrap == "true") {
-            editor.getSession().setUseWrapMode(true);
+            editor.session.setUseWrapMode(true);
         }
         if (!!minlines) {
             editor.setOption("minLines", minlines);
@@ -136,12 +136,12 @@
             editor.setOption("fontSize", fontsize);
         }
         if (usesofttabs == "false") {
-            editor.getSession().setUseSoftTabs(false);
+            editor.session.setUseSoftTabs(false);
         }
 
         // write data back to original textarea
-        editor.getSession().on('change', function() {
-            textarea.value = editor.getSession().getValue();
+        editor.session.on('change', function() {
+            textarea.value = editor.session.getValue();
         });
 
         editor.commands.addCommand({
