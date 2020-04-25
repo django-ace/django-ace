@@ -75,6 +75,7 @@
             textarea = next(widget),
             mode = widget.getAttribute('data-mode'),
             theme = widget.getAttribute('data-theme'),
+            useWorker = widget.hasAttribute('data-use-worker'),
             wordwrap = widget.getAttribute('data-wordwrap'),
             minlines = widget.getAttribute('data-minlines'),
             maxlines = widget.getAttribute('data-maxlines'),
@@ -86,7 +87,9 @@
             toolbar = prev(widget);
 
         // initialize editor and attach to widget element (for use in formset:removed)
-        var editor = widget.editor = ace.edit(div);
+        var editor = widget.editor = ace.edit(div, {
+            useWorker: useWorker
+        });
 
         var main_block = div.parentNode.parentNode;
         if (toolbar != null) {
