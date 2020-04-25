@@ -13,6 +13,7 @@ setup(
     packages=find_packages(exclude=["example", "example.*"]),
     include_package_data=True,
     install_requires=["Django>1.11"],
+    tests_require=["html5lib"],
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
