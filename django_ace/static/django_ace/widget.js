@@ -73,7 +73,6 @@
     function apply_widget(widget) {
         var div = widget.firstChild,
             textarea = next(widget),
-            editor = ace.edit(div),
             mode = widget.getAttribute('data-mode'),
             theme = widget.getAttribute('data-theme'),
             wordwrap = widget.getAttribute('data-wordwrap'),
@@ -86,8 +85,10 @@
             usesofttabs = widget.getAttribute('data-usesofttabs'),
             toolbar = prev(widget);
 
-        var main_block = div.parentNode.parentNode;
+        // initialize editor and attach to widget element (for use in formset:removed)
+        var editor = widget.editor = ace.edit(div);
 
+        var main_block = div.parentNode.parentNode;
         if (toolbar != null) {
             // Toolbar maximize/minimize button
             var min_max = toolbar.getElementsByClassName('django-ace-max_min');
@@ -189,9 +190,14 @@
     }
 
     django.jQuery(document).on('formset:added', function(event, $row, formsetName) {
-        // Row added to InlineModelAdmin
+        // Row added to InlineModelAdmin, initialize new widgets
         init();
     });
+    django.jQuery(document).on('formset:removed', function(event, $row, formsetName) {
+        // Row removed from InlineModelAdmin, destroy attached editor
+        $row.find('div.django-ace-widget')[0].editor.destroy()
+    });
+
 
     if (window.addEventListener) { // W3C
         window.addEventListener('load', init);
