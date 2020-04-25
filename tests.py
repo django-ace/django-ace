@@ -14,7 +14,9 @@ import django_ace
 class TestWidget(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        settings.configure()
+        settings.configure(TEMPLATES=[{
+            'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        }])
         django.setup()
 
     def test_media(self):
@@ -57,6 +59,18 @@ class TestWidget(unittest.TestCase):
             '<textarea name="name" rows="10" cols="40">\nvalue</textarea>' \
             '</div>'
         self.assertEqual(content, expected_content)
+
+    def test_attrib(self):
+        ace_widget = django_ace.AceWidget()
+        expected_attrs = {
+            'class': 'django-ace-widget loading',
+            'style': 'width:500px; height:300px',
+            'data-showinvisibles': 'false',
+            'data-showprintmargin': 'true',
+            'data-usesofttabs': 'true',
+            'data-use-worker': True,
+        }
+        self.assertEqual(ace_widget.get_attributes(), expected_attrs)
 
     def test_attrib_default(self, name='form-0-code', value='<html></html>'):
         ace_widget = django_ace.AceWidget()

@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from django import forms
+from django.template import Context, Template
 
 try:
     from django.forms.utils import flatatt
@@ -59,9 +60,7 @@ class AceWidget(forms.Textarea):
 
         return forms.Media(js=js, css=css)
 
-    def render(self, name, value, attrs=None, renderer=None):
-        attrs = attrs or {}
-
+    def get_attributes(self):
         ace_attrs = {
             "class": "django-ace-widget loading",
             "style": "width:%s; height:%s" % (self.width, self.height),
@@ -87,17 +86,25 @@ class AceWidget(forms.Textarea):
         ace_attrs["data-showinvisibles"] = "true" if self.showinvisibles else "false"
         ace_attrs["data-usesofttabs"] = "true" if self.usesofttabs else "false"
 
+        return ace_attrs
+
+    def render(self, name, value, attrs=None, renderer=None):
         textarea = super(AceWidget, self).render(name, value, attrs, renderer)
 
-        html = "<div{}><div></div></div>{}".format(flatatt(ace_attrs), textarea)
-
-        if self.toolbar:
-            toolbar = (
-                '<div style="width: {}" class="django-ace-toolbar">'
-                '<a href="./" class="django-ace-max_min"></a>'
-                "</div>"
-            ).format(self.width)
-            html = toolbar + html
-
-        html = '<div class="django-ace-editor">{}</div>'.format(html)
+        template = Template(
+            '{% spaceless %}'
+            '<div class="django-ace-editor">'
+            '{% if toolbar %}<div style="width: {{ width }}" class="django-ace-toolbar">'
+            '<a href="./" class="django-ace-max_min"></a>'
+            "</div>{% endif %}"
+            '<div{{ ace_attrs }}><div></div></div>{{ textarea|safe }}'
+            '</div>'
+            '{% endspaceless %}'
+        )
+        html = template.render(Context({
+            'ace_attrs': flatatt(self.get_attributes()),
+            'textarea': textarea,
+            'toolbar': self.toolbar,
+            'width': self.width,
+        }))
         return mark_safe(html)
