@@ -74,15 +74,20 @@ Example Project
 
 There's an example project included in the source, to try it do::
 
+    # install in virtualenv
     cd example/
     virtualenv .env
     . .env/bin/activate
     pip install -e ..
+    # prepare sqlite database
     ./manage.py makemigrations app
     ./manage.py migrate
+    # user for admin access
+    ./manage.py createsuperuser
+    # run dev-server
     ./manage.py runserver
 
-Then browser to ``http://localhost:8000``.
+Then browser to ``http://localhost:8000`` or ``http://localhost:8000/admin``.
 
 
 Change log
