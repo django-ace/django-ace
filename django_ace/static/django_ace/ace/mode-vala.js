@@ -6,8 +6,8 @@ var TextHighlightRules = require("./text_highlight_rules").TextHighlightRules;
 
 var ValaHighlightRules = function() {
 
-    this.$rules = { start: 
-       [ { token: 
+    this.$rules = { start:
+       [ { token:
             [ 'meta.using.vala',
               'keyword.other.using.vala',
               'meta.using.vala',
@@ -16,20 +16,20 @@ var ValaHighlightRules = function() {
               'punctuation.terminator.vala' ],
            regex: '^(\\s*)(using)\\b(?:(\\s*)([^ ;$]+)(\\s*)((?:;)?))?' },
          { include: '#code' } ],
-      '#all-types': 
+      '#all-types':
        [ { include: '#primitive-arrays' },
          { include: '#primitive-types' },
          { include: '#object-types' } ],
-      '#annotations': 
-       [ { token: 
+      '#annotations':
+       [ { token:
             [ 'storage.type.annotation.vala',
               'punctuation.definition.annotation-arguments.begin.vala' ],
            regex: '(@[^ (]+)(\\()',
-           push: 
+           push:
             [ { token: 'punctuation.definition.annotation-arguments.end.vala',
                 regex: '\\)',
                 next: 'pop' },
-              { token: 
+              { token:
                  [ 'constant.other.key.vala',
                    'text',
                    'keyword.operator.assignment.vala' ],
@@ -38,10 +38,10 @@ var ValaHighlightRules = function() {
               { token: 'punctuation.seperator.property.vala', regex: ',' },
               { defaultToken: 'meta.declaration.annotation.vala' } ] },
          { token: 'storage.type.annotation.vala', regex: '@\\w*' } ],
-      '#anonymous-classes-and-new': 
+      '#anonymous-classes-and-new':
        [ { token: 'keyword.control.new.vala',
            regex: '\\bnew\\b',
-           push_disabled: 
+           push_disabled:
             [ { token: 'text',
                 regex: '(?<=\\)|\\])(?!\\s*{)|(?<=})|(?=;)',
                 TODO: 'FIXME: regexp doesn\'t have js equivalent',
@@ -49,21 +49,21 @@ var ValaHighlightRules = function() {
                 next: 'pop' },
               { token: [ 'storage.type.vala', 'text' ],
                 regex: '(\\w+)(\\s*)(?=\\[)',
-                push: 
+                push:
                  [ { token: 'text', regex: '}|(?=;|\\))', next: 'pop' },
                    { token: 'text',
                      regex: '\\[',
-                     push: 
+                     push:
                       [ { token: 'text', regex: '\\]', next: 'pop' },
                         { include: '#code' } ] },
                    { token: 'text',
                      regex: '{',
-                     push: 
+                     push:
                       [ { token: 'text', regex: '(?=})', next: 'pop' },
                         { include: '#code' } ] } ] },
               { token: 'text',
                 regex: '(?=\\w.*\\()',
-                push: 
+                push:
                  [ { token: 'text',
                      regex: '(?<=\\))',
                      TODO: 'FIXME: regexp doesn\'t have js equivalent',
@@ -72,21 +72,21 @@ var ValaHighlightRules = function() {
                    { include: '#object-types' },
                    { token: 'text',
                      regex: '\\(',
-                     push: 
+                     push:
                       [ { token: 'text', regex: '\\)', next: 'pop' },
                         { include: '#code' } ] } ] },
               { token: 'meta.inner-class.vala',
                 regex: '{',
-                push: 
+                push:
                  [ { token: 'meta.inner-class.vala', regex: '}', next: 'pop' },
                    { include: '#class-body' },
                    { defaultToken: 'meta.inner-class.vala' } ] } ] } ],
-      '#assertions': 
-       [ { token: 
+      '#assertions':
+       [ { token:
             [ 'keyword.control.assert.vala',
               'meta.declaration.assertion.vala' ],
            regex: '\\b(assert|requires|ensures)(\\s)',
-           push: 
+           push:
             [ { token: 'meta.declaration.assertion.vala',
                 regex: '$',
                 next: 'pop' },
@@ -94,34 +94,34 @@ var ValaHighlightRules = function() {
                 regex: ':' },
               { include: '#code' },
               { defaultToken: 'meta.declaration.assertion.vala' } ] } ],
-      '#class': 
+      '#class':
        [ { token: 'meta.class.vala',
            regex: '(?=\\w?[\\w\\s]*(?:class|(?:@)?interface|enum|struct|namespace)\\s+\\w+)',
-           push: 
+           push:
             [ { token: 'paren.vala',
                 regex: '}',
                 next: 'pop' },
               { include: '#storage-modifiers' },
               { include: '#comments' },
-              { token: 
+              { token:
                  [ 'storage.modifier.vala',
                    'meta.class.identifier.vala',
                    'entity.name.type.class.vala' ],
                 regex: '(class|(?:@)?interface|enum|struct|namespace)(\\s+)([\\w\\.]+)' },
               { token: 'storage.modifier.extends.vala',
                 regex: ':',
-                push: 
+                push:
                  [ { token: 'meta.definition.class.inherited.classes.vala',
                      regex: '(?={|,)',
                      next: 'pop' },
                    { include: '#object-types-inherited' },
                    { include: '#comments' },
                    { defaultToken: 'meta.definition.class.inherited.classes.vala' } ] },
-              { token: 
+              { token:
                  [ 'storage.modifier.implements.vala',
                    'meta.definition.class.implemented.interfaces.vala' ],
                 regex: '(,)(\\s)',
-                push: 
+                push:
                  [ { token: 'meta.definition.class.implemented.interfaces.vala',
                      regex: '(?=\\{)',
                      next: 'pop' },
@@ -130,13 +130,13 @@ var ValaHighlightRules = function() {
                    { defaultToken: 'meta.definition.class.implemented.interfaces.vala' } ] },
               { token: 'paren.vala',
                 regex: '{',
-                push: 
+                push:
                  [ { token: 'paren.vala', regex: '(?=})', next: 'pop' },
                    { include: '#class-body' },
                    { defaultToken: 'meta.class.body.vala' } ] },
               { defaultToken: 'meta.class.vala' } ],
            comment: 'attempting to put namespace in here.' } ],
-      '#class-body': 
+      '#class-body':
        [ { include: '#comments' },
          { include: '#class' },
          { include: '#enums' },
@@ -144,12 +144,12 @@ var ValaHighlightRules = function() {
          { include: '#annotations' },
          { include: '#storage-modifiers' },
          { include: '#code' } ],
-      '#code': 
+      '#code':
        [ { include: '#comments' },
          { include: '#class' },
          { token: 'text',
            regex: '{',
-           push: 
+           push:
             [ { token: 'text', regex: '}', next: 'pop' },
               { include: '#code' } ] },
          { include: '#assertions' },
@@ -160,25 +160,25 @@ var ValaHighlightRules = function() {
          { include: '#storage-modifiers' },
          { include: '#strings' },
          { include: '#all-types' } ],
-      '#comments': 
+      '#comments':
        [ { token: 'punctuation.definition.comment.vala',
            regex: '/\\*\\*/' },
          { include: 'text.html.javadoc' },
          { include: '#comments-inline' } ],
-      '#comments-inline': 
+      '#comments-inline':
        [ { token: 'punctuation.definition.comment.vala',
            regex: '/\\*',
-           push: 
+           push:
             [ { token: 'punctuation.definition.comment.vala',
                 regex: '\\*/',
                 next: 'pop' },
               { defaultToken: 'comment.block.vala' } ] },
-         { token: 
+         { token:
             [ 'text',
               'punctuation.definition.comment.vala',
               'comment.line.double-slash.vala' ],
            regex: '(\\s*)(//)(.*$)' } ],
-      '#constants-and-special-vars': 
+      '#constants-and-special-vars':
        [ { token: 'constant.language.vala',
            regex: '\\b(?:true|false|null)\\b' },
          { token: 'variable.language.vala',
@@ -187,23 +187,23 @@ var ValaHighlightRules = function() {
            regex: '\\b(?:0(?:x|X)[0-9a-fA-F]*|(?:[0-9]+\\.?[0-9]*|\\.[0-9]+)(?:(?:e|E)(?:\\+|-)?[0-9]+)?)(?:[LlFfUuDd]|UL|ul)?\\b' },
          { token: [ 'keyword.operator.dereference.vala', 'constant.other.vala' ],
            regex: '((?:\\.)?)\\b([A-Z][A-Z0-9_]+)(?!<|\\.class|\\s*\\w+\\s*=)\\b' } ],
-      '#enums': 
+      '#enums':
        [ { token: 'text',
            regex: '^(?=\\s*[A-Z0-9_]+\\s*(?:{|\\(|,))',
-           push: 
+           push:
             [ { token: 'text', regex: '(?=;|})', next: 'pop' },
               { token: 'constant.other.enum.vala',
                 regex: '\\w+',
-                push: 
+                push:
                  [ { token: 'meta.enum.vala', regex: '(?=,|;|})', next: 'pop' },
                    { include: '#parens' },
                    { token: 'text',
                      regex: '{',
-                     push: 
+                     push:
                       [ { token: 'text', regex: '}', next: 'pop' },
                         { include: '#class-body' } ] },
                    { defaultToken: 'meta.enum.vala' } ] } ] } ],
-      '#keywords': 
+      '#keywords':
        [ { token: 'keyword.control.catch-exception.vala',
            regex: '\\b(?:try|catch|finally|throw)\\b' },
          { token: 'keyword.control.vala', regex: '\\?|:|\\?\\?' },
@@ -224,15 +224,15 @@ var ValaHighlightRules = function() {
            originalRegex: '(?<=\\S)\\.(?=\\S)' },
          { token: 'punctuation.terminator.vala', regex: ';' },
          { token: 'keyword.operator.ownership', regex: 'owned|unowned' } ],
-      '#methods': 
+      '#methods':
        [ { token: 'meta.method.vala',
            regex: '(?!new)(?=\\w.*\\s+)(?=[^=]+\\()',
-           push: 
+           push:
             [ { token: 'paren.vala', regex: '}|(?=;)', next: 'pop' },
               { include: '#storage-modifiers' },
               { token: [ 'entity.name.function.vala', 'meta.method.identifier.vala' ],
                 regex: '([\\~\\w\\.]+)(\\s*\\()',
-                push: 
+                push:
                  [ { token: 'meta.method.identifier.vala',
                      regex: '\\)',
                      next: 'pop' },
@@ -240,7 +240,7 @@ var ValaHighlightRules = function() {
                    { defaultToken: 'meta.method.identifier.vala' } ] },
               { token: 'meta.method.return-type.vala',
                 regex: '(?=\\w.*\\s+\\w+\\s*\\()',
-                push: 
+                push:
                  [ { token: 'meta.method.return-type.vala',
                      regex: '(?=\\w+\\s*\\()',
                      next: 'pop' },
@@ -249,32 +249,32 @@ var ValaHighlightRules = function() {
               { include: '#throws' },
               { token: 'paren.vala',
                 regex: '{',
-                push: 
+                push:
                  [ { token: 'paren.vala', regex: '(?=})', next: 'pop' },
                    { include: '#code' },
                    { defaultToken: 'meta.method.body.vala' } ] },
               { defaultToken: 'meta.method.vala' } ] } ],
-      '#namespace': 
+      '#namespace':
        [ { token: 'text',
            regex: '^(?=\\s*[A-Z0-9_]+\\s*(?:{|\\(|,))',
-           push: 
+           push:
             [ { token: 'text', regex: '(?=;|})', next: 'pop' },
               { token: 'constant.other.namespace.vala',
                 regex: '\\w+',
-                push: 
+                push:
                  [ { token: 'meta.namespace.vala', regex: '(?=,|;|})', next: 'pop' },
                    { include: '#parens' },
                    { token: 'text',
                      regex: '{',
-                     push: 
+                     push:
                       [ { token: 'text', regex: '}', next: 'pop' },
                         { include: '#code' } ] },
                    { defaultToken: 'meta.namespace.vala' } ] } ],
            comment: 'This is not quite right. See the class grammar right now' } ],
-      '#object-types': 
+      '#object-types':
        [ { token: 'storage.type.generic.vala',
            regex: '\\b(?:[a-z]\\w*\\.)*[A-Z]+\\w*<',
-           push: 
+           push:
             [ { token: 'storage.type.generic.vala',
                 regex: '>|[^\\w\\s,\\?<\\[()\\]]',
                 TODO: 'FIXME: regexp doesn\'t have js equivalent',
@@ -283,7 +283,7 @@ var ValaHighlightRules = function() {
               { include: '#object-types' },
               { token: 'storage.type.generic.vala',
                 regex: '<',
-                push: 
+                push:
                  [ { token: 'storage.type.generic.vala',
                      regex: '>|[^\\w\\s,\\[\\]<]',
                      next: 'pop' },
@@ -292,70 +292,70 @@ var ValaHighlightRules = function() {
               { defaultToken: 'storage.type.generic.vala' } ] },
          { token: 'storage.type.object.array.vala',
            regex: '\\b(?:[a-z]\\w*\\.)*[A-Z]+\\w*(?=\\[)',
-           push: 
+           push:
             [ { token: 'storage.type.object.array.vala',
                 regex: '(?=[^\\]\\s])',
                 next: 'pop' },
               { token: 'text',
                 regex: '\\[',
-                push: 
+                push:
                  [ { token: 'text', regex: '\\]', next: 'pop' },
                    { include: '#code' } ] },
               { defaultToken: 'storage.type.object.array.vala' } ] },
-         { token: 
+         { token:
             [ 'storage.type.vala',
               'keyword.operator.dereference.vala',
               'storage.type.vala' ],
            regex: '\\b(?:([a-z]\\w*)(\\.))*([A-Z]+\\w*\\b)' } ],
-      '#object-types-inherited': 
+      '#object-types-inherited':
        [ { token: 'entity.other.inherited-class.vala',
            regex: '\\b(?:[a-z]\\w*\\.)*[A-Z]+\\w*<',
-           push: 
+           push:
             [ { token: 'entity.other.inherited-class.vala',
                 regex: '>|[^\\w\\s,<]',
                 next: 'pop' },
               { include: '#object-types' },
               { token: 'storage.type.generic.vala',
                 regex: '<',
-                push: 
+                push:
                  [ { token: 'storage.type.generic.vala',
                      regex: '>|[^\\w\\s,<]',
                      next: 'pop' },
                    { defaultToken: 'storage.type.generic.vala' } ],
                 comment: 'This is just to support <>\'s with no actual type prefix' },
               { defaultToken: 'entity.other.inherited-class.vala' } ] },
-         { token: 
+         { token:
             [ 'entity.other.inherited-class.vala',
               'keyword.operator.dereference.vala',
               'entity.other.inherited-class.vala' ],
            regex: '\\b(?:([a-z]\\w*)(\\.))*([A-Z]+\\w*)' } ],
-      '#parameters': 
+      '#parameters':
        [ { token: 'storage.modifier.vala', regex: 'final' },
          { include: '#primitive-arrays' },
          { include: '#primitive-types' },
          { include: '#object-types' },
          { token: 'variable.parameter.vala', regex: '\\w+' } ],
-      '#parens': 
+      '#parens':
        [ { token: 'text',
            regex: '\\(',
-           push: 
+           push:
             [ { token: 'text', regex: '\\)', next: 'pop' },
               { include: '#code' } ] } ],
-      '#primitive-arrays': 
+      '#primitive-arrays':
        [ { token: 'storage.type.primitive.array.vala',
            regex: '\\b(?:bool|byte|sbyte|char|decimal|double|float|int|uint|long|ulong|object|short|ushort|string|void|int8|int16|int32|int64|uint8|uint16|uint32|uint64)(?:\\[\\])*\\b' } ],
-      '#primitive-types': 
+      '#primitive-types':
        [ { token: 'storage.type.primitive.vala',
            regex: '\\b(?:var|bool|byte|sbyte|char|decimal|double|float|int|uint|long|ulong|object|short|ushort|string|void|signal|int8|int16|int32|int64|uint8|uint16|uint32|uint64)\\b',
            comment: 'var is not really a primitive, but acts like one in most cases' } ],
-      '#storage-modifiers': 
+      '#storage-modifiers':
        [ { token: 'storage.modifier.vala',
            regex: '\\b(?:public|private|protected|internal|static|final|sealed|virtual|override|abstract|readonly|volatile|dynamic|async|unsafe|out|ref|weak|owned|unowned|const)\\b',
            comment: 'Not sure about unsafe and readonly' } ],
-      '#strings': 
+      '#strings':
        [ { token: 'punctuation.definition.string.begin.vala',
            regex: '@"',
-           push: 
+           push:
             [ { token: 'punctuation.definition.string.end.vala',
                 regex: '"',
                 next: 'pop' },
@@ -364,7 +364,7 @@ var ValaHighlightRules = function() {
               { defaultToken: 'string.quoted.interpolated.vala' } ] },
          { token: 'punctuation.definition.string.begin.vala',
            regex: '"',
-           push: 
+           push:
             [ { token: 'punctuation.definition.string.end.vala',
                 regex: '"',
                 next: 'pop' },
@@ -374,7 +374,7 @@ var ValaHighlightRules = function() {
               { defaultToken: 'string.quoted.double.vala' } ] },
          { token: 'punctuation.definition.string.begin.vala',
            regex: '\'',
-           push: 
+           push:
             [ { token: 'punctuation.definition.string.end.vala',
                 regex: '\'',
                 next: 'pop' },
@@ -382,29 +382,29 @@ var ValaHighlightRules = function() {
               { defaultToken: 'string.quoted.single.vala' } ] },
          { token: 'punctuation.definition.string.begin.vala',
            regex: '"""',
-           push: 
+           push:
             [ { token: 'punctuation.definition.string.end.vala',
                 regex: '"""',
                 next: 'pop' },
               { token: 'constant.character.escape.vala',
                 regex: '%[\\w\\.\\-]+' },
               { defaultToken: 'string.quoted.triple.vala' } ] } ],
-      '#throws': 
+      '#throws':
        [ { token: 'storage.modifier.vala',
            regex: 'throws',
-           push: 
+           push:
             [ { token: 'meta.throwables.vala', regex: '(?={|;)', next: 'pop' },
               { include: '#object-types' },
               { defaultToken: 'meta.throwables.vala' } ] } ],
-      '#values': 
+      '#values':
        [ { include: '#strings' },
          { include: '#object-types' },
          { include: '#constants-and-special-vars' } ] };
-    
+
     this.normalizeRules();
 };
 
-ValaHighlightRules.metaData = { 
+ValaHighlightRules.metaData = {
     comment: 'Based heavily on the Java bundle\'s language syntax. TODO:\n* Closures\n* Delegates\n* Properties: Better support for properties.\n* Annotations\n* Error domains\n* Named arguments\n* Array slicing, negative indexes, multidimensional\n* construct blocks\n* lock blocks?\n* regex literals\n* DocBlock syntax highlighting. (Currently importing javadoc)\n* Folding rule for comments.\n',
       fileTypes: [ 'vala' ],
       foldingStartMarker: '(\\{\\s*(//.*)?$|^\\s*// \\{\\{\\{)',
@@ -438,7 +438,7 @@ var FoldMode = exports.FoldMode = function(commentRegex) {
 oop.inherits(FoldMode, BaseFoldMode);
 
 (function() {
-    
+
     this.foldingStartMarker = /([\{\[\(])[^\}\]\)]*$|^\s*(\/\*)/;
     this.foldingStopMarker = /^[^\[\{\(]*([\}\]\)])|^[\s\*]*(\*\/)/;
     this.singleLineBlockCommentRe= /^\s*(\/\*).*\*\/\s*$/;
@@ -447,42 +447,42 @@ oop.inherits(FoldMode, BaseFoldMode);
     this._getFoldWidgetBase = this.getFoldWidget;
     this.getFoldWidget = function(session, foldStyle, row) {
         var line = session.getLine(row);
-    
+
         if (this.singleLineBlockCommentRe.test(line)) {
             if (!this.startRegionRe.test(line) && !this.tripleStarBlockCommentRe.test(line))
                 return "";
         }
-    
+
         var fw = this._getFoldWidgetBase(session, foldStyle, row);
-    
+
         if (!fw && this.startRegionRe.test(line))
             return "start"; // lineCommentRegionStart
-    
+
         return fw;
     };
 
     this.getFoldWidgetRange = function(session, foldStyle, row, forceMultiline) {
         var line = session.getLine(row);
-        
+
         if (this.startRegionRe.test(line))
             return this.getCommentRegionBlock(session, line, row);
-        
+
         var match = line.match(this.foldingStartMarker);
         if (match) {
             var i = match.index;
 
             if (match[1])
                 return this.openingBracketBlock(session, match[1], row, i);
-                
+
             var range = session.getCommentFoldRange(row, i + match[0].length, 1);
-            
+
             if (range && !range.isMultiLine()) {
                 if (forceMultiline) {
                     range = this.getSectionRange(session, row);
                 } else if (foldStyle != "all")
                     range = null;
             }
-            
+
             return range;
         }
 
@@ -499,7 +499,7 @@ oop.inherits(FoldMode, BaseFoldMode);
             return session.getCommentFoldRange(row, i, -1);
         }
     };
-    
+
     this.getSectionRange = function(session, row) {
         var line = session.getLine(row);
         var startIndent = line.search(/\S/);
@@ -516,7 +516,7 @@ oop.inherits(FoldMode, BaseFoldMode);
             if  (startIndent > indent)
                 break;
             var subRange = this.getFoldWidgetRange(session, "all", row);
-            
+
             if (subRange) {
                 if (subRange.start.row <= startRow) {
                     break;
@@ -528,14 +528,14 @@ oop.inherits(FoldMode, BaseFoldMode);
             }
             endRow = row;
         }
-        
+
         return new Range(startRow, startColumn, endRow, session.getLine(endRow).length);
     };
     this.getCommentRegionBlock = function(session, line, row) {
         var startColumn = line.search(/\s*$/);
         var maxRow = session.getLength();
         var startRow = row;
-        
+
         var re = /^\s*(?:\/\*|\/\/|--)#?(end)?region\b/;
         var depth = 1;
         while (++row < maxRow) {
@@ -612,7 +612,7 @@ var MatchingBraceOutdent = require("./matching_brace_outdent").MatchingBraceOutd
 
 var Mode = function() {
     this.HighlightRules = ValaHighlightRules;
-    
+
     this.$outdent = new MatchingBraceOutdent();
     this.$behaviour = new CstyleBehaviour();
     this.foldingRules = new CStyleFoldMode();
@@ -663,6 +663,7 @@ oop.inherits(Mode, TextMode);
         this.$outdent.autoOutdent(doc, row);
     };
     this.$id = "ace/mode/vala";
+    this.snippetFileId = "ace/snippets/vala";
 }).call(Mode.prototype);
 
 exports.Mode = Mode;
@@ -673,4 +674,3 @@ exports.Mode = Mode;
                         }
                     });
                 })();
-            

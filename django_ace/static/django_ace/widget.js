@@ -36,12 +36,12 @@
     }
 
     function redraw(element){
-    element = $(element);
-    var n = document.createTextNode(' ');
-    element.appendChild(n);
-    (function(){n.parentNode.removeChild(n)}).defer();
-    return element;
-  }
+        element = $(element);
+        var n = document.createTextNode(' ');
+        element.appendChild(n);
+        (function(){n.parentNode.removeChild(n)}).defer();
+        return element;
+    }
 
     function minimizeMaximize(widget, main_block, editor) {
         if (window.fullscreen == true) {
@@ -73,18 +73,26 @@
     function apply_widget(widget) {
         var div = widget.firstChild,
             textarea = next(widget),
-            editor = ace.edit(div),
             mode = widget.getAttribute('data-mode'),
             theme = widget.getAttribute('data-theme'),
-            wordwrap = widget.getAttribute('data-wordwrap'),
+            useWorker = widget.hasAttribute('data-use-worker'),
+            wordwrap = widget.hasAttribute('data-wordwrap'),
             minlines = widget.getAttribute('data-minlines'),
             maxlines = widget.getAttribute('data-maxlines'),
-            showprintmargin = widget.getAttribute('data-showprintmargin'),
-            showinvisibles = widget.getAttribute('data-showinvisibles'),
+            showprintmargin = widget.hasAttribute('data-showprintmargin'),
+            showinvisibles = widget.hasAttribute('data-showinvisibles'),
             tabsize = widget.getAttribute('data-tabsize'),
             fontsize = widget.getAttribute('data-fontsize'),
-            usesofttabs = widget.getAttribute('data-usesofttabs'),
+            usesofttabs = widget.hasAttribute('data-usesofttabs'),
             toolbar = prev(widget);
+
+        // initialize editor and attach to widget element (for use in formset:removed)
+        var editor = widget.editor = ace.edit(div, {
+            useWorker: useWorker,
+            showPrintMargin: showprintmargin,
+            showInvisibles: showinvisibles
+        });
+
         var main_block = div.parentNode.parentNode;
         if (toolbar != null) {
             // Toolbar maximize/minimize button
@@ -95,21 +103,18 @@
             };
         }
 
-        editor.getSession().setValue(textarea.value);
+        // load initial data
+        editor.session.setValue(textarea.value);
 
         // the editor is initially absolute positioned
         textarea.style.display = "none";
 
         // options
         if (mode) {
-            var Mode = require("ace/mode/" + mode).Mode;
-            editor.getSession().setMode(new Mode());
+            editor.session.setMode("ace/mode/" + mode);
         }
         if (theme) {
             editor.setTheme("ace/theme/" + theme);
-        }
-        if (wordwrap == "true") {
-            editor.getSession().setUseWrapMode(true);
         }
         if (!!minlines) {
             editor.setOption("minLines", minlines);
@@ -117,24 +122,18 @@
         if (!!maxlines) {
             editor.setOption("maxLines", maxlines=="-1" ? Infinity : maxlines);
         }
-        if (showprintmargin == "false") {
-            editor.setShowPrintMargin(false);
-        }
-        if (showinvisibles == "true") {
-            editor.setShowInvisibles(true);
-        }
         if (!!tabsize) {
             editor.setOption("tabSize", tabsize);
         }
         if (!!fontsize) {
             editor.setOption("fontSize", fontsize);
         }
-        if (usesofttabs == "false") {
-            editor.getSession().setUseSoftTabs(false);
-        }
+        editor.session.setUseSoftTabs(usesofttabs);
+        editor.session.setUseWrapMode(wordwrap);
 
-        editor.getSession().on('change', function() {
-            textarea.value = editor.getSession().getValue();
+        // write data back to original textarea
+        editor.session.on('change', function() {
+            textarea.value = editor.session.getValue();
         });
 
         editor.commands.addCommand({
@@ -147,15 +146,53 @@
         });
     }
 
+    /**
+     * Determine if the given element is within the element that holds the template
+     * for dynamically added forms for an InlineModelAdmin.
+     *
+     * @param {*} widget - The element to check.
+     */
+    function is_empty_form(widget) {
+        var empty_forms = document.getElementsByClassName('empty-form');
+        for (empty_form of empty_forms) {
+            if (empty_form.contains(widget)) {
+                return true
+            }
+        }
+        return false
+    }
+
     function init() {
         var widgets = document.getElementsByClassName('django-ace-widget');
 
-        for (var i = 0; i < widgets.length; i++) {
-            var widget = widgets[i];
+        for (widget of widgets) {
+
+            // skip the widget in the admin inline empty-form
+            if (is_empty_form(widget)) {
+                continue;
+            }
+
+            // skip already loaded widgets
+            if (!widget.classList.contains("loading")) {
+                continue;
+            }
+
             widget.className = "django-ace-widget"; // remove `loading` class
 
             apply_widget(widget);
         }
+    }
+
+    // Django's jQuery instance is available, we are probably in the admin
+    if (typeof django == 'object') {
+        django.jQuery(document).on('formset:added', function (event, $row, formsetName) {
+            // Row added to InlineModelAdmin, initialize new widgets
+            init();
+        });
+        django.jQuery(document).on('formset:removed', function (event, $row, formsetName) {
+            // Row removed from InlineModelAdmin, destroy attached editor
+            $row.find('div.django-ace-widget')[0].editor.destroy()
+        });
     }
 
     if (window.addEventListener) { // W3C

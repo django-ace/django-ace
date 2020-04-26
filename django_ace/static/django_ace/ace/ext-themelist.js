@@ -13,7 +13,7 @@ var themeData = [
     ["Solarized Light"],
     ["TextMate"       ],
     ["Tomorrow"       ],
-    ["XCode"          ],
+    ["Xcode"          ],
     ["Kuroir"],
     ["KatzenMilch"],
     ["SQL Server"           ,"sqlserver"               , "light"],
@@ -30,6 +30,7 @@ var themeData = [
     ["Merbivore Soft"       ,"merbivore_soft"          ,  "dark"],
     ["Mono Industrial"      ,"mono_industrial"         ,  "dark"],
     ["Monokai"              ,"monokai"                 ,  "dark"],
+    ["Nord Dark"            ,"nord_dark"               ,  "dark"],
     ["Pastel on dark"       ,"pastel_on_dark"          ,  "dark"],
     ["Solarized Dark"       ,"solarized_dark"          ,  "dark"],
     ["Terminal"             ,"terminal"                ,  "dark"],
@@ -62,4 +63,3 @@ exports.themes = themeData.map(function(data) {
                         }
                     });
                 })();
-            

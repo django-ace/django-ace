@@ -17,7 +17,7 @@ var SqlHighlightRules = function() {
     );
 
     var builtinFunctions = (
-        "avg|count|first|last|max|min|sum|ucase|lcase|mid|len|round|rank|now|format|" + 
+        "avg|count|first|last|max|min|sum|ucase|lcase|mid|len|round|rank|now|format|" +
         "coalesce|ifnull|isnull|nvl"
     );
 
@@ -96,6 +96,7 @@ oop.inherits(Mode, TextMode);
     this.lineCommentStart = "--";
 
     this.$id = "ace/mode/sql";
+    this.snippetFileId = "ace/snippets/sql";
 }).call(Mode.prototype);
 
 exports.Mode = Mode;
@@ -107,4 +108,3 @@ exports.Mode = Mode;
                         }
                     });
                 })();
-            

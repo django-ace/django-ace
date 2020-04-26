@@ -208,7 +208,7 @@ var ShHighlightRules = function() {
             push : "start"
         }]
     };
-    
+
     this.normalizeRules();
 };
 
@@ -233,7 +233,7 @@ var MakefileHighlightRules = function() {
         "invalid.deprecated": "debugger"
     }, "string");
 
-    this.$rules = 
+    this.$rules =
         {
     "start": [
         {
@@ -270,11 +270,11 @@ var MakefileHighlightRules = function() {
         {
             token: keywordMapper,
             regex : "[a-zA-Z_$][a-zA-Z0-9_$]*\\b"
-        }, 
+        },
         {
             token: "string",
             regex : "\\w+"
-        }, 
+        },
         {
             token : "string.interpolated.backtick.makefile",
             regex : "`",
@@ -393,11 +393,12 @@ var Mode = function() {
 oop.inherits(Mode, TextMode);
 
 (function() {
-       
-    this.lineCommentStart = "#";    
+
+    this.lineCommentStart = "#";
     this.$indentWithTabs = true;
-    
+
     this.$id = "ace/mode/makefile";
+    this.snippetFileId = "ace/snippets/makefile";
 }).call(Mode.prototype);
 
 exports.Mode = Mode;
@@ -408,4 +409,3 @@ exports.Mode = Mode;
                         }
                     });
                 })();
-            

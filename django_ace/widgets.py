@@ -1,5 +1,8 @@
+# -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+
 from django import forms
+from django.template import Context, Template
 
 try:
     from django.forms.utils import flatatt
@@ -13,6 +16,7 @@ class AceWidget(forms.Textarea):
         self,
         mode=None,
         theme=None,
+        use_worker=True,
         wordwrap=False,
         width="500px",
         height="300px",
@@ -29,6 +33,7 @@ class AceWidget(forms.Textarea):
     ):
         self.mode = mode
         self.theme = theme
+        self.use_worker = use_worker
         self.wordwrap = wordwrap
         self.width = width
         self.height = height
@@ -55,20 +60,21 @@ class AceWidget(forms.Textarea):
 
         return forms.Media(js=js, css=css)
 
-    def render(self, name, value, attrs=None, renderer=None):
-        attrs = attrs or {}
-
+    def get_attributes(self):
         ace_attrs = {
             "class": "django-ace-widget loading",
             "style": "width:%s; height:%s" % (self.width, self.height),
+            "data-use-worker": self.use_worker,
+            "data-showinvisibles": self.showinvisibles,
+            "data-showprintmargin": self.showprintmargin,
+            "data-usesofttabs": self.usesofttabs,
+            "data-wordwrap": self.wordwrap,
         }
 
         if self.mode:
             ace_attrs["data-mode"] = self.mode
         if self.theme:
             ace_attrs["data-theme"] = self.theme
-        if self.wordwrap:
-            ace_attrs["data-wordwrap"] = "true"
         if self.minlines:
             ace_attrs["data-minlines"] = str(self.minlines)
         if self.maxlines:
@@ -78,21 +84,25 @@ class AceWidget(forms.Textarea):
         if self.fontsize:
             ace_attrs["data-fontsize"] = str(self.fontsize)
 
-        ace_attrs["data-showprintmargin"] = "true" if self.showprintmargin else "false"
-        ace_attrs["data-showinvisibles"] = "true" if self.showinvisibles else "false"
-        ace_attrs["data-usesofttabs"] = "true" if self.usesofttabs else "false"
+        return ace_attrs
 
+    def render(self, name, value, attrs=None, renderer=None):
         textarea = super(AceWidget, self).render(name, value, attrs, renderer)
 
-        html = "<div{}><div></div></div>{}".format(flatatt(ace_attrs), textarea)
-
-        if self.toolbar:
-            toolbar = (
-                '<div style="width: {}" class="django-ace-toolbar">'
-                '<a href="./" class="django-ace-max_min"></a>'
-                "</div>"
-            ).format(self.width)
-            html = toolbar + html
-
-        html = '<div class="django-ace-editor">{}</div>'.format(html)
+        template = Template(
+            '{% spaceless %}'
+            '<div class="django-ace-editor">'
+            '{% if toolbar %}<div style="width: {{ width }}" class="django-ace-toolbar">'
+            '<a href="./" class="django-ace-max_min"></a>'
+            "</div>{% endif %}"
+            '<div{{ ace_attrs }}><div></div></div>{{ textarea|safe }}'
+            '</div>'
+            '{% endspaceless %}'
+        )
+        html = template.render(Context({
+            'ace_attrs': flatatt(self.get_attributes()),
+            'textarea': textarea,
+            'toolbar': self.toolbar,
+            'width': self.width,
+        }))
         return mark_safe(html)

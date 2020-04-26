@@ -172,7 +172,7 @@ var SnippetGroupHighlightRules = function() {
             return this.tokenName;
         }, tokenName: "text", regex: "^(?!\t)", next: "start"}
     ]);
-    
+
 };
 
 oop.inherits(SnippetGroupHighlightRules, TextHighlightRules);
@@ -192,6 +192,7 @@ oop.inherits(Mode, TextMode);
     this.$indentWithTabs = true;
     this.lineCommentStart = "#";
     this.$id = "ace/mode/snippets";
+    this.snippetFileId = "ace/snippets/snippets";
 }).call(Mode.prototype);
 exports.Mode = Mode;
 
@@ -203,4 +204,3 @@ exports.Mode = Mode;
                         }
                     });
                 })();
-            

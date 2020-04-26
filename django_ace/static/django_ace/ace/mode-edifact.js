@@ -9,7 +9,7 @@ var DocCommentHighlightRules = function() {
         "start" : [ {
             token : "comment.doc.tag",
             regex : "@[\\w\\d_]+" // TODO: fix email addresses
-        }, 
+        },
         DocCommentHighlightRules.getTagRule(),
         {
             defaultToken : "comment.doc",
@@ -50,13 +50,13 @@ exports.DocCommentHighlightRules = DocCommentHighlightRules;
 
 define("ace/mode/edifact_highlight_rules",["require","exports","module","ace/lib/oop","ace/mode/doc_comment_highlight_rules","ace/mode/text_highlight_rules"], function(require, exports, module) {
     "use strict";
-    
+
     var oop = require("../lib/oop");
     var DocCommentHighlightRules = require("./doc_comment_highlight_rules").DocCommentHighlightRules;
     var TextHighlightRules = require("./text_highlight_rules").TextHighlightRules;
-    
+
     var EdifactHighlightRules = function() {
-    
+
         var header = (
             "UNH"
         );
@@ -76,20 +76,20 @@ define("ace/mode/edifact_highlight_rules",["require","exports","module","ace/lib
             "UNB|UNZ|UNT|UGH|UGT|UNS|"+
             "VLI"
         );
-    
+
         var header = (
             "UNH"
         );
-    
+
         var buildinConstants = ("null|Infinity|NaN|undefined");
         var langClasses = (
             ""
         );
-    
+
         var keywords = (
             "BY|SE|ON|INV|JP|UNOA"
         );
-    
+
         var keywordMapper = this.createKeywordMapper({
             "variable.language": "this",
             "keyword": keywords,
@@ -98,7 +98,7 @@ define("ace/mode/edifact_highlight_rules",["require","exports","module","ace/lib
             "constant.language": buildinConstants,
             "support.function": langClasses
         }, "identifier");
-    
+
         this.$rules = {
             "start" : [
                 {
@@ -122,18 +122,18 @@ define("ace/mode/edifact_highlight_rules",["require","exports","module","ace/lib
                 }
             ]
         };
-    
+
         this.embedRules(DocCommentHighlightRules, "doc-",
             [ DocCommentHighlightRules.getEndRule("start") ]);
     };
-    
+
     EdifactHighlightRules.metaData = { fileTypes: [ 'edi' ],
           keyEquivalent: '^~E',
           name: 'Edifact',
           scopeName: 'source.edifact' };
-    
+
     oop.inherits(EdifactHighlightRules, TextHighlightRules);
-    
+
     exports.EdifactHighlightRules = EdifactHighlightRules;
     });
 
@@ -145,13 +145,14 @@ var TextMode = require("./text").Mode;
 var EdifactHighlightRules = require("./edifact_highlight_rules").EdifactHighlightRules;
 
 var Mode = function() {
-   
+
     this.HighlightRules = EdifactHighlightRules;
 };
 oop.inherits(Mode, TextMode);
 
 (function() {
     this.$id = "ace/mode/edifact";
+    this.snippetFileId = "ace/snippets/edifact";
 }).call(Mode.prototype);
 
 exports.Mode = Mode;
@@ -162,4 +163,3 @@ exports.Mode = Mode;
                         }
                     });
                 })();
-            

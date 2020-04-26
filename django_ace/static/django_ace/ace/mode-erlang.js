@@ -6,7 +6,7 @@ var TextHighlightRules = require("./text_highlight_rules").TextHighlightRules;
 
 var ErlangHighlightRules = function() {
 
-    this.$rules = { start: 
+    this.$rules = { start:
        [ { include: '#module-directive' },
          { include: '#import-export-directive' },
          { include: '#behaviour-directive' },
@@ -16,14 +16,14 @@ var ErlangHighlightRules = function() {
          { include: '#directive' },
          { include: '#function' },
          { include: '#everything-else' } ],
-      '#atom': 
+      '#atom':
        [ { token: 'punctuation.definition.symbol.begin.erlang',
            regex: '\'',
-           push: 
+           push:
             [ { token: 'punctuation.definition.symbol.end.erlang',
                 regex: '\'',
                 next: 'pop' },
-              { token: 
+              { token:
                  [ 'punctuation.definition.escape.erlang',
                    'constant.other.symbol.escape.erlang',
                    'punctuation.definition.escape.erlang',
@@ -34,8 +34,8 @@ var ErlangHighlightRules = function() {
               { defaultToken: 'constant.other.symbol.quoted.single.erlang' } ] },
          { token: 'constant.other.symbol.unquoted.erlang',
            regex: '[a-z][a-zA-Z\\d@_]*' } ],
-      '#behaviour-directive': 
-       [ { token: 
+      '#behaviour-directive':
+       [ { token:
             [ 'meta.directive.behaviour.erlang',
               'punctuation.section.directive.begin.erlang',
               'meta.directive.behaviour.erlang',
@@ -49,22 +49,22 @@ var ErlangHighlightRules = function() {
               'meta.directive.behaviour.erlang',
               'punctuation.section.directive.end.erlang' ],
            regex: '^(\\s*)(-)(\\s*)(behaviour)(\\s*)(\\()(\\s*)([a-z][a-zA-Z\\d@_]*)(\\s*)(\\))(\\s*)(\\.)' } ],
-      '#binary': 
+      '#binary':
        [ { token: 'punctuation.definition.binary.begin.erlang',
            regex: '<<',
-           push: 
+           push:
             [ { token: 'punctuation.definition.binary.end.erlang',
                 regex: '>>',
                 next: 'pop' },
-              { token: 
+              { token:
                  [ 'punctuation.separator.binary.erlang',
                    'punctuation.separator.value-size.erlang' ],
                 regex: '(,)|(:)' },
               { include: '#internal-type-specifiers' },
               { include: '#everything-else' },
               { defaultToken: 'meta.structure.binary.erlang' } ] } ],
-      '#character': 
-       [ { token: 
+      '#character':
+       [ { token:
             [ 'punctuation.definition.character.erlang',
               'punctuation.definition.escape.erlang',
               'constant.character.escape.erlang',
@@ -74,21 +74,21 @@ var ErlangHighlightRules = function() {
            regex: '(\\$)(\\\\)(?:([bdefnrstv\\\\\'"])|(\\^)([@-_])|([0-7]{1,3}))' },
          { token: 'invalid.illegal.character.erlang',
            regex: '\\$\\\\\\^?.?' },
-         { token: 
+         { token:
             [ 'punctuation.definition.character.erlang',
               'constant.character.erlang' ],
            regex: '(\\$)(\\S)' },
          { token: 'invalid.illegal.character.erlang', regex: '\\$.?' } ],
-      '#comment': 
+      '#comment':
        [ { token: 'punctuation.definition.comment.erlang',
            regex: '%.*$',
-           push_: 
+           push_:
             [ { token: 'comment.line.percentage.erlang',
                 regex: '$',
                 next: 'pop' },
               { defaultToken: 'comment.line.percentage.erlang' } ] } ],
-      '#define-directive': 
-       [ { token: 
+      '#define-directive':
+       [ { token:
             [ 'meta.directive.define.erlang',
               'punctuation.section.directive.begin.erlang',
               'meta.directive.define.erlang',
@@ -100,8 +100,8 @@ var ErlangHighlightRules = function() {
               'meta.directive.define.erlang',
               'punctuation.separator.parameters.erlang' ],
            regex: '^(\\s*)(-)(\\s*)(define)(\\s*)(\\()(\\s*)([a-zA-Z\\d@_]+)(\\s*)(,)',
-           push: 
-            [ { token: 
+           push:
+            [ { token:
                  [ 'punctuation.definition.parameters.end.erlang',
                    'meta.directive.define.erlang',
                    'punctuation.section.directive.end.erlang' ],
@@ -111,14 +111,14 @@ var ErlangHighlightRules = function() {
               { defaultToken: 'meta.directive.define.erlang' } ] },
          { token: 'meta.directive.define.erlang',
            regex: '(?=^\\s*-\\s*define\\s*\\(\\s*[a-zA-Z\\d@_]+\\s*\\()',
-           push: 
-            [ { token: 
+           push:
+            [ { token:
                  [ 'punctuation.definition.parameters.end.erlang',
                    'meta.directive.define.erlang',
                    'punctuation.section.directive.end.erlang' ],
                 regex: '(\\))(\\s*)(\\.)',
                 next: 'pop' },
-              { token: 
+              { token:
                  [ 'text',
                    'punctuation.section.directive.begin.erlang',
                    'text',
@@ -130,8 +130,8 @@ var ErlangHighlightRules = function() {
                    'text',
                    'punctuation.definition.parameters.begin.erlang' ],
                 regex: '^(\\s*)(-)(\\s*)(define)(\\s*)(\\()(\\s*)([a-zA-Z\\d@_]+)(\\s*)(\\()',
-                push: 
-                 [ { token: 
+                push:
+                 [ { token:
                       [ 'punctuation.definition.parameters.end.erlang',
                         'text',
                         'punctuation.separator.parameters.erlang' ],
@@ -143,8 +143,8 @@ var ErlangHighlightRules = function() {
                 regex: '\\|\\||\\||:|;|,|\\.|->' },
               { include: '#everything-else' },
               { defaultToken: 'meta.directive.define.erlang' } ] } ],
-      '#directive': 
-       [ { token: 
+      '#directive':
+       [ { token:
             [ 'meta.directive.erlang',
               'punctuation.section.directive.begin.erlang',
               'meta.directive.erlang',
@@ -152,8 +152,8 @@ var ErlangHighlightRules = function() {
               'meta.directive.erlang',
               'punctuation.definition.parameters.begin.erlang' ],
            regex: '^(\\s*)(-)(\\s*)([a-z][a-zA-Z\\d@_]*)(\\s*)(\\(?)',
-           push: 
-            [ { token: 
+           push:
+            [ { token:
                  [ 'punctuation.definition.parameters.end.erlang',
                    'meta.directive.erlang',
                    'punctuation.section.directive.end.erlang' ],
@@ -161,7 +161,7 @@ var ErlangHighlightRules = function() {
                 next: 'pop' },
               { include: '#everything-else' },
               { defaultToken: 'meta.directive.erlang' } ] },
-         { token: 
+         { token:
             [ 'meta.directive.erlang',
               'punctuation.section.directive.begin.erlang',
               'meta.directive.erlang',
@@ -169,7 +169,7 @@ var ErlangHighlightRules = function() {
               'meta.directive.erlang',
               'punctuation.section.directive.end.erlang' ],
            regex: '^(\\s*)(-)(\\s*)([a-z][a-zA-Z\\d@_]*)(\\s*)(\\.)' } ],
-      '#everything-else': 
+      '#everything-else':
        [ { include: '#comment' },
          { include: '#record-usage' },
          { include: '#macro-usage' },
@@ -187,10 +187,10 @@ var ErlangHighlightRules = function() {
          { include: '#string' },
          { include: '#symbolic-operator' },
          { include: '#variable' } ],
-      '#expression': 
+      '#expression':
        [ { token: 'keyword.control.if.erlang',
            regex: '\\bif\\b',
-           push: 
+           push:
             [ { token: 'keyword.control.end.erlang',
                 regex: '\\bend\\b',
                 next: 'pop' },
@@ -199,7 +199,7 @@ var ErlangHighlightRules = function() {
               { defaultToken: 'meta.expression.if.erlang' } ] },
          { token: 'keyword.control.case.erlang',
            regex: '\\bcase\\b',
-           push: 
+           push:
             [ { token: 'keyword.control.end.erlang',
                 regex: '\\bend\\b',
                 next: 'pop' },
@@ -208,14 +208,14 @@ var ErlangHighlightRules = function() {
               { defaultToken: 'meta.expression.case.erlang' } ] },
          { token: 'keyword.control.receive.erlang',
            regex: '\\breceive\\b',
-           push: 
+           push:
             [ { token: 'keyword.control.end.erlang',
                 regex: '\\bend\\b',
                 next: 'pop' },
               { include: '#internal-expression-punctuation' },
               { include: '#everything-else' },
               { defaultToken: 'meta.expression.receive.erlang' } ] },
-         { token: 
+         { token:
             [ 'keyword.control.fun.erlang',
               'text',
               'entity.name.type.class.module.erlang',
@@ -228,13 +228,13 @@ var ErlangHighlightRules = function() {
            regex: '\\b(fun)(\\s*)(?:([a-z][a-zA-Z\\d@_]*)(\\s*)(:)(\\s*))?([a-z][a-zA-Z\\d@_]*)(\\s*)(/)' },
          { token: 'keyword.control.fun.erlang',
            regex: '\\bfun\\b',
-           push: 
+           push:
             [ { token: 'keyword.control.end.erlang',
                 regex: '\\bend\\b',
                 next: 'pop' },
               { token: 'text',
                 regex: '(?=\\()',
-                push: 
+                push:
                  [ { token: 'punctuation.separator.clauses.erlang',
                      regex: ';|(?=\\bend\\b)',
                      next: 'pop' },
@@ -243,7 +243,7 @@ var ErlangHighlightRules = function() {
               { defaultToken: 'meta.expression.fun.erlang' } ] },
          { token: 'keyword.control.try.erlang',
            regex: '\\btry\\b',
-           push: 
+           push:
             [ { token: 'keyword.control.end.erlang',
                 regex: '\\bend\\b',
                 next: 'pop' },
@@ -252,7 +252,7 @@ var ErlangHighlightRules = function() {
               { defaultToken: 'meta.expression.try.erlang' } ] },
          { token: 'keyword.control.begin.erlang',
            regex: '\\bbegin\\b',
-           push: 
+           push:
             [ { token: 'keyword.control.end.erlang',
                 regex: '\\bend\\b',
                 next: 'pop' },
@@ -261,19 +261,19 @@ var ErlangHighlightRules = function() {
               { defaultToken: 'meta.expression.begin.erlang' } ] },
          { token: 'keyword.control.query.erlang',
            regex: '\\bquery\\b',
-           push: 
+           push:
             [ { token: 'keyword.control.end.erlang',
                 regex: '\\bend\\b',
                 next: 'pop' },
               { include: '#everything-else' },
               { defaultToken: 'meta.expression.query.erlang' } ] } ],
-      '#function': 
-       [ { token: 
+      '#function':
+       [ { token:
             [ 'meta.function.erlang',
               'entity.name.function.definition.erlang',
               'meta.function.erlang' ],
            regex: '^(\\s*)([a-z][a-zA-Z\\d@_]*|\'[^\']*\')(\\s*)(?=\\()',
-           push: 
+           push:
             [ { token: 'punctuation.terminator.function.erlang',
                 regex: '\\.',
                 next: 'pop' },
@@ -281,7 +281,7 @@ var ErlangHighlightRules = function() {
                 regex: '^(\\s*)([a-z][a-zA-Z\\d@_]*|\'[^\']*\')(\\s*)(?=\\()' },
               { token: 'text',
                 regex: '(?=\\()',
-                push: 
+                push:
                  [ { token: 'punctuation.separator.clauses.erlang',
                      regex: ';|(?=\\.)',
                      next: 'pop' },
@@ -289,14 +289,14 @@ var ErlangHighlightRules = function() {
                    { include: '#internal-function-parts' } ] },
               { include: '#everything-else' },
               { defaultToken: 'meta.function.erlang' } ] } ],
-      '#function-call': 
+      '#function-call':
        [ { token: 'meta.function-call.erlang',
            regex: '(?=(?:[a-z][a-zA-Z\\d@_]*|\'[^\']*\')\\s*(?:\\(|:\\s*(?:[a-z][a-zA-Z\\d@_]*|\'[^\']*\')\\s*\\())',
-           push: 
+           push:
             [ { token: 'punctuation.definition.parameters.end.erlang',
                 regex: '\\)',
                 next: 'pop' },
-              { token: 
+              { token:
                  [ 'entity.name.type.class.module.erlang',
                    'text',
                    'punctuation.separator.module-function.erlang',
@@ -305,11 +305,11 @@ var ErlangHighlightRules = function() {
                    'text',
                    'punctuation.definition.parameters.begin.erlang' ],
                 regex: '(?:(erlang)(\\s*)(:)(\\s*))?(is_atom|is_binary|is_constant|is_float|is_function|is_integer|is_list|is_number|is_pid|is_port|is_reference|is_tuple|is_record|abs|element|hd|length|node|round|self|size|tl|trunc)(\\s*)(\\()',
-                push: 
+                push:
                  [ { token: 'text', regex: '(?=\\))', next: 'pop' },
                    { token: 'punctuation.separator.parameters.erlang', regex: ',' },
                    { include: '#everything-else' } ] },
-              { token: 
+              { token:
                  [ 'entity.name.type.class.module.erlang',
                    'text',
                    'punctuation.separator.module-function.erlang',
@@ -318,13 +318,13 @@ var ErlangHighlightRules = function() {
                    'text',
                    'punctuation.definition.parameters.begin.erlang' ],
                 regex: '(?:([a-z][a-zA-Z\\d@_]*|\'[^\']*\')(\\s*)(:)(\\s*))?([a-z][a-zA-Z\\d@_]*|\'[^\']*\')(\\s*)(\\()',
-                push: 
+                push:
                  [ { token: 'text', regex: '(?=\\))', next: 'pop' },
                    { token: 'punctuation.separator.parameters.erlang', regex: ',' },
                    { include: '#everything-else' } ] },
               { defaultToken: 'meta.function-call.erlang' } ] } ],
-      '#import-export-directive': 
-       [ { token: 
+      '#import-export-directive':
+       [ { token:
             [ 'meta.directive.import.erlang',
               'punctuation.section.directive.begin.erlang',
               'meta.directive.import.erlang',
@@ -336,8 +336,8 @@ var ErlangHighlightRules = function() {
               'meta.directive.import.erlang',
               'punctuation.separator.parameters.erlang' ],
            regex: '^(\\s*)(-)(\\s*)(import)(\\s*)(\\()(\\s*)([a-z][a-zA-Z\\d@_]*|\'[^\']*\')(\\s*)(,)',
-           push: 
-            [ { token: 
+           push:
+            [ { token:
                  [ 'punctuation.definition.parameters.end.erlang',
                    'meta.directive.import.erlang',
                    'punctuation.section.directive.end.erlang' ],
@@ -345,7 +345,7 @@ var ErlangHighlightRules = function() {
                 next: 'pop' },
               { include: '#internal-function-list' },
               { defaultToken: 'meta.directive.import.erlang' } ] },
-         { token: 
+         { token:
             [ 'meta.directive.export.erlang',
               'punctuation.section.directive.begin.erlang',
               'meta.directive.export.erlang',
@@ -353,8 +353,8 @@ var ErlangHighlightRules = function() {
               'meta.directive.export.erlang',
               'punctuation.definition.parameters.begin.erlang' ],
            regex: '^(\\s*)(-)(\\s*)(export)(\\s*)(\\()',
-           push: 
-            [ { token: 
+           push:
+            [ { token:
                  [ 'punctuation.definition.parameters.end.erlang',
                    'meta.directive.export.erlang',
                    'punctuation.section.directive.end.erlang' ],
@@ -362,41 +362,41 @@ var ErlangHighlightRules = function() {
                 next: 'pop' },
               { include: '#internal-function-list' },
               { defaultToken: 'meta.directive.export.erlang' } ] } ],
-      '#internal-expression-punctuation': 
-       [ { token: 
+      '#internal-expression-punctuation':
+       [ { token:
             [ 'punctuation.separator.clause-head-body.erlang',
               'punctuation.separator.clauses.erlang',
               'punctuation.separator.expressions.erlang' ],
            regex: '(->)|(;)|(,)' } ],
-      '#internal-function-list': 
+      '#internal-function-list':
        [ { token: 'punctuation.definition.list.begin.erlang',
            regex: '\\[',
-           push: 
+           push:
             [ { token: 'punctuation.definition.list.end.erlang',
                 regex: '\\]',
                 next: 'pop' },
-              { token: 
+              { token:
                  [ 'entity.name.function.erlang',
                    'text',
                    'punctuation.separator.function-arity.erlang' ],
                 regex: '([a-z][a-zA-Z\\d@_]*|\'[^\']*\')(\\s*)(/)',
-                push: 
+                push:
                  [ { token: 'punctuation.separator.list.erlang',
                      regex: ',|(?=\\])',
                      next: 'pop' },
                    { include: '#everything-else' } ] },
               { include: '#everything-else' },
               { defaultToken: 'meta.structure.list.function.erlang' } ] } ],
-      '#internal-function-parts': 
+      '#internal-function-parts':
        [ { token: 'text',
            regex: '(?=\\()',
-           push: 
+           push:
             [ { token: 'punctuation.separator.clause-head-body.erlang',
                 regex: '->',
                 next: 'pop' },
               { token: 'punctuation.definition.parameters.begin.erlang',
                 regex: '\\(',
-                push: 
+                push:
                  [ { token: 'punctuation.definition.parameters.end.erlang',
                      regex: '\\)',
                      next: 'pop' },
@@ -407,50 +407,50 @@ var ErlangHighlightRules = function() {
          { token: 'punctuation.separator.expressions.erlang',
            regex: ',' },
          { include: '#everything-else' } ],
-      '#internal-record-body': 
+      '#internal-record-body':
        [ { token: 'punctuation.definition.class.record.begin.erlang',
            regex: '\\{',
-           push: 
+           push:
             [ { token: 'meta.structure.record.erlang',
                 regex: '(?=\\})',
                 next: 'pop' },
-              { token: 
+              { token:
                  [ 'variable.other.field.erlang',
                    'variable.language.omitted.field.erlang',
                    'text',
                    'keyword.operator.assignment.erlang' ],
                 regex: '(?:([a-z][a-zA-Z\\d@_]*|\'[^\']*\')|(_))(\\s*)(=|::)',
-                push: 
+                push:
                  [ { token: 'punctuation.separator.class.record.erlang',
                      regex: ',|(?=\\})',
                      next: 'pop' },
                    { include: '#everything-else' } ] },
-              { token: 
+              { token:
                  [ 'variable.other.field.erlang',
                    'text',
                    'punctuation.separator.class.record.erlang' ],
                 regex: '([a-z][a-zA-Z\\d@_]*|\'[^\']*\')(\\s*)((?:,)?)' },
               { include: '#everything-else' },
               { defaultToken: 'meta.structure.record.erlang' } ] } ],
-      '#internal-type-specifiers': 
+      '#internal-type-specifiers':
        [ { token: 'punctuation.separator.value-type.erlang',
            regex: '/',
-           push: 
+           push:
             [ { token: 'text', regex: '(?=,|:|>>)', next: 'pop' },
-              { token: 
+              { token:
                  [ 'storage.type.erlang',
                    'storage.modifier.signedness.erlang',
                    'storage.modifier.endianness.erlang',
                    'storage.modifier.unit.erlang',
                    'punctuation.separator.type-specifiers.erlang' ],
                 regex: '(integer|float|binary|bytes|bitstring|bits)|(signed|unsigned)|(big|little|native)|(unit)|(-)' } ] } ],
-      '#keyword': 
+      '#keyword':
        [ { token: 'keyword.control.erlang',
            regex: '\\b(?:after|begin|case|catch|cond|end|fun|if|let|of|query|try|receive|when)\\b' } ],
-      '#list': 
+      '#list':
        [ { token: 'punctuation.definition.list.begin.erlang',
            regex: '\\[',
-           push: 
+           push:
             [ { token: 'punctuation.definition.list.end.erlang',
                 regex: '\\]',
                 next: 'pop' },
@@ -458,8 +458,8 @@ var ErlangHighlightRules = function() {
                 regex: '\\||\\|\\||,' },
               { include: '#everything-else' },
               { defaultToken: 'meta.structure.list.erlang' } ] } ],
-      '#macro-directive': 
-       [ { token: 
+      '#macro-directive':
+       [ { token:
             [ 'meta.directive.ifdef.erlang',
               'punctuation.section.directive.begin.erlang',
               'meta.directive.ifdef.erlang',
@@ -473,7 +473,7 @@ var ErlangHighlightRules = function() {
               'meta.directive.ifdef.erlang',
               'punctuation.section.directive.end.erlang' ],
            regex: '^(\\s*)(-)(\\s*)(ifdef)(\\s*)(\\()(\\s*)([a-zA-Z\\d@_]+)(\\s*)(\\))(\\s*)(\\.)' },
-         { token: 
+         { token:
             [ 'meta.directive.ifndef.erlang',
               'punctuation.section.directive.begin.erlang',
               'meta.directive.ifndef.erlang',
@@ -487,7 +487,7 @@ var ErlangHighlightRules = function() {
               'meta.directive.ifndef.erlang',
               'punctuation.section.directive.end.erlang' ],
            regex: '^(\\s*)(-)(\\s*)(ifndef)(\\s*)(\\()(\\s*)([a-zA-Z\\d@_]+)(\\s*)(\\))(\\s*)(\\.)' },
-         { token: 
+         { token:
             [ 'meta.directive.undef.erlang',
               'punctuation.section.directive.begin.erlang',
               'meta.directive.undef.erlang',
@@ -501,14 +501,14 @@ var ErlangHighlightRules = function() {
               'meta.directive.undef.erlang',
               'punctuation.section.directive.end.erlang' ],
            regex: '^(\\s*)(-)(\\s*)(undef)(\\s*)(\\()(\\s*)([a-zA-Z\\d@_]+)(\\s*)(\\))(\\s*)(\\.)' } ],
-      '#macro-usage': 
-       [ { token: 
+      '#macro-usage':
+       [ { token:
             [ 'keyword.operator.macro.erlang',
               'meta.macro-usage.erlang',
               'entity.name.function.macro.erlang' ],
            regex: '(\\?\\??)(\\s*)([a-zA-Z\\d@_]+)' } ],
-      '#module-directive': 
-       [ { token: 
+      '#module-directive':
+       [ { token:
             [ 'meta.directive.module.erlang',
               'punctuation.section.directive.begin.erlang',
               'meta.directive.module.erlang',
@@ -522,188 +522,188 @@ var ErlangHighlightRules = function() {
               'meta.directive.module.erlang',
               'punctuation.section.directive.end.erlang' ],
            regex: '^(\\s*)(-)(\\s*)(module)(\\s*)(\\()(\\s*)([a-z][a-zA-Z\\d@_]*)(\\s*)(\\))(\\s*)(\\.)' } ],
-      '#number': 
+      '#number':
        [ { token: 'text',
            regex: '(?=\\d)',
-           push: 
+           push:
             [ { token: 'text', regex: '(?!\\d)', next: 'pop' },
-              { token: 
+              { token:
                  [ 'constant.numeric.float.erlang',
                    'punctuation.separator.integer-float.erlang',
                    'constant.numeric.float.erlang',
                    'punctuation.separator.float-exponent.erlang' ],
                 regex: '(\\d+)(\\.)(\\d+)((?:[eE][\\+\\-]?\\d+)?)' },
-              { token: 
+              { token:
                  [ 'constant.numeric.integer.binary.erlang',
                    'punctuation.separator.base-integer.erlang',
                    'constant.numeric.integer.binary.erlang' ],
                 regex: '(2)(#)([0-1]+)' },
-              { token: 
+              { token:
                  [ 'constant.numeric.integer.base-3.erlang',
                    'punctuation.separator.base-integer.erlang',
                    'constant.numeric.integer.base-3.erlang' ],
                 regex: '(3)(#)([0-2]+)' },
-              { token: 
+              { token:
                  [ 'constant.numeric.integer.base-4.erlang',
                    'punctuation.separator.base-integer.erlang',
                    'constant.numeric.integer.base-4.erlang' ],
                 regex: '(4)(#)([0-3]+)' },
-              { token: 
+              { token:
                  [ 'constant.numeric.integer.base-5.erlang',
                    'punctuation.separator.base-integer.erlang',
                    'constant.numeric.integer.base-5.erlang' ],
                 regex: '(5)(#)([0-4]+)' },
-              { token: 
+              { token:
                  [ 'constant.numeric.integer.base-6.erlang',
                    'punctuation.separator.base-integer.erlang',
                    'constant.numeric.integer.base-6.erlang' ],
                 regex: '(6)(#)([0-5]+)' },
-              { token: 
+              { token:
                  [ 'constant.numeric.integer.base-7.erlang',
                    'punctuation.separator.base-integer.erlang',
                    'constant.numeric.integer.base-7.erlang' ],
                 regex: '(7)(#)([0-6]+)' },
-              { token: 
+              { token:
                  [ 'constant.numeric.integer.octal.erlang',
                    'punctuation.separator.base-integer.erlang',
                    'constant.numeric.integer.octal.erlang' ],
                 regex: '(8)(#)([0-7]+)' },
-              { token: 
+              { token:
                  [ 'constant.numeric.integer.base-9.erlang',
                    'punctuation.separator.base-integer.erlang',
                    'constant.numeric.integer.base-9.erlang' ],
                 regex: '(9)(#)([0-8]+)' },
-              { token: 
+              { token:
                  [ 'constant.numeric.integer.decimal.erlang',
                    'punctuation.separator.base-integer.erlang',
                    'constant.numeric.integer.decimal.erlang' ],
                 regex: '(10)(#)(\\d+)' },
-              { token: 
+              { token:
                  [ 'constant.numeric.integer.base-11.erlang',
                    'punctuation.separator.base-integer.erlang',
                    'constant.numeric.integer.base-11.erlang' ],
                 regex: '(11)(#)([\\daA]+)' },
-              { token: 
+              { token:
                  [ 'constant.numeric.integer.base-12.erlang',
                    'punctuation.separator.base-integer.erlang',
                    'constant.numeric.integer.base-12.erlang' ],
                 regex: '(12)(#)([\\da-bA-B]+)' },
-              { token: 
+              { token:
                  [ 'constant.numeric.integer.base-13.erlang',
                    'punctuation.separator.base-integer.erlang',
                    'constant.numeric.integer.base-13.erlang' ],
                 regex: '(13)(#)([\\da-cA-C]+)' },
-              { token: 
+              { token:
                  [ 'constant.numeric.integer.base-14.erlang',
                    'punctuation.separator.base-integer.erlang',
                    'constant.numeric.integer.base-14.erlang' ],
                 regex: '(14)(#)([\\da-dA-D]+)' },
-              { token: 
+              { token:
                  [ 'constant.numeric.integer.base-15.erlang',
                    'punctuation.separator.base-integer.erlang',
                    'constant.numeric.integer.base-15.erlang' ],
                 regex: '(15)(#)([\\da-eA-E]+)' },
-              { token: 
+              { token:
                  [ 'constant.numeric.integer.hexadecimal.erlang',
                    'punctuation.separator.base-integer.erlang',
                    'constant.numeric.integer.hexadecimal.erlang' ],
                 regex: '(16)(#)([\\da-fA-F]+)' },
-              { token: 
+              { token:
                  [ 'constant.numeric.integer.base-17.erlang',
                    'punctuation.separator.base-integer.erlang',
                    'constant.numeric.integer.base-17.erlang' ],
                 regex: '(17)(#)([\\da-gA-G]+)' },
-              { token: 
+              { token:
                  [ 'constant.numeric.integer.base-18.erlang',
                    'punctuation.separator.base-integer.erlang',
                    'constant.numeric.integer.base-18.erlang' ],
                 regex: '(18)(#)([\\da-hA-H]+)' },
-              { token: 
+              { token:
                  [ 'constant.numeric.integer.base-19.erlang',
                    'punctuation.separator.base-integer.erlang',
                    'constant.numeric.integer.base-19.erlang' ],
                 regex: '(19)(#)([\\da-iA-I]+)' },
-              { token: 
+              { token:
                  [ 'constant.numeric.integer.base-20.erlang',
                    'punctuation.separator.base-integer.erlang',
                    'constant.numeric.integer.base-20.erlang' ],
                 regex: '(20)(#)([\\da-jA-J]+)' },
-              { token: 
+              { token:
                  [ 'constant.numeric.integer.base-21.erlang',
                    'punctuation.separator.base-integer.erlang',
                    'constant.numeric.integer.base-21.erlang' ],
                 regex: '(21)(#)([\\da-kA-K]+)' },
-              { token: 
+              { token:
                  [ 'constant.numeric.integer.base-22.erlang',
                    'punctuation.separator.base-integer.erlang',
                    'constant.numeric.integer.base-22.erlang' ],
                 regex: '(22)(#)([\\da-lA-L]+)' },
-              { token: 
+              { token:
                  [ 'constant.numeric.integer.base-23.erlang',
                    'punctuation.separator.base-integer.erlang',
                    'constant.numeric.integer.base-23.erlang' ],
                 regex: '(23)(#)([\\da-mA-M]+)' },
-              { token: 
+              { token:
                  [ 'constant.numeric.integer.base-24.erlang',
                    'punctuation.separator.base-integer.erlang',
                    'constant.numeric.integer.base-24.erlang' ],
                 regex: '(24)(#)([\\da-nA-N]+)' },
-              { token: 
+              { token:
                  [ 'constant.numeric.integer.base-25.erlang',
                    'punctuation.separator.base-integer.erlang',
                    'constant.numeric.integer.base-25.erlang' ],
                 regex: '(25)(#)([\\da-oA-O]+)' },
-              { token: 
+              { token:
                  [ 'constant.numeric.integer.base-26.erlang',
                    'punctuation.separator.base-integer.erlang',
                    'constant.numeric.integer.base-26.erlang' ],
                 regex: '(26)(#)([\\da-pA-P]+)' },
-              { token: 
+              { token:
                  [ 'constant.numeric.integer.base-27.erlang',
                    'punctuation.separator.base-integer.erlang',
                    'constant.numeric.integer.base-27.erlang' ],
                 regex: '(27)(#)([\\da-qA-Q]+)' },
-              { token: 
+              { token:
                  [ 'constant.numeric.integer.base-28.erlang',
                    'punctuation.separator.base-integer.erlang',
                    'constant.numeric.integer.base-28.erlang' ],
                 regex: '(28)(#)([\\da-rA-R]+)' },
-              { token: 
+              { token:
                  [ 'constant.numeric.integer.base-29.erlang',
                    'punctuation.separator.base-integer.erlang',
                    'constant.numeric.integer.base-29.erlang' ],
                 regex: '(29)(#)([\\da-sA-S]+)' },
-              { token: 
+              { token:
                  [ 'constant.numeric.integer.base-30.erlang',
                    'punctuation.separator.base-integer.erlang',
                    'constant.numeric.integer.base-30.erlang' ],
                 regex: '(30)(#)([\\da-tA-T]+)' },
-              { token: 
+              { token:
                  [ 'constant.numeric.integer.base-31.erlang',
                    'punctuation.separator.base-integer.erlang',
                    'constant.numeric.integer.base-31.erlang' ],
                 regex: '(31)(#)([\\da-uA-U]+)' },
-              { token: 
+              { token:
                  [ 'constant.numeric.integer.base-32.erlang',
                    'punctuation.separator.base-integer.erlang',
                    'constant.numeric.integer.base-32.erlang' ],
                 regex: '(32)(#)([\\da-vA-V]+)' },
-              { token: 
+              { token:
                  [ 'constant.numeric.integer.base-33.erlang',
                    'punctuation.separator.base-integer.erlang',
                    'constant.numeric.integer.base-33.erlang' ],
                 regex: '(33)(#)([\\da-wA-W]+)' },
-              { token: 
+              { token:
                  [ 'constant.numeric.integer.base-34.erlang',
                    'punctuation.separator.base-integer.erlang',
                    'constant.numeric.integer.base-34.erlang' ],
                 regex: '(34)(#)([\\da-xA-X]+)' },
-              { token: 
+              { token:
                  [ 'constant.numeric.integer.base-35.erlang',
                    'punctuation.separator.base-integer.erlang',
                    'constant.numeric.integer.base-35.erlang' ],
                 regex: '(35)(#)([\\da-yA-Y]+)' },
-              { token: 
+              { token:
                  [ 'constant.numeric.integer.base-36.erlang',
                    'punctuation.separator.base-integer.erlang',
                    'constant.numeric.integer.base-36.erlang' ],
@@ -712,17 +712,17 @@ var ErlangHighlightRules = function() {
                 regex: '\\d+#[\\da-zA-Z]+' },
               { token: 'constant.numeric.integer.decimal.erlang',
                 regex: '\\d+' } ] } ],
-      '#parenthesized-expression': 
+      '#parenthesized-expression':
        [ { token: 'punctuation.section.expression.begin.erlang',
            regex: '\\(',
-           push: 
+           push:
             [ { token: 'punctuation.section.expression.end.erlang',
                 regex: '\\)',
                 next: 'pop' },
               { include: '#everything-else' },
               { defaultToken: 'meta.expression.parenthesized' } ] } ],
-      '#record-directive': 
-       [ { token: 
+      '#record-directive':
+       [ { token:
             [ 'meta.directive.record.erlang',
               'punctuation.section.directive.begin.erlang',
               'meta.directive.record.erlang',
@@ -734,8 +734,8 @@ var ErlangHighlightRules = function() {
               'meta.directive.record.erlang',
               'punctuation.separator.parameters.erlang' ],
            regex: '^(\\s*)(-)(\\s*)(record)(\\s*)(\\()(\\s*)([a-z][a-zA-Z\\d@_]*|\'[^\']*\')(\\s*)(,)',
-           push: 
-            [ { token: 
+           push:
+            [ { token:
                  [ 'punctuation.definition.class.record.end.erlang',
                    'meta.directive.record.erlang',
                    'punctuation.definition.parameters.end.erlang',
@@ -745,8 +745,8 @@ var ErlangHighlightRules = function() {
                 next: 'pop' },
               { include: '#internal-record-body' },
               { defaultToken: 'meta.directive.record.erlang' } ] } ],
-      '#record-usage': 
-       [ { token: 
+      '#record-usage':
+       [ { token:
             [ 'keyword.operator.record.erlang',
               'meta.record-usage.erlang',
               'entity.name.type.class.record.erlang',
@@ -755,25 +755,25 @@ var ErlangHighlightRules = function() {
               'meta.record-usage.erlang',
               'variable.other.field.erlang' ],
            regex: '(#)(\\s*)([a-z][a-zA-Z\\d@_]*|\'[^\']*\')(\\s*)(\\.)(\\s*)([a-z][a-zA-Z\\d@_]*|\'[^\']*\')' },
-         { token: 
+         { token:
             [ 'keyword.operator.record.erlang',
               'meta.record-usage.erlang',
               'entity.name.type.class.record.erlang' ],
            regex: '(#)(\\s*)([a-z][a-zA-Z\\d@_]*|\'[^\']*\')',
-           push: 
+           push:
             [ { token: 'punctuation.definition.class.record.end.erlang',
                 regex: '\\}',
                 next: 'pop' },
               { include: '#internal-record-body' },
               { defaultToken: 'meta.record-usage.erlang' } ] } ],
-      '#string': 
+      '#string':
        [ { token: 'punctuation.definition.string.begin.erlang',
            regex: '"',
-           push: 
+           push:
             [ { token: 'punctuation.definition.string.end.erlang',
                 regex: '"',
                 next: 'pop' },
-              { token: 
+              { token:
                  [ 'punctuation.definition.escape.erlang',
                    'constant.character.escape.erlang',
                    'punctuation.definition.escape.erlang',
@@ -781,7 +781,7 @@ var ErlangHighlightRules = function() {
                    'constant.character.escape.erlang' ],
                 regex: '(\\\\)(?:([bdefnrstv\\\\\'"])|(\\^)([@-_])|([0-7]{1,3}))' },
               { token: 'invalid.illegal.string.erlang', regex: '\\\\\\^?.?' },
-              { token: 
+              { token:
                  [ 'punctuation.definition.placeholder.erlang',
                    'punctuation.separator.placeholder-parts.erlang',
                    'constant.other.placeholder.erlang',
@@ -794,7 +794,7 @@ var ErlangHighlightRules = function() {
                    'constant.other.placeholder.erlang',
                    'constant.other.placeholder.erlang' ],
                 regex: '(~)(?:((?:\\-)?)(\\d+)|(\\*))?(?:(\\.)(?:(\\d+)|(\\*)))?(?:(\\.)(?:(\\*)|(.)))?([~cfegswpWPBX#bx\\+ni])' },
-              { token: 
+              { token:
                  [ 'punctuation.definition.placeholder.erlang',
                    'punctuation.separator.placeholder-parts.erlang',
                    'constant.other.placeholder.erlang',
@@ -802,26 +802,26 @@ var ErlangHighlightRules = function() {
                 regex: '(~)((?:\\*)?)((?:\\d+)?)([~du\\-#fsacl])' },
               { token: 'invalid.illegal.string.erlang', regex: '~.?' },
               { defaultToken: 'string.quoted.double.erlang' } ] } ],
-      '#symbolic-operator': 
+      '#symbolic-operator':
        [ { token: 'keyword.operator.symbolic.erlang',
            regex: '\\+\\+|\\+|--|-|\\*|/=|/|=/=|=:=|==|=<|=|<-|<|>=|>|!|::' } ],
-      '#textual-operator': 
+      '#textual-operator':
        [ { token: 'keyword.operator.textual.erlang',
            regex: '\\b(?:andalso|band|and|bxor|xor|bor|orelse|or|bnot|not|bsl|bsr|div|rem)\\b' } ],
-      '#tuple': 
+      '#tuple':
        [ { token: 'punctuation.definition.tuple.begin.erlang',
            regex: '\\{',
-           push: 
+           push:
             [ { token: 'punctuation.definition.tuple.end.erlang',
                 regex: '\\}',
                 next: 'pop' },
               { token: 'punctuation.separator.tuple.erlang', regex: ',' },
               { include: '#everything-else' },
               { defaultToken: 'meta.structure.tuple.erlang' } ] } ],
-      '#variable': 
+      '#variable':
        [ { token: [ 'variable.other.erlang', 'variable.language.omitted.erlang' ],
            regex: '(_[a-zA-Z\\d@_]+|[A-Z][a-zA-Z\\d@_]*)|(_)' } ] };
-    
+
     this.normalizeRules();
 };
 
@@ -857,7 +857,7 @@ var FoldMode = exports.FoldMode = function(commentRegex) {
 oop.inherits(FoldMode, BaseFoldMode);
 
 (function() {
-    
+
     this.foldingStartMarker = /([\{\[\(])[^\}\]\)]*$|^\s*(\/\*)/;
     this.foldingStopMarker = /^[^\[\{\(]*([\}\]\)])|^[\s\*]*(\*\/)/;
     this.singleLineBlockCommentRe= /^\s*(\/\*).*\*\/\s*$/;
@@ -866,42 +866,42 @@ oop.inherits(FoldMode, BaseFoldMode);
     this._getFoldWidgetBase = this.getFoldWidget;
     this.getFoldWidget = function(session, foldStyle, row) {
         var line = session.getLine(row);
-    
+
         if (this.singleLineBlockCommentRe.test(line)) {
             if (!this.startRegionRe.test(line) && !this.tripleStarBlockCommentRe.test(line))
                 return "";
         }
-    
+
         var fw = this._getFoldWidgetBase(session, foldStyle, row);
-    
+
         if (!fw && this.startRegionRe.test(line))
             return "start"; // lineCommentRegionStart
-    
+
         return fw;
     };
 
     this.getFoldWidgetRange = function(session, foldStyle, row, forceMultiline) {
         var line = session.getLine(row);
-        
+
         if (this.startRegionRe.test(line))
             return this.getCommentRegionBlock(session, line, row);
-        
+
         var match = line.match(this.foldingStartMarker);
         if (match) {
             var i = match.index;
 
             if (match[1])
                 return this.openingBracketBlock(session, match[1], row, i);
-                
+
             var range = session.getCommentFoldRange(row, i + match[0].length, 1);
-            
+
             if (range && !range.isMultiLine()) {
                 if (forceMultiline) {
                     range = this.getSectionRange(session, row);
                 } else if (foldStyle != "all")
                     range = null;
             }
-            
+
             return range;
         }
 
@@ -918,7 +918,7 @@ oop.inherits(FoldMode, BaseFoldMode);
             return session.getCommentFoldRange(row, i, -1);
         }
     };
-    
+
     this.getSectionRange = function(session, row) {
         var line = session.getLine(row);
         var startIndent = line.search(/\S/);
@@ -935,7 +935,7 @@ oop.inherits(FoldMode, BaseFoldMode);
             if  (startIndent > indent)
                 break;
             var subRange = this.getFoldWidgetRange(session, "all", row);
-            
+
             if (subRange) {
                 if (subRange.start.row <= startRow) {
                     break;
@@ -947,14 +947,14 @@ oop.inherits(FoldMode, BaseFoldMode);
             }
             endRow = row;
         }
-        
+
         return new Range(startRow, startColumn, endRow, session.getLine(endRow).length);
     };
     this.getCommentRegionBlock = function(session, line, row) {
         var startColumn = line.search(/\s*$/);
         var maxRow = session.getLength();
         var startRow = row;
-        
+
         var re = /^\s*(?:\/\*|\/\/|--)#?(end)?region\b/;
         var depth = 1;
         while (++row < maxRow) {
@@ -996,6 +996,7 @@ oop.inherits(Mode, TextMode);
     this.lineCommentStart = "%";
     this.blockComment = null;
     this.$id = "ace/mode/erlang";
+    this.snippetFileId = "ace/snippets/erlang";
 }).call(Mode.prototype);
 
 exports.Mode = Mode;
@@ -1006,4 +1007,3 @@ exports.Mode = Mode;
                         }
                     });
                 })();
-            

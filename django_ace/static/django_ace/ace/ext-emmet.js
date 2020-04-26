@@ -91,11 +91,11 @@ var SnippetManager = function() {
 
 (function() {
     oop.implement(this, EventEmitter);
-    
+
     this.getTokenizer = function() {
         return SnippetManager.$tokenizer || this.createTokenizer();
     };
-    
+
     this.createTokenizer = function() {
         function TabstopToken(str) {
             str = str.substr(1);
@@ -107,7 +107,7 @@ var SnippetManager = function() {
             return "(?:[^\\\\" + ch + "]|\\\\.)";
         }
         var formatMatcher = {
-            regex: "/(" + escape("/") + "+)/", 
+            regex: "/(" + escape("/") + "+)/",
             onMatch: function(val, state, stack) {
                 var ts = stack[0];
                 ts.fmtString = true;
@@ -117,7 +117,7 @@ var SnippetManager = function() {
             },
             next: "formatString"
         };
-        
+
         SnippetManager.$tokenizer = new Tokenizer({
             start: [
                 {regex: /\\./, onMatch: function(val, state, stack) {
@@ -220,13 +220,13 @@ var SnippetManager = function() {
             return x.value || x;
         });
     };
-    
+
     this.getVariableValue = function(editor, name, indentation) {
         if (/^\d+$/.test(name))
             return (this.variables.__ || {})[name] || "";
         if (/^[A-Z]\d+$/.test(name))
             return (this.variables[name[0] + "__"] || {})[name.substr(1)] || "";
-        
+
         name = name.replace(/^TM_/, "");
         if (!this.variables.hasOwnProperty(name))
             return "";
@@ -235,7 +235,7 @@ var SnippetManager = function() {
             value = this.variables[name](editor, name, indentation);
         return value == null ? "" : value;
     };
-    
+
     this.variables = VARIABLES;
     this.tmStrFormat = function(str, ch, editor) {
         if (!ch.fmt) return str;
@@ -276,7 +276,7 @@ var SnippetManager = function() {
         });
         return formatted;
     };
-    
+
     this.tmFormatFunction = function(str, ch, editor) {
         if (ch.formatFunction == "upcase")
             return str.toUpperCase();
@@ -305,21 +305,21 @@ var SnippetManager = function() {
             }
             if (!ch)  continue;
             afterNewLine = false;
-            
+
             if (ch.fmtString) {
                 var j = snippet.indexOf(ch, i + 1);
                 if (j == -1) j = snippet.length;
                 ch.fmt = snippet.slice(i + 1, j);
                 i = j;
             }
-            
+
             if (ch.text) {
                 var value = this.getVariableValue(editor, ch.text, indentation) + "";
                 if (ch.fmtString)
                     value = this.tmStrFormat(value, ch, editor);
                 if (ch.formatFunction)
                     value = this.tmFormatFunction(value, ch, editor);
-                
+
                 if (value && !ch.ifEnd) {
                     result.push(value);
                     gotoNext(ch);
@@ -347,7 +347,7 @@ var SnippetManager = function() {
         var line = editor.session.getLine(cursor.row);
         var tabString = editor.session.getTabString();
         var indentString = line.match(/^\s*/)[0];
-        
+
         if (cursor.column < indentString.length)
             indentString = indentString.slice(0, cursor.column);
 
@@ -458,16 +458,16 @@ var SnippetManager = function() {
         var selectionId = editor.inVirtualSelectionMode && editor.selection.index;
         tabstopManager.addTabstops(tabstops, range.start, end, selectionId);
     };
-    
+
     this.insertSnippet = function(editor, snippetText) {
         var self = this;
         if (editor.inVirtualSelectionMode)
             return self.insertSnippetForSelection(editor, snippetText);
-        
+
         editor.forEachSelection(function() {
             self.insertSnippetForSelection(editor, snippetText);
         }, null, {keepOrder: true});
-        
+
         if (editor.tabstopManager)
             editor.tabstopManager.tabNext();
     };
@@ -476,7 +476,7 @@ var SnippetManager = function() {
         var scope = editor.session.$mode.$id || "";
         scope = scope.split("/").pop();
         if (scope === "html" || scope === "php") {
-            if (scope === "php" && !editor.session.$mode.inlinePhp) 
+            if (scope === "php" && !editor.session.$mode.inlinePhp)
                 scope = "html";
             var c = editor.getCursorPosition();
             var state = editor.session.getState(c.row);
@@ -492,7 +492,7 @@ var SnippetManager = function() {
                     scope = "php";
             }
         }
-        
+
         return scope;
     };
 
@@ -516,7 +516,7 @@ var SnippetManager = function() {
             editor.tabstopManager.tabNext();
         return result;
     };
-    
+
     this.expandSnippetForSelection = function(editor, options) {
         var cursor = editor.getCursorPosition();
         var line = editor.session.getLine(cursor.row);
@@ -572,10 +572,10 @@ var SnippetManager = function() {
         var snippetMap = this.snippetMap;
         var snippetNameMap = this.snippetNameMap;
         var self = this;
-        
-        if (!snippets) 
+
+        if (!snippets)
             snippets = [];
-        
+
         function wrapRegexp(src) {
             if (src && !/^\^?\(.*\)\$?$|^\\b$/.test(src))
                 src = "(?:" + src + ")";
@@ -615,15 +615,21 @@ var SnippetManager = function() {
             }
             snippetMap[scope].push(s);
 
+            if (s.prefix)
+                s.tabTrigger = s.prefix;
+
+            if (!s.content && s.body)
+                s.content = Array.isArray(s.body) ? s.body.join("\n") : s.body;
+
             if (s.tabTrigger && !s.trigger) {
                 if (!s.guard && /^\w/.test(s.tabTrigger))
                     s.guard = "\\b";
                 s.trigger = lang.escapeRegExp(s.tabTrigger);
             }
-            
+
             if (!s.trigger && !s.guard && !s.endTrigger && !s.endGuard)
                 return;
-            
+
             s.startRe = guardedRegexp(s.trigger, s.guard, true);
             s.triggerRe = new RegExp(s.trigger);
 
@@ -631,11 +637,14 @@ var SnippetManager = function() {
             s.endTriggerRe = new RegExp(s.endTrigger);
         }
 
-        if (snippets && snippets.content)
-            addSnippet(snippets);
-        else if (Array.isArray(snippets))
+        if (Array.isArray(snippets)) {
             snippets.forEach(addSnippet);
-        
+        } else {
+            Object.keys(snippets).forEach(function(key) {
+                addSnippet(snippets[key]);
+            });
+        }
+
         this._signal("registerSnippets", {scope: scope});
     };
     this.unregister = function(snippets, scope) {
@@ -684,7 +693,7 @@ var SnippetManager = function() {
                     snippet.tabTrigger = val.match(/^\S*/)[0];
                     if (!snippet.name)
                         snippet.name = val;
-                } else {
+                } else if (key) {
                     snippet[key] = val;
                 }
             }
@@ -754,7 +763,7 @@ var TabstopManager = function(editor) {
             var ts = tabstops[i];
             var active = ts == selectedTabstop || parents[ts.index];
             ts.rangeList.$bias = active ? 0 : 1;
-            
+
             if (delta.action == "remove" && ts !== selectedTabstop) {
                 var parentActive = ts.parents && ts.parents[selectedTabstop.index];
                 var startIndex = ts.rangeList.pointIndex(delta.start, parentActive);
@@ -830,7 +839,7 @@ var TabstopManager = function(editor) {
         ts = this.tabstops[this.index];
         if (!ts || !ts.length)
             return;
-        
+
         this.selectedTabstop = ts;
         var range = ts.firstNonLinked || ts;
         if (!this.editor.inVirtualSelectionMode) {
@@ -846,14 +855,14 @@ var TabstopManager = function(editor) {
         } else {
             this.editor.selection.setRange(range);
         }
-        
+
         this.editor.keyBinding.addKeyboardHandler(this.keyboardHandler);
         if (this.selectedTabstop && this.selectedTabstop.choices)
             this.editor.execCommand("startAutocomplete", {matches: this.selectedTabstop.choices});
     };
     this.addTabstops = function(tabstops, start, end) {
         var useLink = this.useLink || !this.editor.getOption("enableMultiselect");
-        
+
         if (!this.$openTabstops)
             this.$openTabstops = [];
         if (!tabstops[0]) {
@@ -869,7 +878,7 @@ var TabstopManager = function(editor) {
         var ranges = this.ranges;
         tabstops.forEach(function(ts, index) {
             var dest = this.$openTabstops[index] || ts;
-            
+
             for (var i = 0; i < ts.length; i++) {
                 var p = ts[i];
                 var range = Range.fromPoints(p.start, p.end || p.start);
@@ -899,7 +908,7 @@ var TabstopManager = function(editor) {
             dest.rangeList.$bias = 0;
             dest.rangeList.addList(dest);
         }, this);
-        
+
         if (arg.length > 2) {
             if (this.tabstops.length)
                 arg.push(arg.splice(2, 1)[0]);
@@ -1057,15 +1066,15 @@ AceEmmetEditor.prototype = {
         if (end == null)
             end = start == null ? this.getContent().length : start;
         if (start == null)
-            start = 0;        
-        
+            start = 0;
+
         var editor = this.ace;
         var doc = editor.session.doc;
         var range = Range.fromPoints(doc.indexToPosition(start), doc.indexToPosition(end));
         editor.session.remove(range);
-        
+
         range.end = range.start;
-        
+
         value = this.$updateTabstops(value);
         snippetManager.insertSnippet(editor, value);
     },
@@ -1161,7 +1170,7 @@ AceEmmetEditor.prototype = {
             var common = emmet.utils ? emmet.utils.common : emmet.require('utils');
             value = common.replaceSubstring(value, '${0}', lastZero[0], lastZero[1]);
         }
-        
+
         return value;
     }
 };
@@ -1207,13 +1216,13 @@ exports.runEmmetCommand = function runEmmetCommand(editor) {
     try {
         editorProxy.setupContext(editor);
         var actions = emmet.actions || emmet.require("actions");
-        
+
         if (this.action == "wrap_with_abbreviation") {
             return setTimeout(function() {
                 actions.run("wrap_with_abbreviation", editorProxy);
             }, 0);
         }
-        
+
         var result = actions.run(this.action, editorProxy);
     } catch(e) {
         if (!emmet) {
@@ -1317,4 +1326,3 @@ exports.setCore = function(e) {
                         }
                     });
                 })();
-            

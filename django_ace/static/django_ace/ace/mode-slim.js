@@ -43,7 +43,7 @@ var SlimHighlightRules = function() {
                         var indent = stack[2][0];
                         var language = stack[2][1];
                         var embedState = stack[1];
-                        
+
                         if (modes[language]) {
                             var data = modes[language].getTokenizer().getLineTokens(line.slice(indent.length), embedState.slice(0));
                             stack[1] = data.state;
@@ -215,7 +215,7 @@ var DocCommentHighlightRules = function() {
         "start" : [ {
             token : "comment.doc.tag",
             regex : "@[\\w\\d_]+" // TODO: fix email addresses
-        }, 
+        },
         DocCommentHighlightRules.getTagRule(),
         {
             defaultToken : "comment.doc",
@@ -788,7 +788,7 @@ var FoldMode = exports.FoldMode = function(commentRegex) {
 oop.inherits(FoldMode, BaseFoldMode);
 
 (function() {
-    
+
     this.foldingStartMarker = /([\{\[\(])[^\}\]\)]*$|^\s*(\/\*)/;
     this.foldingStopMarker = /^[^\[\{\(]*([\}\]\)])|^[\s\*]*(\*\/)/;
     this.singleLineBlockCommentRe= /^\s*(\/\*).*\*\/\s*$/;
@@ -797,42 +797,42 @@ oop.inherits(FoldMode, BaseFoldMode);
     this._getFoldWidgetBase = this.getFoldWidget;
     this.getFoldWidget = function(session, foldStyle, row) {
         var line = session.getLine(row);
-    
+
         if (this.singleLineBlockCommentRe.test(line)) {
             if (!this.startRegionRe.test(line) && !this.tripleStarBlockCommentRe.test(line))
                 return "";
         }
-    
+
         var fw = this._getFoldWidgetBase(session, foldStyle, row);
-    
+
         if (!fw && this.startRegionRe.test(line))
             return "start"; // lineCommentRegionStart
-    
+
         return fw;
     };
 
     this.getFoldWidgetRange = function(session, foldStyle, row, forceMultiline) {
         var line = session.getLine(row);
-        
+
         if (this.startRegionRe.test(line))
             return this.getCommentRegionBlock(session, line, row);
-        
+
         var match = line.match(this.foldingStartMarker);
         if (match) {
             var i = match.index;
 
             if (match[1])
                 return this.openingBracketBlock(session, match[1], row, i);
-                
+
             var range = session.getCommentFoldRange(row, i + match[0].length, 1);
-            
+
             if (range && !range.isMultiLine()) {
                 if (forceMultiline) {
                     range = this.getSectionRange(session, row);
                 } else if (foldStyle != "all")
                     range = null;
             }
-            
+
             return range;
         }
 
@@ -849,7 +849,7 @@ oop.inherits(FoldMode, BaseFoldMode);
             return session.getCommentFoldRange(row, i, -1);
         }
     };
-    
+
     this.getSectionRange = function(session, row) {
         var line = session.getLine(row);
         var startIndent = line.search(/\S/);
@@ -866,7 +866,7 @@ oop.inherits(FoldMode, BaseFoldMode);
             if  (startIndent > indent)
                 break;
             var subRange = this.getFoldWidgetRange(session, "all", row);
-            
+
             if (subRange) {
                 if (subRange.start.row <= startRow) {
                     break;
@@ -878,14 +878,14 @@ oop.inherits(FoldMode, BaseFoldMode);
             }
             endRow = row;
         }
-        
+
         return new Range(startRow, startColumn, endRow, session.getLine(endRow).length);
     };
     this.getCommentRegionBlock = function(session, line, row) {
         var startColumn = line.search(/\s*$/);
         var maxRow = session.getLength();
         var startRow = row;
-        
+
         var re = /^\s*(?:\/\*|\/\/|--)#?(end)?region\b/;
         var depth = 1;
         while (++row < maxRow) {
@@ -921,7 +921,7 @@ var CStyleFoldMode = require("./folding/cstyle").FoldMode;
 
 var Mode = function() {
     this.HighlightRules = JavaScriptHighlightRules;
-    
+
     this.$outdent = new MatchingBraceOutdent();
     this.$behaviour = new CstyleBehaviour();
     this.foldingRules = new CStyleFoldMode();
@@ -990,6 +990,7 @@ oop.inherits(Mode, TextMode);
     };
 
     this.$id = "ace/mode/javascript";
+    this.snippetFileId = "ace/snippets/javascript";
 }).call(Mode.prototype);
 
 exports.Mode = Mode;
@@ -1287,7 +1288,7 @@ var XmlBehaviour = function () {
                     iterator.stepBackward();
                 }
             }
-            
+
             if (/^\s*>/.test(session.getLine(position.row).slice(position.column)))
                 return;
             while (!is(token, "tag-name")) {
@@ -1385,7 +1386,7 @@ var FoldMode = exports.FoldMode = function(voidElements, optionalEndTags) {
     this.optionalEndTags = oop.mixin({}, this.voidElements);
     if (optionalEndTags)
         oop.mixin(this.optionalEndTags, optionalEndTags);
-    
+
 };
 oop.inherits(FoldMode, BaseFoldMode);
 
@@ -1420,7 +1421,7 @@ function is(token, type) {
 
         return "start";
     };
-    
+
     this.getCommentFoldWidget = function(session, row) {
         if (/comment/.test(session.getState(row)) && /<!-/.test(session.getLine(row)))
             return "start";
@@ -1499,7 +1500,7 @@ function is(token, type) {
 
         return null;
     };
-    
+
     this._readTagBackward = function(iterator) {
         var token = iterator.getCurrentToken();
         if (!token)
@@ -1524,10 +1525,10 @@ function is(token, type) {
 
         return null;
     };
-    
+
     this._pop = function(stack, tag) {
         while (stack.length) {
-            
+
             var top = stack[stack.length-1];
             if (!tag || top.tagName == tag.tagName) {
                 return stack.pop();
@@ -1540,19 +1541,19 @@ function is(token, type) {
             }
         }
     };
-    
+
     this.getFoldWidgetRange = function(session, foldStyle, row) {
         var firstTag = this._getFirstTagInLine(session, row);
-        
+
         if (!firstTag) {
             return this.getCommentFoldWidget(session, row)
                 && session.getCommentFoldRange(row, session.getLine(row).length);
         }
-        
+
         var isBackward = firstTag.closing || firstTag.selfClosing;
         var stack = [];
         var tag;
-        
+
         if (!isBackward) {
             var iterator = new TokenIterator(session, row, firstTag.start.column);
             var start = {
@@ -1570,7 +1571,7 @@ function is(token, type) {
                     } else
                         continue;
                 }
-                
+
                 if (tag.closing) {
                     this._pop(stack, tag);
                     if (stack.length == 0)
@@ -1587,7 +1588,7 @@ function is(token, type) {
                 row: row,
                 column: firstTag.start.column
             };
-            
+
             while (tag = this._readTagBackward(iterator)) {
                 if (tag.selfClosing) {
                     if (!stack.length) {
@@ -1597,7 +1598,7 @@ function is(token, type) {
                     } else
                         continue;
                 }
-                
+
                 if (!tag.closing) {
                     this._pop(stack, tag);
                     if (stack.length == 0) {
@@ -1612,7 +1613,7 @@ function is(token, type) {
                 }
             }
         }
-        
+
     };
 
 }).call(FoldMode.prototype);
@@ -1658,7 +1659,7 @@ oop.inherits(Mode, TextMode);
 
         return worker;
     };
-    
+
     this.$id = "ace/mode/xml";
 }).call(Mode.prototype);
 
@@ -2192,6 +2193,7 @@ oop.inherits(Mode, TextMode);
     };
 
     this.$id = "ace/mode/css";
+    this.snippetFileId = "ace/snippets/css";
 }).call(Mode.prototype);
 
 exports.Mode = Mode;
@@ -2296,7 +2298,7 @@ oop.inherits(FoldMode, BaseFoldMode);
 
 
     this.$getMode = function(state) {
-        if (typeof state != "string") 
+        if (typeof state != "string")
             state = state[0];
         for (var key in this.subModes) {
             if (state.indexOf(key) === 0)
@@ -2304,7 +2306,7 @@ oop.inherits(FoldMode, BaseFoldMode);
         }
         return null;
     };
-    
+
     this.$tryMode = function(state, session, foldStyle, row) {
         var mode = this.$getMode(state);
         return (mode ? mode.getFoldWidget(session, foldStyle, row) : "");
@@ -2320,13 +2322,13 @@ oop.inherits(FoldMode, BaseFoldMode);
 
     this.getFoldWidgetRange = function(session, foldStyle, row) {
         var mode = this.$getMode(session.getState(row-1));
-        
+
         if (!mode || !mode.getFoldWidget(session, foldStyle, row))
             mode = this.$getMode(session.getState(row));
-        
+
         if (!mode || !mode.getFoldWidget(session, foldStyle, row))
             mode = this.defaultMode;
-        
+
         return mode.getFoldWidgetRange(session, foldStyle, row);
     };
 
@@ -2640,7 +2642,7 @@ var HtmlCompletions = function() {
     this.getAttributeValueCompletions = function(state, session, pos, prefix) {
         var tagName = findTagName(session, pos);
         var attributeName = findAttributeName(session, pos);
-        
+
         if (!tagName)
             return [];
         var values = [];
@@ -2696,12 +2698,12 @@ var Mode = function(options) {
     this.HighlightRules = HtmlHighlightRules;
     this.$behaviour = new XmlBehaviour();
     this.$completer = new HtmlCompletions();
-    
+
     this.createModeDelegates({
         "js-": JavaScriptMode,
         "css-": CssMode
     });
-    
+
     this.foldingRules = new HtmlFoldMode(this.voidElements, lang.arrayToMap(optionalEndTags));
 };
 oop.inherits(Mode, TextMode);
@@ -2745,6 +2747,7 @@ oop.inherits(Mode, TextMode);
     };
 
     this.$id = "ace/mode/html";
+    this.snippetFileId = "ace/snippets/html";
 }).call(Mode.prototype);
 
 exports.Mode = Mode;
@@ -2787,7 +2790,7 @@ var MarkdownHighlightRules = function() {
             var indent = stack[2][0];
             var endMarker = stack[2][1];
             var language = stack[2][2];
-            
+
             var m = /^(\s*)(`+|~+)\s*$/.exec(value);
             if (
                 m && m[1].length < indent.length + 3
@@ -3243,7 +3246,7 @@ var ShHighlightRules = function() {
             push : "start"
         }]
     };
-    
+
     this.normalizeRules();
 };
 
@@ -3271,7 +3274,7 @@ oop.inherits(Mode, TextMode);
 
 (function() {
 
-   
+
     this.lineCommentStart = "#";
 
     this.getNextLineIndent = function(state, line, tab) {
@@ -3330,6 +3333,7 @@ oop.inherits(Mode, TextMode);
     };
 
     this.$id = "ace/mode/sh";
+    this.snippetFileId = "ace/snippets/sh";
 }).call(Mode.prototype);
 
 exports.Mode = Mode;
@@ -3382,6 +3386,7 @@ oop.inherits(Mode, TextMode);
         }
     };
     this.$id = "ace/mode/markdown";
+    this.snippetFileId = "ace/snippets/markdown";
 }).call(Mode.prototype);
 
 exports.Mode = Mode;
@@ -3533,8 +3538,8 @@ define("ace/mode/coffee_highlight_rules",["require","exports","module","ace/lib/
                 }, {
                     token : ["entity.name.function", "text", "keyword.operator", "text"].concat(functionRule.token),
                     regex : "(" + identifier + ")(\\s*)([=:])(\\s*)" + functionRule.regex
-                }, 
-                functionRule, 
+                },
+                functionRule,
                 {
                     token : "variable",
                     regex : "@(?:" + identifier + ")?"
@@ -3696,44 +3701,45 @@ oop.inherits(Mode, TextMode);
 
 (function() {
     var indenter = /(?:[({[=:]|[-=]>|\b(?:else|try|(?:swi|ca)tch(?:\s+[$A-Za-z_\x7f-\uffff][$\w\x7f-\uffff]*)?|finally))\s*$|^\s*(else\b\s*)?(?:if|for|while|loop)\b(?!.*\bthen\b)/;
-    
+
     this.lineCommentStart = "#";
     this.blockComment = {start: "###", end: "###"};
-    
+
     this.getNextLineIndent = function(state, line, tab) {
         var indent = this.$getIndent(line);
         var tokens = this.getTokenizer().getLineTokens(line, state).tokens;
-    
+
         if (!(tokens.length && tokens[tokens.length - 1].type === 'comment') &&
             state === 'start' && indenter.test(line))
             indent += tab;
         return indent;
     };
-    
+
     this.checkOutdent = function(state, line, input) {
         return this.$outdent.checkOutdent(line, input);
     };
-    
+
     this.autoOutdent = function(state, doc, row) {
         this.$outdent.autoOutdent(doc, row);
     };
-    
+
     this.createWorker = function(session) {
         var worker = new WorkerClient(["ace"], "ace/mode/coffee_worker", "Worker");
         worker.attachToDocument(session.getDocument());
-        
+
         worker.on("annotate", function(e) {
             session.setAnnotations(e.data);
         });
-        
+
         worker.on("terminate", function() {
             session.clearAnnotations();
         });
-        
+
         return worker;
     };
 
     this.$id = "ace/mode/coffee";
+    this.snippetFileId = "ace/snippets/coffee";
 }).call(Mode.prototype);
 
 exports.Mode = Mode;
@@ -3749,13 +3755,13 @@ var TextHighlightRules = require("./text_highlight_rules").TextHighlightRules;
 var CssHighlightRules = require("./css_highlight_rules");
 
 var ScssHighlightRules = function() {
-    
+
     var properties = lang.arrayToMap(CssHighlightRules.supportType.split("|"));
 
     var functions = lang.arrayToMap(
         ("hsl|hsla|rgb|rgba|url|attr|counter|counters|abs|adjust_color|adjust_hue|" +
-         "alpha|join|blue|ceil|change_color|comparable|complement|darken|desaturate|" + 
-         "floor|grayscale|green|hue|if|invert|join|length|lighten|lightness|mix|" + 
+         "alpha|join|blue|ceil|change_color|comparable|complement|darken|desaturate|" +
+         "floor|grayscale|green|hue|if|invert|join|length|lighten|lightness|mix|" +
          "nth|opacify|opacity|percentage|quote|red|round|saturate|saturation|" +
          "scale_color|transparentize|type_of|unit|unitless|unquote").split("|")
     );
@@ -3763,20 +3769,20 @@ var ScssHighlightRules = function() {
     var constants = lang.arrayToMap(CssHighlightRules.supportConstant.split("|"));
 
     var colors = lang.arrayToMap(CssHighlightRules.supportConstantColor.split("|"));
-    
+
     var keywords = lang.arrayToMap(
         ("@mixin|@extend|@include|@import|@media|@debug|@warn|@if|@for|@each|@while|@else|@font-face|@-webkit-keyframes|if|and|!default|module|def|end|declare").split("|")
     );
-    
+
     var tags = lang.arrayToMap(
-        ("a|abbr|acronym|address|applet|area|article|aside|audio|b|base|basefont|bdo|" + 
-         "big|blockquote|body|br|button|canvas|caption|center|cite|code|col|colgroup|" + 
-         "command|datalist|dd|del|details|dfn|dir|div|dl|dt|em|embed|fieldset|" + 
-         "figcaption|figure|font|footer|form|frame|frameset|h1|h2|h3|h4|h5|h6|head|" + 
-         "header|hgroup|hr|html|i|iframe|img|input|ins|keygen|kbd|label|legend|li|" + 
-         "link|map|mark|menu|meta|meter|nav|noframes|noscript|object|ol|optgroup|" + 
-         "option|output|p|param|pre|progress|q|rp|rt|ruby|s|samp|script|section|select|" + 
-         "small|source|span|strike|strong|style|sub|summary|sup|table|tbody|td|" + 
+        ("a|abbr|acronym|address|applet|area|article|aside|audio|b|base|basefont|bdo|" +
+         "big|blockquote|body|br|button|canvas|caption|center|cite|code|col|colgroup|" +
+         "command|datalist|dd|del|details|dfn|dir|div|dl|dt|em|embed|fieldset|" +
+         "figcaption|figure|font|footer|form|frame|frameset|h1|h2|h3|h4|h5|h6|head|" +
+         "header|hgroup|hr|html|i|iframe|img|input|ins|keygen|kbd|label|legend|li|" +
+         "link|map|mark|menu|meta|meter|nav|noframes|noscript|object|ol|optgroup|" +
+         "option|output|p|param|pre|progress|q|rp|rt|ruby|s|samp|script|section|select|" +
+         "small|source|span|strike|strong|style|sub|summary|sup|table|tbody|td|" +
          "textarea|tfoot|th|thead|time|title|tr|tt|u|ul|var|video|wbr|xmp").split("|")
     );
 
@@ -3930,7 +3936,7 @@ var Mode = function() {
 oop.inherits(Mode, TextMode);
 
 (function() {
-   
+
     this.lineCommentStart = "//";
     this.blockComment = {start: "/*", end: "*/"};
 
@@ -3956,7 +3962,7 @@ oop.inherits(Mode, TextMode);
     this.autoOutdent = function(state, doc, row) {
         this.$outdent.autoOutdent(doc, row);
     };
-    
+
     this.getCompletions = function(state, session, pos, prefix) {
         return this.$completer.getCompletions(state, session, pos, prefix);
     };
@@ -3994,7 +4000,7 @@ var SassHighlightRules = function() {
             token: "support.type",
             regex: /^\s*:[\w\-]+\s/
         });
-        
+
         this.$rules.comment = [
             {regex: /^\s*/, onMatch: function(value, currentState, stack) {
                 if (stack[1] === -1)
@@ -4033,7 +4039,7 @@ var Mode = function() {
 };
 oop.inherits(Mode, TextMode);
 
-(function() {   
+(function() {
     this.lineCommentStart = "//";
     this.$id = "ace/mode/sass";
 }).call(Mode.prototype);
@@ -4052,7 +4058,7 @@ var CssHighlightRules = require('./css_highlight_rules');
 var LessHighlightRules = function() {
 
 
-    var keywordList = "@import|@media|@font-face|@keyframes|@-webkit-keyframes|@supports|" + 
+    var keywordList = "@import|@media|@font-face|@keyframes|@-webkit-keyframes|@supports|" +
         "@charset|@plugin|@namespace|@document|@page|@viewport|@-ms-viewport|" +
         "or|and|when|not";
 
@@ -4065,7 +4071,7 @@ var LessHighlightRules = function() {
         "keyword": keywordList,
         "support.constant.color": CssHighlightRules.supportConstantColor,
         "support.constant.fonts": CssHighlightRules.supportConstantFonts
-    }, "identifier", true);   
+    }, "identifier", true);
 
     var numRe = "\\-?(?:(?:[0-9]+)|(?:[0-9]*\\.[0-9]+))";
 
@@ -4202,7 +4208,7 @@ oop.inherits(Mode, TextMode);
 
     this.lineCommentStart = "//";
     this.blockComment = {start: "/*", end: "*/"};
-    
+
     this.getNextLineIndent = function(state, line, tab) {
         var indent = this.$getIndent(line);
         var tokens = this.getTokenizer().getLineTokens(line, state).tokens;
@@ -4597,6 +4603,7 @@ oop.inherits(Mode, TextMode);
     };
 
     this.$id = "ace/mode/ruby";
+    this.snippetFileId = "ace/snippets/ruby";
 }).call(Mode.prototype);
 
 exports.Mode = Mode;
@@ -4639,4 +4646,3 @@ exports.Mode = Mode;
                         }
                     });
                 })();
-            

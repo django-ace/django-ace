@@ -3,6 +3,10 @@
 /*.sublime-*
 /*.egg-info
 /example/.env
-/example/example/database.sqlite3
+/example/**/db.sqlite3
+/example/**/migrations
 /dist
 .idea/
+.vscode
+.eggs
+.python-version
