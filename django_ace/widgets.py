@@ -65,14 +65,16 @@ class AceWidget(forms.Textarea):
             "class": "django-ace-widget loading",
             "style": "width:%s; height:%s" % (self.width, self.height),
             "data-use-worker": self.use_worker,
+            "data-showinvisibles": self.showinvisibles,
+            "data-showprintmargin": self.showprintmargin,
+            "data-usesofttabs": self.usesofttabs,
+            "data-wordwrap": self.wordwrap,
         }
 
         if self.mode:
             ace_attrs["data-mode"] = self.mode
         if self.theme:
             ace_attrs["data-theme"] = self.theme
-        if self.wordwrap:
-            ace_attrs["data-wordwrap"] = "true"
         if self.minlines:
             ace_attrs["data-minlines"] = str(self.minlines)
         if self.maxlines:
@@ -81,10 +83,6 @@ class AceWidget(forms.Textarea):
             ace_attrs["data-tabsize"] = str(self.tabsize)
         if self.fontsize:
             ace_attrs["data-fontsize"] = str(self.fontsize)
-
-        ace_attrs["data-showprintmargin"] = "true" if self.showprintmargin else "false"
-        ace_attrs["data-showinvisibles"] = "true" if self.showinvisibles else "false"
-        ace_attrs["data-usesofttabs"] = "true" if self.usesofttabs else "false"
 
         return ace_attrs
 

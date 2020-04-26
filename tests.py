@@ -51,9 +51,9 @@ class TestWidget(unittest.TestCase):
             '<div style="width: 500px" class="django-ace-toolbar">' \
             '<a href="./" class="django-ace-max_min"></a>' \
             '</div>' \
-            '<div class="django-ace-widget loading" data-showinvisibles="false" ' \
-            'data-showprintmargin="true" data-usesofttabs="true" ' \
-            'style="width:500px; height:300px" data-use-worker>' \
+            '<div class="django-ace-widget loading" ' \
+            'style="width:500px; height:300px" ' \
+            'data-showprintmargin data-use-worker data-usesofttabs>' \
             '<div></div>' \
             '</div>' \
             '<textarea name="name" rows="10" cols="40">\nvalue</textarea>' \
@@ -65,10 +65,11 @@ class TestWidget(unittest.TestCase):
         expected_attrs = {
             'class': 'django-ace-widget loading',
             'style': 'width:500px; height:300px',
-            'data-showinvisibles': 'false',
-            'data-showprintmargin': 'true',
-            'data-usesofttabs': 'true',
+            'data-showinvisibles': False,
+            'data-showprintmargin': True,
             'data-use-worker': True,
+            'data-usesofttabs': True,
+            'data-wordwrap': False,
         }
         self.assertEqual(ace_widget.get_attributes(), expected_attrs)
 
@@ -94,13 +95,12 @@ class TestWidget(unittest.TestCase):
 
         widget = editor[1]
         self.assertEqual(widget.tag, 'div')
-        self.assertEqual(len(widget.attrib.keys()), 6)
+        self.assertEqual(len(widget.attrib.keys()), 5)
         self.assertEqual(
             sorted(widget.attrib.keys()),
             sorted([
                 'class',
                 'style',
-                'data-showinvisibles',
                 'data-showprintmargin',
                 'data-usesofttabs',
                 'data-use-worker',
@@ -108,9 +108,8 @@ class TestWidget(unittest.TestCase):
         )
         self.assertEqual(widget.attrib['class'], 'django-ace-widget loading')
         self.assertEqual(widget.attrib['style'], 'width:500px; height:300px')
-        self.assertEqual(widget.attrib['data-showinvisibles'], 'false')
-        self.assertEqual(widget.attrib['data-showprintmargin'], 'true')
-        self.assertEqual(widget.attrib['data-usesofttabs'], 'true')
+        self.assertEqual(widget.attrib['data-showprintmargin'], '')
+        self.assertEqual(widget.attrib['data-usesofttabs'], '')
         self.assertEqual(widget.attrib['data-use-worker'], '')
 
         textarea = editor[2]
@@ -139,13 +138,12 @@ class TestWidget(unittest.TestCase):
 
         widget = editor[1]
         self.assertEqual(widget.tag, 'div')
-        self.assertEqual(len(widget.attrib.keys()), 5)
+        self.assertEqual(len(widget.attrib.keys()), 4)
         self.assertEqual(
             sorted(widget.attrib.keys()),
             sorted([
                 'class',
                 'style',
-                'data-showinvisibles',
                 'data-showprintmargin',
                 'data-usesofttabs',
             ])
@@ -156,6 +154,7 @@ class TestWidget(unittest.TestCase):
             mode='html',
             theme='twilight',
             wordwrap=True,
+            showinvisibles=True,
             minlines=8,
             maxlines=16,
             tabsize=4,
@@ -189,7 +188,7 @@ class TestWidget(unittest.TestCase):
         )
         self.assertEqual(widget.attrib['data-mode'], 'html')
         self.assertEqual(widget.attrib['data-theme'], 'twilight')
-        self.assertEqual(widget.attrib['data-wordwrap'], 'true')
+        self.assertEqual(widget.attrib['data-wordwrap'], '')
         self.assertEqual(widget.attrib['data-minlines'], '8')
         self.assertEqual(widget.attrib['data-maxlines'], '16')
         self.assertEqual(widget.attrib['data-tabsize'], '4')
