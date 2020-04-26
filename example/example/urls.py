@@ -1,7 +1,8 @@
+# -*- coding: utf-8 -*-
 from django.conf.urls import url
 from django.contrib import admin
-from .app.views import simple
 
+from .app.views import simple
 
 urlpatterns = [
     url(r'', simple),

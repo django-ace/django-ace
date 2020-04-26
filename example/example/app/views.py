@@ -1,6 +1,8 @@
+# -*- coding: utf-8 -*-
+from django.shortcuts import redirect, render
+
 from .forms import SnippetForm
 from .models import Snippet
-from django.shortcuts import render, redirect
 
 
 def simple(request):
