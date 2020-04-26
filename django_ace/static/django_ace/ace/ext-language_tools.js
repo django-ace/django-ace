@@ -91,11 +91,11 @@ var SnippetManager = function() {
 
 (function() {
     oop.implement(this, EventEmitter);
-    
+
     this.getTokenizer = function() {
         return SnippetManager.$tokenizer || this.createTokenizer();
     };
-    
+
     this.createTokenizer = function() {
         function TabstopToken(str) {
             str = str.substr(1);
@@ -107,7 +107,7 @@ var SnippetManager = function() {
             return "(?:[^\\\\" + ch + "]|\\\\.)";
         }
         var formatMatcher = {
-            regex: "/(" + escape("/") + "+)/", 
+            regex: "/(" + escape("/") + "+)/",
             onMatch: function(val, state, stack) {
                 var ts = stack[0];
                 ts.fmtString = true;
@@ -117,7 +117,7 @@ var SnippetManager = function() {
             },
             next: "formatString"
         };
-        
+
         SnippetManager.$tokenizer = new Tokenizer({
             start: [
                 {regex: /\\./, onMatch: function(val, state, stack) {
@@ -220,13 +220,13 @@ var SnippetManager = function() {
             return x.value || x;
         });
     };
-    
+
     this.getVariableValue = function(editor, name, indentation) {
         if (/^\d+$/.test(name))
             return (this.variables.__ || {})[name] || "";
         if (/^[A-Z]\d+$/.test(name))
             return (this.variables[name[0] + "__"] || {})[name.substr(1)] || "";
-        
+
         name = name.replace(/^TM_/, "");
         if (!this.variables.hasOwnProperty(name))
             return "";
@@ -235,7 +235,7 @@ var SnippetManager = function() {
             value = this.variables[name](editor, name, indentation);
         return value == null ? "" : value;
     };
-    
+
     this.variables = VARIABLES;
     this.tmStrFormat = function(str, ch, editor) {
         if (!ch.fmt) return str;
@@ -276,7 +276,7 @@ var SnippetManager = function() {
         });
         return formatted;
     };
-    
+
     this.tmFormatFunction = function(str, ch, editor) {
         if (ch.formatFunction == "upcase")
             return str.toUpperCase();
@@ -305,21 +305,21 @@ var SnippetManager = function() {
             }
             if (!ch)  continue;
             afterNewLine = false;
-            
+
             if (ch.fmtString) {
                 var j = snippet.indexOf(ch, i + 1);
                 if (j == -1) j = snippet.length;
                 ch.fmt = snippet.slice(i + 1, j);
                 i = j;
             }
-            
+
             if (ch.text) {
                 var value = this.getVariableValue(editor, ch.text, indentation) + "";
                 if (ch.fmtString)
                     value = this.tmStrFormat(value, ch, editor);
                 if (ch.formatFunction)
                     value = this.tmFormatFunction(value, ch, editor);
-                
+
                 if (value && !ch.ifEnd) {
                     result.push(value);
                     gotoNext(ch);
@@ -347,7 +347,7 @@ var SnippetManager = function() {
         var line = editor.session.getLine(cursor.row);
         var tabString = editor.session.getTabString();
         var indentString = line.match(/^\s*/)[0];
-        
+
         if (cursor.column < indentString.length)
             indentString = indentString.slice(0, cursor.column);
 
@@ -458,16 +458,16 @@ var SnippetManager = function() {
         var selectionId = editor.inVirtualSelectionMode && editor.selection.index;
         tabstopManager.addTabstops(tabstops, range.start, end, selectionId);
     };
-    
+
     this.insertSnippet = function(editor, snippetText) {
         var self = this;
         if (editor.inVirtualSelectionMode)
             return self.insertSnippetForSelection(editor, snippetText);
-        
+
         editor.forEachSelection(function() {
             self.insertSnippetForSelection(editor, snippetText);
         }, null, {keepOrder: true});
-        
+
         if (editor.tabstopManager)
             editor.tabstopManager.tabNext();
     };
@@ -476,7 +476,7 @@ var SnippetManager = function() {
         var scope = editor.session.$mode.$id || "";
         scope = scope.split("/").pop();
         if (scope === "html" || scope === "php") {
-            if (scope === "php" && !editor.session.$mode.inlinePhp) 
+            if (scope === "php" && !editor.session.$mode.inlinePhp)
                 scope = "html";
             var c = editor.getCursorPosition();
             var state = editor.session.getState(c.row);
@@ -492,7 +492,7 @@ var SnippetManager = function() {
                     scope = "php";
             }
         }
-        
+
         return scope;
     };
 
@@ -516,7 +516,7 @@ var SnippetManager = function() {
             editor.tabstopManager.tabNext();
         return result;
     };
-    
+
     this.expandSnippetForSelection = function(editor, options) {
         var cursor = editor.getCursorPosition();
         var line = editor.session.getLine(cursor.row);
@@ -572,10 +572,10 @@ var SnippetManager = function() {
         var snippetMap = this.snippetMap;
         var snippetNameMap = this.snippetNameMap;
         var self = this;
-        
-        if (!snippets) 
+
+        if (!snippets)
             snippets = [];
-        
+
         function wrapRegexp(src) {
             if (src && !/^\^?\(.*\)\$?$|^\\b$/.test(src))
                 src = "(?:" + src + ")";
@@ -615,15 +615,21 @@ var SnippetManager = function() {
             }
             snippetMap[scope].push(s);
 
+            if (s.prefix)
+                s.tabTrigger = s.prefix;
+
+            if (!s.content && s.body)
+                s.content = Array.isArray(s.body) ? s.body.join("\n") : s.body;
+
             if (s.tabTrigger && !s.trigger) {
                 if (!s.guard && /^\w/.test(s.tabTrigger))
                     s.guard = "\\b";
                 s.trigger = lang.escapeRegExp(s.tabTrigger);
             }
-            
+
             if (!s.trigger && !s.guard && !s.endTrigger && !s.endGuard)
                 return;
-            
+
             s.startRe = guardedRegexp(s.trigger, s.guard, true);
             s.triggerRe = new RegExp(s.trigger);
 
@@ -631,11 +637,14 @@ var SnippetManager = function() {
             s.endTriggerRe = new RegExp(s.endTrigger);
         }
 
-        if (snippets && snippets.content)
-            addSnippet(snippets);
-        else if (Array.isArray(snippets))
+        if (Array.isArray(snippets)) {
             snippets.forEach(addSnippet);
-        
+        } else {
+            Object.keys(snippets).forEach(function(key) {
+                addSnippet(snippets[key]);
+            });
+        }
+
         this._signal("registerSnippets", {scope: scope});
     };
     this.unregister = function(snippets, scope) {
@@ -684,7 +693,7 @@ var SnippetManager = function() {
                     snippet.tabTrigger = val.match(/^\S*/)[0];
                     if (!snippet.name)
                         snippet.name = val;
-                } else {
+                } else if (key) {
                     snippet[key] = val;
                 }
             }
@@ -754,7 +763,7 @@ var TabstopManager = function(editor) {
             var ts = tabstops[i];
             var active = ts == selectedTabstop || parents[ts.index];
             ts.rangeList.$bias = active ? 0 : 1;
-            
+
             if (delta.action == "remove" && ts !== selectedTabstop) {
                 var parentActive = ts.parents && ts.parents[selectedTabstop.index];
                 var startIndex = ts.rangeList.pointIndex(delta.start, parentActive);
@@ -830,7 +839,7 @@ var TabstopManager = function(editor) {
         ts = this.tabstops[this.index];
         if (!ts || !ts.length)
             return;
-        
+
         this.selectedTabstop = ts;
         var range = ts.firstNonLinked || ts;
         if (!this.editor.inVirtualSelectionMode) {
@@ -846,14 +855,14 @@ var TabstopManager = function(editor) {
         } else {
             this.editor.selection.setRange(range);
         }
-        
+
         this.editor.keyBinding.addKeyboardHandler(this.keyboardHandler);
         if (this.selectedTabstop && this.selectedTabstop.choices)
             this.editor.execCommand("startAutocomplete", {matches: this.selectedTabstop.choices});
     };
     this.addTabstops = function(tabstops, start, end) {
         var useLink = this.useLink || !this.editor.getOption("enableMultiselect");
-        
+
         if (!this.$openTabstops)
             this.$openTabstops = [];
         if (!tabstops[0]) {
@@ -869,7 +878,7 @@ var TabstopManager = function(editor) {
         var ranges = this.ranges;
         tabstops.forEach(function(ts, index) {
             var dest = this.$openTabstops[index] || ts;
-            
+
             for (var i = 0; i < ts.length; i++) {
                 var p = ts[i];
                 var range = Range.fromPoints(p.start, p.end || p.start);
@@ -899,7 +908,7 @@ var TabstopManager = function(editor) {
             dest.rangeList.$bias = 0;
             dest.rangeList.addList(dest);
         }, this);
-        
+
         if (arg.length > 2) {
             if (this.tabstops.length)
                 arg.push(arg.splice(2, 1)[0]);
@@ -1146,11 +1155,11 @@ var AcePopup = function(parentNode) {
 
         function addToken(value, className) {
             value && tokens.push({
-                type: (data.className || "") + (className || ""), 
+                type: (data.className || "") + (className || ""),
                 value: value
             });
         }
-        
+
         var lower = caption.toLowerCase();
         var filterText = (popup.filterText || "").toLowerCase();
         var lastIndex = 0;
@@ -1167,7 +1176,7 @@ var AcePopup = function(parentNode) {
             }
         }
         addToken(caption.slice(lastIndex, caption.length), "");
-        
+
         if (data.meta)
             tokens.push({type: "completion-meta", value: data.meta});
         if (data.message)
@@ -1455,7 +1464,7 @@ var Autocomplete = function() {
         this.popup.setData(this.completions.filtered, this.completions.filterText);
 
         editor.keyBinding.addKeyboardHandler(this.keyboardHandler);
-        
+
         var renderer = editor.renderer;
         this.popup.setRow(this.autoSelect ? 0 : -1);
         if (!keepPopupPosition) {
@@ -1538,6 +1547,7 @@ var Autocomplete = function() {
         if (!data)
             return false;
 
+        this.editor.startOperation({command: {name: "insertMatch"}});
         if (data.completer && data.completer.insertMatch) {
             data.completer.insertMatch(this.editor, data);
         } else {
@@ -1554,6 +1564,7 @@ var Autocomplete = function() {
                 this.editor.execCommand("insertstring", data.value || data);
         }
         this.detach();
+        this.editor.endOperation();
     };
 
 
@@ -1640,7 +1651,7 @@ var Autocomplete = function() {
             this.openPopup(this.editor, prefix, keepPopupPosition);
             return;
         }
-        
+
         if (options && options.matches) {
             var pos = this.editor.getSelectionRange().start;
             this.base = this.editor.session.doc.createAnchor(pos.row, pos.column);
@@ -1766,7 +1777,7 @@ var Autocomplete = function() {
         if (el.parentNode)
             el.parentNode.removeChild(el);
     };
-    
+
     this.onTooltipClick = function(e) {
         var a = e.target;
         while (a && a != this.tooltipNode) {
@@ -1840,7 +1851,7 @@ var FilteredList = function(array, filterText) {
         this.filterText = str;
         matches = this.filterCompletions(matches, this.filterText);
         matches = matches.sort(function(a, b) {
-            return b.exactMatch - a.exactMatch || b.$score - a.$score 
+            return b.exactMatch - a.exactMatch || b.$score - a.$score
                 || (a.caption || a.value).localeCompare(b.caption || b.value);
         });
         var prev = null;
@@ -1906,7 +1917,7 @@ exports.FilteredList = FilteredList;
 
 define("ace/autocomplete/text_completer",["require","exports","module","ace/range"], function(require, exports, module) {
     var Range = require("../range").Range;
-    
+
     var splitRegex = /[^a-zA-Z_0-9\$\-\u00C0-\u1FFF\u2C00-\uD7FF\w]+/;
 
     function getWordIndex(doc, pos) {
@@ -1917,7 +1928,7 @@ define("ace/autocomplete/text_completer",["require","exports","module","ace/rang
         var prefixPos = getWordIndex(doc, pos);
         var words = doc.getValue().split(splitRegex);
         var wordScores = Object.create(null);
-        
+
         var currentWord = words[prefixPos];
 
         words.forEach(function(word, idx) {
@@ -2032,31 +2043,33 @@ var onChangeMode = function(e, editor) {
 };
 
 var loadSnippetsForMode = function(mode) {
-    var id = mode.$id;
+    if (typeof mode == "string")
+        mode = config.$modes[mode];
+    if (!mode)
+        return;
     if (!snippetManager.files)
         snippetManager.files = {};
-    loadSnippetFile(id);
+
+    loadSnippetFile(mode.$id, mode.snippetFileId);
     if (mode.modes)
         mode.modes.forEach(loadSnippetsForMode);
 };
 
-var loadSnippetFile = function(id) {
-    if (!id || snippetManager.files[id])
+var loadSnippetFile = function(id, snippetFilePath) {
+    if (!snippetFilePath || !id || snippetManager.files[id])
         return;
-    var snippetFilePath = id.replace("mode", "snippets");
     snippetManager.files[id] = {};
     config.loadModule(snippetFilePath, function(m) {
-        if (m) {
-            snippetManager.files[id] = m;
-            if (!m.snippets && m.snippetText)
-                m.snippets = snippetManager.parseSnippetFile(m.snippetText);
-            snippetManager.register(m.snippets || [], m.scope);
-            if (m.includeScopes) {
-                snippetManager.snippetMap[m.scope].includeScopes = m.includeScopes;
-                m.includeScopes.forEach(function(x) {
-                    loadSnippetFile("ace/mode/" + x);
-                });
-            }
+        if (!m) return;
+        snippetManager.files[id] = m;
+        if (!m.snippets && m.snippetText)
+            m.snippets = snippetManager.parseSnippetFile(m.snippetText);
+        snippetManager.register(m.snippets || [], m.scope);
+        if (m.includeScopes) {
+            snippetManager.snippetMap[m.scope].includeScopes = m.includeScopes;
+            m.includeScopes.forEach(function(x) {
+                loadSnippetsForMode("ace/mode/" + x);
+            });
         }
     });
 };
@@ -2125,4 +2138,3 @@ require("../config").defineOptions(Editor.prototype, "editor", {
                         }
                     });
                 })();
-            

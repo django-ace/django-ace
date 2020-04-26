@@ -204,7 +204,7 @@ var DocCommentHighlightRules = function() {
         "start" : [ {
             token : "comment.doc.tag",
             regex : "@[\\w\\d_]+" // TODO: fix email addresses
-        }, 
+        },
         DocCommentHighlightRules.getTagRule(),
         {
             defaultToken : "comment.doc",
@@ -1543,8 +1543,9 @@ oop.inherits(Mode, TextMode);
 
 (function() {
     this.lineCommentStart = "//";
-    
+
     this.$id = "ace/mode/haml";
+    this.snippetFileId = "ace/snippets/haml";
 }).call(Mode.prototype);
 
 exports.Mode = Mode;
@@ -1555,4 +1556,3 @@ exports.Mode = Mode;
                         }
                     });
                 })();
-            

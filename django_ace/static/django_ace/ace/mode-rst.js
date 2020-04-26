@@ -242,6 +242,7 @@ oop.inherits(Mode, TextMode);
     this.type = "text";
 
     this.$id = "ace/mode/rst";
+    this.snippetFileId = "ace/snippets/rst";
 }).call(Mode.prototype);
 
 exports.Mode = Mode;
@@ -253,4 +254,3 @@ exports.Mode = Mode;
                         }
                     });
                 })();
-            

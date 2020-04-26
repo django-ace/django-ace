@@ -122,7 +122,7 @@ oop.inherits(Mode, TextMode);
     this.getNextLineIndent = function(state, line, tab) {
         if (state == "intag")
             return tab;
-        
+
         return "";
     };
 
@@ -133,8 +133,9 @@ oop.inherits(Mode, TextMode);
     this.autoOutdent = function(state, doc, row) {
         this.$outdent.autoOutdent(doc, row);
     };
-    
+
     this.$id = "ace/mode/textile";
+    this.snippetFileId = "ace/snippets/textile";
 }).call(Mode.prototype);
 
 exports.Mode = Mode;
@@ -146,4 +147,3 @@ exports.Mode = Mode;
                         }
                     });
                 })();
-            

@@ -111,7 +111,7 @@ var LuaHighlightRules = function() {
                         }
                         return "string.end";
                     },
-                    
+
                     regex : /\]=*\]/,
                     next  : "start"
                 }, {
@@ -148,7 +148,7 @@ var LuaHighlightRules = function() {
             regex : "\\s+|\\w+"
         } ]
     };
-    
+
     this.normalizeRules();
 };
 
@@ -309,17 +309,17 @@ var WorkerClient = require("../worker/worker_client").WorkerClient;
 
 var Mode = function() {
     this.HighlightRules = LuaHighlightRules;
-    
+
     this.foldingRules = new LuaFoldMode();
     this.$behaviour = this.$defaultBehaviour;
 };
 oop.inherits(Mode, TextMode);
 
 (function() {
-   
+
     this.lineCommentStart = "--";
     this.blockComment = {start: "--[", end: "]--"};
-    
+
     var indentKeywords = {
         "function": 1,
         "then": 1,
@@ -425,19 +425,20 @@ oop.inherits(Mode, TextMode);
     this.createWorker = function(session) {
         var worker = new WorkerClient(["ace"], "ace/mode/lua_worker", "Worker");
         worker.attachToDocument(session.getDocument());
-        
+
         worker.on("annotate", function(e) {
             session.setAnnotations(e.data);
         });
-        
+
         worker.on("terminate", function() {
             session.clearAnnotations();
         });
-        
+
         return worker;
     };
 
     this.$id = "ace/mode/lua";
+    this.snippetFileId = "ace/snippets/lua";
 }).call(Mode.prototype);
 
 exports.Mode = Mode;
@@ -448,4 +449,3 @@ exports.Mode = Mode;
                         }
                     });
                 })();
-            

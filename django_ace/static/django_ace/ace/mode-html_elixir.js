@@ -204,7 +204,7 @@ var DocCommentHighlightRules = function() {
         "start" : [ {
             token : "comment.doc.tag",
             regex : "@[\\w\\d_]+" // TODO: fix email addresses
-        }, 
+        },
         DocCommentHighlightRules.getTagRule(),
         {
             defaultToken : "comment.doc",
@@ -1010,8 +1010,8 @@ var TextHighlightRules = require("./text_highlight_rules").TextHighlightRules;
 
 var ElixirHighlightRules = function() {
 
-    this.$rules = { start: 
-       [ { token: 
+    this.$rules = { start:
+       [ { token:
             [ 'meta.module.elixir',
               'keyword.control.module.elixir',
               'meta.module.elixir',
@@ -1019,7 +1019,7 @@ var ElixirHighlightRules = function() {
            regex: '^(\\s*)(defmodule)(\\s+)((?:[A-Z]\\w*\\s*\\.\\s*)*[A-Z]\\w*)' },
          { token: 'comment.documentation.heredoc',
            regex: '@(?:module|type)?doc (?:~[a-z])?"""',
-           push: 
+           push:
             [ { token: 'comment.documentation.heredoc',
                 regex: '\\s*"""',
                 next: 'pop' },
@@ -1029,7 +1029,7 @@ var ElixirHighlightRules = function() {
            comment: '@doc with heredocs is treated as documentation' },
          { token: 'comment.documentation.heredoc',
            regex: '@(?:module|type)?doc ~[A-Z]"""',
-           push: 
+           push:
             [ { token: 'comment.documentation.heredoc',
                 regex: '\\s*"""',
                 next: 'pop' },
@@ -1037,7 +1037,7 @@ var ElixirHighlightRules = function() {
            comment: '@doc with heredocs is treated as documentation' },
          { token: 'comment.documentation.heredoc',
            regex: '@(?:module|type)?doc (?:~[a-z])?\'\'\'',
-           push: 
+           push:
             [ { token: 'comment.documentation.heredoc',
                 regex: '\\s*\'\'\'',
                 next: 'pop' },
@@ -1047,7 +1047,7 @@ var ElixirHighlightRules = function() {
            comment: '@doc with heredocs is treated as documentation' },
          { token: 'comment.documentation.heredoc',
            regex: '@(?:module|type)?doc ~[A-Z]\'\'\'',
-           push: 
+           push:
             [ { token: 'comment.documentation.heredoc',
                 regex: '\\s*\'\'\'',
                 next: 'pop' },
@@ -1058,7 +1058,7 @@ var ElixirHighlightRules = function() {
            comment: '@doc false is treated as documentation' },
          { token: 'comment.documentation.string',
            regex: '@(?:module|type)?doc "',
-           push: 
+           push:
             [ { token: 'comment.documentation.string',
                 regex: '"',
                 next: 'pop' },
@@ -1079,11 +1079,11 @@ var ElixirHighlightRules = function() {
            regex: '\\b(?:nil|true|false)\\b(?![?!])' },
          { token: 'variable.language.elixir',
            regex: '\\b__(?:CALLER|ENV|MODULE|DIR)__\\b(?![?!])' },
-         { token: 
+         { token:
             [ 'punctuation.definition.variable.elixir',
               'variable.other.readwrite.module.elixir' ],
            regex: '(@)([a-zA-Z_]\\w*)' },
-         { token: 
+         { token:
             [ 'punctuation.definition.variable.elixir',
               'variable.other.anonymous.elixir' ],
            regex: '(&)(\\d*)' },
@@ -1095,7 +1095,7 @@ var ElixirHighlightRules = function() {
            originalRegex: '\\b(0x\\h(?>_?\\h)*|\\d(?>_?\\d)*(\\.(?![^[:space:][:digit:]])(?>_?\\d)*)?([eE][-+]?\\d(?>_?\\d)*)?|0b[01]+|0o[0-7]+)\\b' },
          { token: 'punctuation.definition.constant.elixir',
            regex: ':\'',
-           push: 
+           push:
             [ { token: 'punctuation.definition.constant.elixir',
                 regex: '\'',
                 next: 'pop' },
@@ -1104,7 +1104,7 @@ var ElixirHighlightRules = function() {
               { defaultToken: 'constant.other.symbol.single-quoted.elixir' } ] },
          { token: 'punctuation.definition.constant.elixir',
            regex: ':"',
-           push: 
+           push:
             [ { token: 'punctuation.definition.constant.elixir',
                 regex: '"',
                 next: 'pop' },
@@ -1115,7 +1115,7 @@ var ElixirHighlightRules = function() {
            regex: '(?:\'\'\')',
            TODO: 'FIXME: regexp doesn\'t have js equivalent',
            originalRegex: '(?>\'\'\')',
-           push: 
+           push:
             [ { token: 'punctuation.definition.string.end.elixir',
                 regex: '^\\s*\'\'\'',
                 next: 'pop' },
@@ -1125,7 +1125,7 @@ var ElixirHighlightRules = function() {
            comment: 'Single-quoted heredocs' },
          { token: 'punctuation.definition.string.begin.elixir',
            regex: '\'',
-           push: 
+           push:
             [ { token: 'punctuation.definition.string.end.elixir',
                 regex: '\'',
                 next: 'pop' },
@@ -1137,7 +1137,7 @@ var ElixirHighlightRules = function() {
            regex: '(?:""")',
            TODO: 'FIXME: regexp doesn\'t have js equivalent',
            originalRegex: '(?>""")',
-           push: 
+           push:
             [ { token: 'punctuation.definition.string.end.elixir',
                 regex: '^\\s*"""',
                 next: 'pop' },
@@ -1147,7 +1147,7 @@ var ElixirHighlightRules = function() {
            comment: 'Double-quoted heredocs' },
          { token: 'punctuation.definition.string.begin.elixir',
            regex: '"',
-           push: 
+           push:
             [ { token: 'punctuation.definition.string.end.elixir',
                 regex: '"',
                 next: 'pop' },
@@ -1159,7 +1159,7 @@ var ElixirHighlightRules = function() {
            regex: '~[a-z](?:""")',
            TODO: 'FIXME: regexp doesn\'t have js equivalent',
            originalRegex: '~[a-z](?>""")',
-           push: 
+           push:
             [ { token: 'punctuation.definition.string.end.elixir',
                 regex: '^\\s*"""',
                 next: 'pop' },
@@ -1169,7 +1169,7 @@ var ElixirHighlightRules = function() {
            comment: 'Double-quoted heredocs sigils' },
          { token: 'punctuation.definition.string.begin.elixir',
            regex: '~[a-z]\\{',
-           push: 
+           push:
             [ { token: 'punctuation.definition.string.end.elixir',
                 regex: '\\}[a-z]*',
                 next: 'pop' },
@@ -1179,7 +1179,7 @@ var ElixirHighlightRules = function() {
            comment: 'sigil (allow for interpolation)' },
          { token: 'punctuation.definition.string.begin.elixir',
            regex: '~[a-z]\\[',
-           push: 
+           push:
             [ { token: 'punctuation.definition.string.end.elixir',
                 regex: '\\][a-z]*',
                 next: 'pop' },
@@ -1189,7 +1189,7 @@ var ElixirHighlightRules = function() {
            comment: 'sigil (allow for interpolation)' },
          { token: 'punctuation.definition.string.begin.elixir',
            regex: '~[a-z]\\<',
-           push: 
+           push:
             [ { token: 'punctuation.definition.string.end.elixir',
                 regex: '\\>[a-z]*',
                 next: 'pop' },
@@ -1199,7 +1199,7 @@ var ElixirHighlightRules = function() {
            comment: 'sigil (allow for interpolation)' },
          { token: 'punctuation.definition.string.begin.elixir',
            regex: '~[a-z]\\(',
-           push: 
+           push:
             [ { token: 'punctuation.definition.string.end.elixir',
                 regex: '\\)[a-z]*',
                 next: 'pop' },
@@ -1209,7 +1209,7 @@ var ElixirHighlightRules = function() {
            comment: 'sigil (allow for interpolation)' },
          { token: 'punctuation.definition.string.begin.elixir',
            regex: '~[a-z][^\\w]',
-           push: 
+           push:
             [ { token: 'punctuation.definition.string.end.elixir',
                 regex: '[^\\w][a-z]*',
                 next: 'pop' },
@@ -1222,7 +1222,7 @@ var ElixirHighlightRules = function() {
            regex: '~[A-Z](?:""")',
            TODO: 'FIXME: regexp doesn\'t have js equivalent',
            originalRegex: '~[A-Z](?>""")',
-           push: 
+           push:
             [ { token: 'punctuation.definition.string.end.elixir',
                 regex: '^\\s*"""',
                 next: 'pop' },
@@ -1230,7 +1230,7 @@ var ElixirHighlightRules = function() {
            comment: 'Double-quoted heredocs sigils' },
          { token: 'punctuation.definition.string.begin.elixir',
            regex: '~[A-Z]\\{',
-           push: 
+           push:
             [ { token: 'punctuation.definition.string.end.elixir',
                 regex: '\\}[a-z]*',
                 next: 'pop' },
@@ -1238,7 +1238,7 @@ var ElixirHighlightRules = function() {
            comment: 'sigil (without interpolation)' },
          { token: 'punctuation.definition.string.begin.elixir',
            regex: '~[A-Z]\\[',
-           push: 
+           push:
             [ { token: 'punctuation.definition.string.end.elixir',
                 regex: '\\][a-z]*',
                 next: 'pop' },
@@ -1246,7 +1246,7 @@ var ElixirHighlightRules = function() {
            comment: 'sigil (without interpolation)' },
          { token: 'punctuation.definition.string.begin.elixir',
            regex: '~[A-Z]\\<',
-           push: 
+           push:
             [ { token: 'punctuation.definition.string.end.elixir',
                 regex: '\\>[a-z]*',
                 next: 'pop' },
@@ -1254,7 +1254,7 @@ var ElixirHighlightRules = function() {
            comment: 'sigil (without interpolation)' },
          { token: 'punctuation.definition.string.begin.elixir',
            regex: '~[A-Z]\\(',
-           push: 
+           push:
             [ { token: 'punctuation.definition.string.end.elixir',
                 regex: '\\)[a-z]*',
                 next: 'pop' },
@@ -1262,7 +1262,7 @@ var ElixirHighlightRules = function() {
            comment: 'sigil (without interpolation)' },
          { token: 'punctuation.definition.string.begin.elixir',
            regex: '~[A-Z][^\\w]',
-           push: 
+           push:
             [ { token: 'punctuation.definition.string.end.elixir',
                 regex: '[^\\w][a-z]*',
                 next: 'pop' },
@@ -1278,7 +1278,7 @@ var ElixirHighlightRules = function() {
            TODO: 'FIXME: regexp doesn\'t have js equivalent',
            originalRegex: '(?>[a-zA-Z_][\\w@]*(?>[?!])?)(:)(?!:)',
            comment: 'symbols' },
-         { token: 
+         { token:
             [ 'punctuation.definition.comment.elixir',
               'comment.line.number-sign.elixir' ],
            regex: '(#)(.*)' },
@@ -1310,37 +1310,37 @@ var ElixirHighlightRules = function() {
          { token: 'punctuation.section.array.elixir', regex: '\\[|\\]' },
          { token: 'punctuation.section.function.elixir',
            regex: '\\(|\\)' } ],
-      '#escaped_char': 
+      '#escaped_char':
        [ { token: 'constant.character.escape.elixir',
            regex: '\\\\(?:x[\\da-fA-F]{1,2}|.)' } ],
-      '#interpolated_elixir': 
-       [ { token: 
+      '#interpolated_elixir':
+       [ { token:
             [ 'source.elixir.embedded.source',
               'source.elixir.embedded.source.empty' ],
            regex: '(#\\{)(\\})' },
-         { todo: 
+         { todo:
             { token: 'punctuation.section.embedded.elixir',
               regex: '#\\{',
-              push: 
+              push:
                [ { token: 'punctuation.section.embedded.elixir',
                    regex: '\\}',
                    next: 'pop' },
                  { include: '#nest_curly_and_self' },
                  { include: '$self' },
                  { defaultToken: 'source.elixir.embedded.source' } ] } } ],
-      '#nest_curly_and_self': 
+      '#nest_curly_and_self':
        [ { token: 'punctuation.section.scope.elixir',
            regex: '\\{',
-           push: 
+           push:
             [ { token: 'punctuation.section.scope.elixir',
                 regex: '\\}',
                 next: 'pop' },
               { include: '#nest_curly_and_self' } ] },
          { include: '$self' } ],
-      '#regex_sub': 
+      '#regex_sub':
        [ { include: '#interpolated_elixir' },
          { include: '#escaped_char' },
-         { token: 
+         { token:
             [ 'punctuation.definition.arbitrary-repitition.elixir',
               'string.regexp.arbitrary-repitition.elixir',
               'string.regexp.arbitrary-repitition.elixir',
@@ -1348,7 +1348,7 @@ var ElixirHighlightRules = function() {
            regex: '(\\{)(\\d+)((?:,\\d+)?)(\\})' },
          { token: 'punctuation.definition.character-class.elixir',
            regex: '\\[(?:\\^?\\])?',
-           push: 
+           push:
             [ { token: 'punctuation.definition.character-class.elixir',
                 regex: '\\]',
                 next: 'pop' },
@@ -1356,19 +1356,19 @@ var ElixirHighlightRules = function() {
               { defaultToken: 'string.regexp.character-class.elixir' } ] },
          { token: 'punctuation.definition.group.elixir',
            regex: '\\(',
-           push: 
+           push:
             [ { token: 'punctuation.definition.group.elixir',
                 regex: '\\)',
                 next: 'pop' },
               { include: '#regex_sub' },
               { defaultToken: 'string.regexp.group.elixir' } ] },
-         { token: 
+         { token:
             [ 'punctuation.definition.comment.elixir',
               'comment.line.number-sign.elixir' ],
            regex: '(?:^|\\s)(#)(\\s[[a-zA-Z0-9,. \\t?!-][^\\x00-\\x7F]]*$)',
            originalRegex: '(?<=^|\\s)(#)\\s[[a-zA-Z0-9,. \\t?!-][^\\x{00}-\\x{7F}]]*$',
            comment: 'We are restrictive in what we allow to go after the comment character to avoid false positives, since the availability of comments depend on regexp flags.' } ] };
-    
+
     this.normalizeRules();
 };
 
@@ -1502,7 +1502,7 @@ var FoldMode = exports.FoldMode = function(commentRegex) {
 oop.inherits(FoldMode, BaseFoldMode);
 
 (function() {
-    
+
     this.foldingStartMarker = /([\{\[\(])[^\}\]\)]*$|^\s*(\/\*)/;
     this.foldingStopMarker = /^[^\[\{\(]*([\}\]\)])|^[\s\*]*(\*\/)/;
     this.singleLineBlockCommentRe= /^\s*(\/\*).*\*\/\s*$/;
@@ -1511,42 +1511,42 @@ oop.inherits(FoldMode, BaseFoldMode);
     this._getFoldWidgetBase = this.getFoldWidget;
     this.getFoldWidget = function(session, foldStyle, row) {
         var line = session.getLine(row);
-    
+
         if (this.singleLineBlockCommentRe.test(line)) {
             if (!this.startRegionRe.test(line) && !this.tripleStarBlockCommentRe.test(line))
                 return "";
         }
-    
+
         var fw = this._getFoldWidgetBase(session, foldStyle, row);
-    
+
         if (!fw && this.startRegionRe.test(line))
             return "start"; // lineCommentRegionStart
-    
+
         return fw;
     };
 
     this.getFoldWidgetRange = function(session, foldStyle, row, forceMultiline) {
         var line = session.getLine(row);
-        
+
         if (this.startRegionRe.test(line))
             return this.getCommentRegionBlock(session, line, row);
-        
+
         var match = line.match(this.foldingStartMarker);
         if (match) {
             var i = match.index;
 
             if (match[1])
                 return this.openingBracketBlock(session, match[1], row, i);
-                
+
             var range = session.getCommentFoldRange(row, i + match[0].length, 1);
-            
+
             if (range && !range.isMultiLine()) {
                 if (forceMultiline) {
                     range = this.getSectionRange(session, row);
                 } else if (foldStyle != "all")
                     range = null;
             }
-            
+
             return range;
         }
 
@@ -1563,7 +1563,7 @@ oop.inherits(FoldMode, BaseFoldMode);
             return session.getCommentFoldRange(row, i, -1);
         }
     };
-    
+
     this.getSectionRange = function(session, row) {
         var line = session.getLine(row);
         var startIndent = line.search(/\S/);
@@ -1580,7 +1580,7 @@ oop.inherits(FoldMode, BaseFoldMode);
             if  (startIndent > indent)
                 break;
             var subRange = this.getFoldWidgetRange(session, "all", row);
-            
+
             if (subRange) {
                 if (subRange.start.row <= startRow) {
                     break;
@@ -1592,14 +1592,14 @@ oop.inherits(FoldMode, BaseFoldMode);
             }
             endRow = row;
         }
-        
+
         return new Range(startRow, startColumn, endRow, session.getLine(endRow).length);
     };
     this.getCommentRegionBlock = function(session, line, row) {
         var startColumn = line.search(/\s*$/);
         var maxRow = session.getLength();
         var startRow = row;
-        
+
         var re = /^\s*(?:\/\*|\/\/|--)#?(end)?region\b/;
         var depth = 1;
         while (++row < maxRow) {
@@ -1635,7 +1635,7 @@ var CStyleFoldMode = require("./folding/cstyle").FoldMode;
 
 var Mode = function() {
     this.HighlightRules = JavaScriptHighlightRules;
-    
+
     this.$outdent = new MatchingBraceOutdent();
     this.$behaviour = new CstyleBehaviour();
     this.foldingRules = new CStyleFoldMode();
@@ -1704,6 +1704,7 @@ oop.inherits(Mode, TextMode);
     };
 
     this.$id = "ace/mode/javascript";
+    this.snippetFileId = "ace/snippets/javascript";
 }).call(Mode.prototype);
 
 exports.Mode = Mode;
@@ -2041,6 +2042,7 @@ oop.inherits(Mode, TextMode);
     };
 
     this.$id = "ace/mode/css";
+    this.snippetFileId = "ace/snippets/css";
 }).call(Mode.prototype);
 
 exports.Mode = Mode;
@@ -2136,7 +2138,7 @@ var XmlBehaviour = function () {
                     iterator.stepBackward();
                 }
             }
-            
+
             if (/^\s*>/.test(session.getLine(position.row).slice(position.column)))
                 return;
             while (!is(token, "tag-name")) {
@@ -2235,7 +2237,7 @@ oop.inherits(FoldMode, BaseFoldMode);
 
 
     this.$getMode = function(state) {
-        if (typeof state != "string") 
+        if (typeof state != "string")
             state = state[0];
         for (var key in this.subModes) {
             if (state.indexOf(key) === 0)
@@ -2243,7 +2245,7 @@ oop.inherits(FoldMode, BaseFoldMode);
         }
         return null;
     };
-    
+
     this.$tryMode = function(state, session, foldStyle, row) {
         var mode = this.$getMode(state);
         return (mode ? mode.getFoldWidget(session, foldStyle, row) : "");
@@ -2259,13 +2261,13 @@ oop.inherits(FoldMode, BaseFoldMode);
 
     this.getFoldWidgetRange = function(session, foldStyle, row) {
         var mode = this.$getMode(session.getState(row-1));
-        
+
         if (!mode || !mode.getFoldWidget(session, foldStyle, row))
             mode = this.$getMode(session.getState(row));
-        
+
         if (!mode || !mode.getFoldWidget(session, foldStyle, row))
             mode = this.defaultMode;
-        
+
         return mode.getFoldWidgetRange(session, foldStyle, row);
     };
 
@@ -2288,7 +2290,7 @@ var FoldMode = exports.FoldMode = function(voidElements, optionalEndTags) {
     this.optionalEndTags = oop.mixin({}, this.voidElements);
     if (optionalEndTags)
         oop.mixin(this.optionalEndTags, optionalEndTags);
-    
+
 };
 oop.inherits(FoldMode, BaseFoldMode);
 
@@ -2323,7 +2325,7 @@ function is(token, type) {
 
         return "start";
     };
-    
+
     this.getCommentFoldWidget = function(session, row) {
         if (/comment/.test(session.getState(row)) && /<!-/.test(session.getLine(row)))
             return "start";
@@ -2402,7 +2404,7 @@ function is(token, type) {
 
         return null;
     };
-    
+
     this._readTagBackward = function(iterator) {
         var token = iterator.getCurrentToken();
         if (!token)
@@ -2427,10 +2429,10 @@ function is(token, type) {
 
         return null;
     };
-    
+
     this._pop = function(stack, tag) {
         while (stack.length) {
-            
+
             var top = stack[stack.length-1];
             if (!tag || top.tagName == tag.tagName) {
                 return stack.pop();
@@ -2443,19 +2445,19 @@ function is(token, type) {
             }
         }
     };
-    
+
     this.getFoldWidgetRange = function(session, foldStyle, row) {
         var firstTag = this._getFirstTagInLine(session, row);
-        
+
         if (!firstTag) {
             return this.getCommentFoldWidget(session, row)
                 && session.getCommentFoldRange(row, session.getLine(row).length);
         }
-        
+
         var isBackward = firstTag.closing || firstTag.selfClosing;
         var stack = [];
         var tag;
-        
+
         if (!isBackward) {
             var iterator = new TokenIterator(session, row, firstTag.start.column);
             var start = {
@@ -2473,7 +2475,7 @@ function is(token, type) {
                     } else
                         continue;
                 }
-                
+
                 if (tag.closing) {
                     this._pop(stack, tag);
                     if (stack.length == 0)
@@ -2490,7 +2492,7 @@ function is(token, type) {
                 row: row,
                 column: firstTag.start.column
             };
-            
+
             while (tag = this._readTagBackward(iterator)) {
                 if (tag.selfClosing) {
                     if (!stack.length) {
@@ -2500,7 +2502,7 @@ function is(token, type) {
                     } else
                         continue;
                 }
-                
+
                 if (!tag.closing) {
                     this._pop(stack, tag);
                     if (stack.length == 0) {
@@ -2515,7 +2517,7 @@ function is(token, type) {
                 }
             }
         }
-        
+
     };
 
 }).call(FoldMode.prototype);
@@ -2828,7 +2830,7 @@ var HtmlCompletions = function() {
     this.getAttributeValueCompletions = function(state, session, pos, prefix) {
         var tagName = findTagName(session, pos);
         var attributeName = findAttributeName(session, pos);
-        
+
         if (!tagName)
             return [];
         var values = [];
@@ -2884,12 +2886,12 @@ var Mode = function(options) {
     this.HighlightRules = HtmlHighlightRules;
     this.$behaviour = new XmlBehaviour();
     this.$completer = new HtmlCompletions();
-    
+
     this.createModeDelegates({
         "js-": JavaScriptMode,
         "css-": CssMode
     });
-    
+
     this.foldingRules = new HtmlFoldMode(this.voidElements, lang.arrayToMap(optionalEndTags));
 };
 oop.inherits(Mode, TextMode);
@@ -2933,6 +2935,7 @@ oop.inherits(Mode, TextMode);
     };
 
     this.$id = "ace/mode/html";
+    this.snippetFileId = "ace/snippets/html";
 }).call(Mode.prototype);
 
 exports.Mode = Mode;
@@ -3059,7 +3062,7 @@ var CssMode = require("./css").Mode;
 var ElixirMode = require("./elixir").Mode;
 
 var Mode = function() {
-    HtmlMode.call(this);   
+    HtmlMode.call(this);
     this.HighlightRules = HtmlElixirHighlightRules;
     this.createModeDelegates({
         "js-": JavaScriptMode,
@@ -3082,4 +3085,3 @@ exports.Mode = Mode;
                         }
                     });
                 })();
-            
