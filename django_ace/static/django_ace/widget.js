@@ -189,15 +189,17 @@
         }
     }
 
-    django.jQuery(document).on('formset:added', function(event, $row, formsetName) {
-        // Row added to InlineModelAdmin, initialize new widgets
-        init();
-    });
-    django.jQuery(document).on('formset:removed', function(event, $row, formsetName) {
-        // Row removed from InlineModelAdmin, destroy attached editor
-        $row.find('div.django-ace-widget')[0].editor.destroy()
-    });
-
+    // Django's jQuery instance is available, we are probably in the admin
+    if (typeof django == 'object') {
+        django.jQuery(document).on('formset:added', function (event, $row, formsetName) {
+            // Row added to InlineModelAdmin, initialize new widgets
+            init();
+        });
+        django.jQuery(document).on('formset:removed', function (event, $row, formsetName) {
+            // Row removed from InlineModelAdmin, destroy attached editor
+            $row.find('div.django-ace-widget')[0].editor.destroy()
+        });
+    }
 
     if (window.addEventListener) { // W3C
         window.addEventListener('load', init);
