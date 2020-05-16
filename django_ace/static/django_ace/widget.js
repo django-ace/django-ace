@@ -36,12 +36,12 @@
     }
 
     function redraw(element){
-    element = $(element);
-    var n = document.createTextNode(' ');
-    element.appendChild(n);
-    (function(){n.parentNode.removeChild(n)}).defer();
-    return element;
-  }
+        element = $(element);
+        var n = document.createTextNode(' ');
+        element.appendChild(n);
+        (function(){n.parentNode.removeChild(n)}).defer();
+        return element;
+    }
 
     function minimizeMaximize(widget, main_block, editor) {
         if (window.fullscreen == true) {
@@ -73,7 +73,6 @@
     function apply_widget(widget) {
         var div = widget.firstChild,
             textarea = next(widget),
-            editor = ace.edit(div),
             mode = widget.getAttribute('data-mode'),
             theme = widget.getAttribute('data-theme'),
             wordwrap = widget.getAttribute('data-wordwrap'),
@@ -85,6 +84,10 @@
             fontsize = widget.getAttribute('data-fontsize'),
             usesofttabs = widget.getAttribute('data-usesofttabs'),
             toolbar = prev(widget);
+
+        // initialize editor and attach to widget element (for use in formset:removed)
+        var editor = widget.editor = ace.edit(div);
+
         var main_block = div.parentNode.parentNode;
         if (toolbar != null) {
             // Toolbar maximize/minimize button
@@ -95,6 +98,7 @@
             };
         }
 
+        // load initial data
         editor.getSession().setValue(textarea.value);
 
         // the editor is initially absolute positioned
@@ -133,6 +137,7 @@
             editor.getSession().setUseSoftTabs(false);
         }
 
+        // write data back to original textarea
         editor.getSession().on('change', function() {
             textarea.value = editor.getSession().getValue();
         });
@@ -147,15 +152,53 @@
         });
     }
 
+    /**
+     * Determine if the given element is within the element that holds the template
+     * for dynamically added forms for an InlineModelAdmin.
+     *
+     * @param {*} widget - The element to check.
+     */
+    function is_empty_form(widget) {
+        var empty_forms = document.getElementsByClassName('empty-form');
+        for (empty_form of empty_forms) {
+            if (empty_form.contains(widget)) {
+                return true
+            }
+        }
+        return false
+    }
+
     function init() {
         var widgets = document.getElementsByClassName('django-ace-widget');
 
-        for (var i = 0; i < widgets.length; i++) {
-            var widget = widgets[i];
+        for (widget of widgets) {
+
+            // skip the widget in the admin inline empty-form
+            if (is_empty_form(widget)) {
+                continue;
+            }
+
+            // skip already loaded widgets
+            if (!widget.classList.contains("loading")) {
+                continue;
+            }
+
             widget.className = "django-ace-widget"; // remove `loading` class
 
             apply_widget(widget);
         }
+    }
+
+    // Django's jQuery instance is available, we are probably in the admin
+    if (typeof django == 'object') {
+        django.jQuery(document).on('formset:added', function (event, $row, formsetName) {
+            // Row added to InlineModelAdmin, initialize new widgets
+            init();
+        });
+        django.jQuery(document).on('formset:removed', function (event, $row, formsetName) {
+            // Row removed from InlineModelAdmin, destroy attached editor
+            $row.find('div.django-ace-widget')[0].editor.destroy()
+        });
     }
 
     if (window.addEventListener) { // W3C
