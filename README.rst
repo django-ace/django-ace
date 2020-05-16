@@ -2,6 +2,7 @@
 django-ace
 ==========
 
+|donate|
 
 Usage
 =====
@@ -123,3 +124,8 @@ v1.0.0
 ------
 
 - Initial release.
+
+
+.. |donate| image:: https://liberapay.com/assets/widgets/donate.svg
+    :alt: donate
+    :target: https://en.liberapay.com/JulienPalard/
