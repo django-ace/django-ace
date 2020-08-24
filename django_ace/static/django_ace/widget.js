@@ -83,6 +83,7 @@
             tabsize = widget.getAttribute('data-tabsize'),
             fontsize = widget.getAttribute('data-fontsize'),
             usesofttabs = widget.getAttribute('data-usesofttabs'),
+            readonly = widget.getAttribute('data-readonly'),
             toolbar = prev(widget);
 
         // initialize editor and attach to widget element (for use in formset:removed)
@@ -132,6 +133,9 @@
         }
         if (!!fontsize) {
             editor.setOption("fontSize", fontsize);
+        }
+        if (readonly == "true") {
+            editor.setOption("readOnly", readonly);
         }
         if (usesofttabs == "false") {
             editor.getSession().setUseSoftTabs(false);
