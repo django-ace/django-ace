@@ -78,6 +78,13 @@ Then browser to ``http://localhost:8000``.
 Change log
 ==========
 
+v1.0.8
+------
+
+- New widget option ``readonly``.
+- Update ACE editor to version v1.4.12.
+
+
 v1.0.7
 ------
 
