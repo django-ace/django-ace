@@ -24,6 +24,7 @@ class AceWidget(forms.Textarea):
         tabsize=None,
         fontsize=None,
         toolbar=True,
+        readonly=False,
         *args,
         **kwargs
     ):
@@ -39,6 +40,7 @@ class AceWidget(forms.Textarea):
         self.tabsize = tabsize
         self.fontsize = fontsize
         self.toolbar = toolbar
+        self.readonly = readonly
         self.usesofttabs = usesofttabs
         super(AceWidget, self).__init__(*args, **kwargs)
 
@@ -78,6 +80,7 @@ class AceWidget(forms.Textarea):
         if self.fontsize:
             ace_attrs["data-fontsize"] = str(self.fontsize)
 
+        ace_attrs["data-readonly"] = "true" if self.readonly else "false"
         ace_attrs["data-showprintmargin"] = "true" if self.showprintmargin else "false"
         ace_attrs["data-showinvisibles"] = "true" if self.showinvisibles else "false"
         ace_attrs["data-usesofttabs"] = "true" if self.usesofttabs else "false"
