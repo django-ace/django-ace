@@ -82,6 +82,13 @@ Then browser to ``http://localhost:8000``.
 Change log
 ==========
 
+v1.0.9
+------
+
+- New widget option ``showgutters`` to hide line numbers.
+- New widget option ``behaviours`` to avoid auto-insert of quotes.
+
+
 v1.0.8
 ------
 
