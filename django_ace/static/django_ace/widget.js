@@ -85,6 +85,7 @@
             usesofttabs = widget.getAttribute('data-usesofttabs'),
             readonly = widget.getAttribute('data-readonly'),
             showgutter = widget.getAttribute('data-showgutter'),
+            behaviours = widget.getAttribute('data-behaviours'),
             toolbar = prev(widget);
 
         // initialize editor and attach to widget element (for use in formset:removed)
@@ -143,6 +144,9 @@
         }
         if (showgutter == "false") {
             editor.setOption("showGutter", false);
+        }
+        if (behaviours == "false") {
+            editor.setOption("behavioursEnabled", false);
         }
 
         // write data back to original textarea

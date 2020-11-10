@@ -43,7 +43,9 @@ All options, and their default values, are::
             fontsize=None,
             toolbar=True,
             readonly=False,
-            showgutter=True))
+            showgutter=True,  # To hide/show line numbers
+            behaviours=True,  # To disable auto-append of quote when quotes are entered
+        ))
 
 
 Install
