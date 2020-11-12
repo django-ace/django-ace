@@ -82,6 +82,12 @@ Then browser to ``http://localhost:8000``.
 Change log
 ==========
 
+v1.0.10
+-------
+
+- FIX JavaScript error when using ``JavaScriptCatalog``.
+
+
 v1.0.9
 ------
 
