@@ -202,7 +202,7 @@
     }
 
     // Django's jQuery instance is available, we are probably in the admin
-    if (typeof django == 'object') {
+    if (typeof django == 'object' && typeof django.jQuery == 'function') {
         django.jQuery(document).on('formset:added', function (event, $row, formsetName) {
             // Row added to InlineModelAdmin, initialize new widgets
             init();
