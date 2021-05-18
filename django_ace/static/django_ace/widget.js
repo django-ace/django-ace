@@ -171,7 +171,7 @@
      * @param {*} widget - The element to check.
      */
     function is_empty_form(widget) {
-        var empty_forms = document.getElementsByClassName('empty-form');
+        var empty_forms = document.querySelectorAll('.empty-form, .grp-empty-form');
         for (empty_form of empty_forms) {
             if (empty_form.contains(widget)) {
                 return true
