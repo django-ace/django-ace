@@ -82,6 +82,12 @@ Then browser to ``http://localhost:8000``.
 Change log
 ==========
 
+v1.0.11
+-------
+
+- Support Grappelli inlines.
+
+
 v1.0.10
 -------
 
