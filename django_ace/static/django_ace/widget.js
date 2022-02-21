@@ -148,6 +148,9 @@
         if (behaviours == "false") {
             editor.setOption("behavioursEnabled", false);
         }
+        if (mode == "json") {
+            editor.setValue(JSON.stringify(JSON.parse(editor.getSession().getValue()), null, 2));
+        }
 
         // write data back to original textarea
         editor.getSession().on('change', function() {
