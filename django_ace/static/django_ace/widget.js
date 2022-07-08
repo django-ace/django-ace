@@ -86,6 +86,7 @@
             readonly = widget.getAttribute('data-readonly'),
             showgutter = widget.getAttribute('data-showgutter'),
             behaviours = widget.getAttribute('data-behaviours'),
+            emmet = widget.getAttribute('data-emmet'),
             toolbar = prev(widget);
 
         // initialize editor and attach to widget element (for use in formset:removed)
@@ -111,6 +112,10 @@
         if (mode) {
             var Mode = require("ace/mode/" + mode).Mode;
             editor.getSession().setMode(new Mode());
+        }
+        if (emmet == "true") {
+            var Emmet = require("ace/ext/emmet");
+            editor.setOption("enableEmmet", true);
         }
         if (theme) {
             editor.setTheme("ace/theme/" + theme);

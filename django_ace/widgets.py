@@ -27,6 +27,7 @@ class AceWidget(forms.Textarea):
         readonly=False,
         showgutter=True,
         behaviours=True,
+        self.emmet = False,
         *args,
         **kwargs
     ):
@@ -46,12 +47,16 @@ class AceWidget(forms.Textarea):
         self.behaviours = behaviours
         self.showgutter = showgutter
         self.usesofttabs = usesofttabs
+        self.emmet = emmet
         super(AceWidget, self).__init__(*args, **kwargs)
 
     @property
     def media(self):
         js = ["django_ace/ace/ace.js", "django_ace/widget.js"]
 
+        if self.emmet:
+            js.append("django_ace/emmet/emmet.js")
+            js.append("django_ace/ace/ext-emmet.js")
         if self.mode:
             js.append("django_ace/ace/mode-%s.js" % self.mode)
         if self.theme:
@@ -90,6 +95,7 @@ class AceWidget(forms.Textarea):
         ace_attrs["data-showprintmargin"] = "true" if self.showprintmargin else "false"
         ace_attrs["data-showinvisibles"] = "true" if self.showinvisibles else "false"
         ace_attrs["data-usesofttabs"] = "true" if self.usesofttabs else "false"
+        ace_attrs["data-emmet"] = "true" if self.emmet else "false"
 
         textarea = super(AceWidget, self).render(name, value, attrs, renderer)
 
