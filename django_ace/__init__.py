@@ -1,4 +1,4 @@
 from .widgets import AceWidget
 
 # adhere to PEP 386
-__version__ = "1.0.13"
+__version__ = "1.14.0"

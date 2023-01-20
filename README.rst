@@ -82,6 +82,12 @@ Then browser to ``http://localhost:8000``.
 Change log
 ==========
 
+v1.14.0
+-------
+
+- Update ACE editor to version v1.14.0.
+- Follow ACE version numbers.
+
 v1.0.13
 -------
 
