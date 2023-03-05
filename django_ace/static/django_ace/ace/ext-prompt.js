@@ -137,7 +137,10 @@ var AcePopup = function (parentNode) {
             selected.id = ariaId;
             popup.renderer.container.setAttribute("aria-activedescendant", ariaId);
             el.setAttribute("aria-activedescendant", ariaId);
+            selected.setAttribute("role", "option");
             selected.setAttribute("aria-label", popup.getData(row).value);
+            selected.setAttribute("aria-setsize", popup.data.length);
+            selected.setAttribute("aria-posinset", row);
         }
     });
     var hideHoverMarker = function () { setHoverMarker(-1); };
@@ -1358,7 +1361,8 @@ var Autocomplete = function () {
             this.$init();
         this.popup.autoSelect = this.autoSelect;
         this.popup.setData(this.completions.filtered, this.completions.filterText);
-        this.editor.textInput.setAriaOptions({ activeDescendant: getAriaId(this.popup.getRow()) });
+        if (this.editor.textInput.setAriaOptions)
+            this.editor.textInput.setAriaOptions({ activeDescendant: getAriaId(this.popup.getRow()) });
         editor.keyBinding.addKeyboardHandler(this.keyboardHandler);
         var renderer = editor.renderer;
         this.popup.setRow(this.autoSelect ? 0 : -1);
@@ -1904,7 +1908,7 @@ var supportedModes = {
     Clojure: ["clj|cljs"],
     Cobol: ["CBL|COB"],
     coffee: ["coffee|cf|cson|^Cakefile"],
-    ColdFusion: ["cfm"],
+    ColdFusion: ["cfm|cfc"],
     Crystal: ["cr"],
     CSharp: ["cs"],
     Csound_Document: ["csd"],
@@ -1997,9 +2001,10 @@ var supportedModes = {
     Pascal: ["pas|p"],
     Perl: ["pl|pm"],
     pgSQL: ["pgsql"],
-    PHP_Laravel_blade: ["blade.php"],
     PHP: ["php|inc|phtml|shtml|php3|php4|php5|phps|phpt|aw|ctp|module"],
+    PHP_Laravel_blade: ["blade.php"],
     Pig: ["pig"],
+    PLSQL: ["plsql"],
     Powershell: ["ps1"],
     Praat: ["praat|praatscript|psc|proc"],
     Prisma: ["prisma"],

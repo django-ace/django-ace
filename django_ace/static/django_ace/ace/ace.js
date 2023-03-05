@@ -1132,13 +1132,14 @@ exports.setModuleUrl = function (name, subst) {
     return options.$moduleUrls[name] = subst;
 };
 var loader = function (moduleName, cb) {
-    if (moduleName == "ace/theme/textmate")
+    if (moduleName === "ace/theme/textmate" || moduleName === "./theme/textmate")
         return cb(null, require("./theme/textmate"));
     return console.error("loader is not configured");
 };
 exports.setLoader = function (cb) {
     loader = cb;
 };
+exports.dynamicModules = Object.create(null);
 exports.$loading = {};
 exports.loadModule = function (moduleName, onLoad) {
     var module, moduleType;
@@ -1146,31 +1147,49 @@ exports.loadModule = function (moduleName, onLoad) {
         moduleType = moduleName[0];
         moduleName = moduleName[1];
     }
-    try {
-        module = require(moduleName);
-    }
-    catch (e) { }
-    if (module && !exports.$loading[moduleName])
-        return onLoad && onLoad(module);
-    if (!exports.$loading[moduleName])
-        exports.$loading[moduleName] = [];
-    exports.$loading[moduleName].push(onLoad);
-    if (exports.$loading[moduleName].length > 1)
-        return;
-    var afterLoad = function () {
-        loader(moduleName, function (err, module) {
-            exports._emit("load.module", { name: moduleName, module: module });
-            var listeners = exports.$loading[moduleName];
-            exports.$loading[moduleName] = null;
-            listeners.forEach(function (onLoad) {
-                onLoad && onLoad(module);
+    var load = function (module) {
+        if (module && !exports.$loading[moduleName])
+            return onLoad && onLoad(module);
+        if (!exports.$loading[moduleName])
+            exports.$loading[moduleName] = [];
+        exports.$loading[moduleName].push(onLoad);
+        if (exports.$loading[moduleName].length > 1)
+            return;
+        var afterLoad = function () {
+            loader(moduleName, function (err, module) {
+                exports._emit("load.module", { name: moduleName, module: module });
+                var listeners = exports.$loading[moduleName];
+                exports.$loading[moduleName] = null;
+                listeners.forEach(function (onLoad) {
+                    onLoad && onLoad(module);
+                });
             });
-        });
+        };
+        if (!exports.get("packaged"))
+            return afterLoad();
+        net.loadScript(exports.moduleUrl(moduleName, moduleType), afterLoad);
+        reportErrorIfPathIsNotConfigured();
     };
-    if (!exports.get("packaged"))
-        return afterLoad();
-    net.loadScript(exports.moduleUrl(moduleName, moduleType), afterLoad);
-    reportErrorIfPathIsNotConfigured();
+    if (exports.dynamicModules[moduleName]) {
+        exports.dynamicModules[moduleName]().then(function (module) {
+            if (module.default) {
+                load(module.default);
+            }
+            else {
+                load(module);
+            }
+        });
+    }
+    else {
+        try {
+            module = require(moduleName);
+        }
+        catch (e) { }
+        load(module);
+    }
+};
+exports.setModuleLoader = function (moduleName, onLoad) {
+    exports.dynamicModules[moduleName] = onLoad;
 };
 var reportErrorIfPathIsNotConfigured = function () {
     if (!options.basePath && !options.workerPath
@@ -1180,7 +1199,7 @@ var reportErrorIfPathIsNotConfigured = function () {
         reportErrorIfPathIsNotConfigured = function () { };
     }
 };
-exports.version = "1.14.0";
+exports.version = "1.15.3";
 
 });
 
@@ -1218,6 +1237,10 @@ init(true);function init(packaged) {
     var currentScript = (document.currentScript || document._currentScript ); // native or polyfill
     var currentDocument = currentScript && currentScript.ownerDocument || document;
     
+    if (currentScript && currentScript.src) {
+        scriptUrl = currentScript.src.split(/[?#]/)[0].split("/").slice(0, -1).join("/") || "";
+    }
+    
     var scripts = currentDocument.getElementsByTagName("script");
     for (var i=0; i<scripts.length; i++) {
         var script = scripts[i];
@@ -1234,7 +1257,7 @@ init(true);function init(packaged) {
             }
         }
 
-        var m = src.match(/^(.*)\/ace(\-\w+)?\.js(\?|$)/);
+        var m = src.match(/^(.*)\/ace([\-.]\w+)?\.js(\?|$)/);
         if (m)
             scriptUrl = m[1];
     }
@@ -2643,9 +2666,6 @@ function DefaultHandlers(mouseHandler) {
             editor.selection.moveToPosition(pos);
         if (!waitForClickSelection)
             this.select();
-        if (editor.renderer.scroller.setCapture) {
-            editor.renderer.scroller.setCapture();
-        }
         editor.setStyle("ace_selecting");
         this.setState("select");
     };
@@ -2707,9 +2727,6 @@ function DefaultHandlers(mouseHandler) {
                 this.selectByLinesEnd = function () {
                     this.$clickSelection = null;
                     this.editor.unsetStyle("ace_selecting");
-                    if (this.editor.renderer.scroller.releaseCapture) {
-                        this.editor.renderer.scroller.releaseCapture();
-                    }
                 };
     this.focusWait = function () {
         var distance = calcDistance(this.mousedownEvent.x, this.mousedownEvent.y, this.x, this.y);
@@ -4655,16 +4672,17 @@ var Selection = function (session) {
     this.getCursor = function () {
         return this.lead.getPosition();
     };
-    this.setSelectionAnchor = function (row, column) {
+    this.setAnchor = function (row, column) {
         this.$isEmpty = false;
         this.anchor.setPosition(row, column);
     };
-    this.getAnchor =
-        this.getSelectionAnchor = function () {
-            if (this.$isEmpty)
-                return this.getSelectionLead();
-            return this.anchor.getPosition();
-        };
+    this.setSelectionAnchor = this.setAnchor;
+    this.getAnchor = function () {
+        if (this.$isEmpty)
+            return this.getSelectionLead();
+        return this.anchor.getPosition();
+    };
+    this.getSelectionAnchor = this.getAnchor;
     this.getSelectionLead = function () {
         return this.lead.getPosition();
     };
@@ -10899,7 +10917,7 @@ exports.commands = [{
         description: "Go to next error",
         bindKey: bindKey("Alt-E", "F4"),
         exec: function (editor) {
-            config.loadModule("./ext/error_marker", function (module) {
+            config.loadModule("ace/ext/error_marker", function (module) {
                 module.showErrorMarker(editor, 1);
             });
         },
@@ -10910,7 +10928,7 @@ exports.commands = [{
         description: "Go to previous error",
         bindKey: bindKey("Alt-Shift-E", "Shift-F4"),
         exec: function (editor) {
-            config.loadModule("./ext/error_marker", function (module) {
+            config.loadModule("ace/ext/error_marker", function (module) {
                 module.showErrorMarker(editor, -1);
             });
         },
@@ -11734,7 +11752,345 @@ for (var i = 1; i < 9; i++) {
 
 });
 
-define("ace/editor",["require","exports","module","ace/lib/oop","ace/lib/dom","ace/lib/lang","ace/lib/useragent","ace/keyboard/textinput","ace/mouse/mouse_handler","ace/mouse/fold_handler","ace/keyboard/keybinding","ace/edit_session","ace/search","ace/range","ace/lib/event_emitter","ace/commands/command_manager","ace/commands/default_commands","ace/config","ace/token_iterator","ace/clipboard"], function(require, exports, module){"use strict";
+define("ace/line_widgets",["require","exports","module","ace/lib/dom"], function(require, exports, module){"use strict";
+var dom = require("./lib/dom");
+function LineWidgets(session) {
+    this.session = session;
+    this.session.widgetManager = this;
+    this.session.getRowLength = this.getRowLength;
+    this.session.$getWidgetScreenLength = this.$getWidgetScreenLength;
+    this.updateOnChange = this.updateOnChange.bind(this);
+    this.renderWidgets = this.renderWidgets.bind(this);
+    this.measureWidgets = this.measureWidgets.bind(this);
+    this.session._changedWidgets = [];
+    this.$onChangeEditor = this.$onChangeEditor.bind(this);
+    this.session.on("change", this.updateOnChange);
+    this.session.on("changeFold", this.updateOnFold);
+    this.session.on("changeEditor", this.$onChangeEditor);
+}
+(function () {
+    this.getRowLength = function (row) {
+        var h;
+        if (this.lineWidgets)
+            h = this.lineWidgets[row] && this.lineWidgets[row].rowCount || 0;
+        else
+            h = 0;
+        if (!this.$useWrapMode || !this.$wrapData[row]) {
+            return 1 + h;
+        }
+        else {
+            return this.$wrapData[row].length + 1 + h;
+        }
+    };
+    this.$getWidgetScreenLength = function () {
+        var screenRows = 0;
+        this.lineWidgets.forEach(function (w) {
+            if (w && w.rowCount && !w.hidden)
+                screenRows += w.rowCount;
+        });
+        return screenRows;
+    };
+    this.$onChangeEditor = function (e) {
+        this.attach(e.editor);
+    };
+    this.attach = function (editor) {
+        if (editor && editor.widgetManager && editor.widgetManager != this)
+            editor.widgetManager.detach();
+        if (this.editor == editor)
+            return;
+        this.detach();
+        this.editor = editor;
+        if (editor) {
+            editor.widgetManager = this;
+            editor.renderer.on("beforeRender", this.measureWidgets);
+            editor.renderer.on("afterRender", this.renderWidgets);
+        }
+    };
+    this.detach = function (e) {
+        var editor = this.editor;
+        if (!editor)
+            return;
+        this.editor = null;
+        editor.widgetManager = null;
+        editor.renderer.off("beforeRender", this.measureWidgets);
+        editor.renderer.off("afterRender", this.renderWidgets);
+        var lineWidgets = this.session.lineWidgets;
+        lineWidgets && lineWidgets.forEach(function (w) {
+            if (w && w.el && w.el.parentNode) {
+                w._inDocument = false;
+                w.el.parentNode.removeChild(w.el);
+            }
+        });
+    };
+    this.updateOnFold = function (e, session) {
+        var lineWidgets = session.lineWidgets;
+        if (!lineWidgets || !e.action)
+            return;
+        var fold = e.data;
+        var start = fold.start.row;
+        var end = fold.end.row;
+        var hide = e.action == "add";
+        for (var i = start + 1; i < end; i++) {
+            if (lineWidgets[i])
+                lineWidgets[i].hidden = hide;
+        }
+        if (lineWidgets[end]) {
+            if (hide) {
+                if (!lineWidgets[start])
+                    lineWidgets[start] = lineWidgets[end];
+                else
+                    lineWidgets[end].hidden = hide;
+            }
+            else {
+                if (lineWidgets[start] == lineWidgets[end])
+                    lineWidgets[start] = undefined;
+                lineWidgets[end].hidden = hide;
+            }
+        }
+    };
+    this.updateOnChange = function (delta) {
+        var lineWidgets = this.session.lineWidgets;
+        if (!lineWidgets)
+            return;
+        var startRow = delta.start.row;
+        var len = delta.end.row - startRow;
+        if (len === 0) {
+        }
+        else if (delta.action == "remove") {
+            var removed = lineWidgets.splice(startRow + 1, len);
+            if (!lineWidgets[startRow] && removed[removed.length - 1]) {
+                lineWidgets[startRow] = removed.pop();
+            }
+            removed.forEach(function (w) {
+                w && this.removeLineWidget(w);
+            }, this);
+            this.$updateRows();
+        }
+        else {
+            var args = new Array(len);
+            if (lineWidgets[startRow] && lineWidgets[startRow].column != null) {
+                if (delta.start.column > lineWidgets[startRow].column)
+                    startRow++;
+            }
+            args.unshift(startRow, 0);
+            lineWidgets.splice.apply(lineWidgets, args);
+            this.$updateRows();
+        }
+    };
+    this.$updateRows = function () {
+        var lineWidgets = this.session.lineWidgets;
+        if (!lineWidgets)
+            return;
+        var noWidgets = true;
+        lineWidgets.forEach(function (w, i) {
+            if (w) {
+                noWidgets = false;
+                w.row = i;
+                while (w.$oldWidget) {
+                    w.$oldWidget.row = i;
+                    w = w.$oldWidget;
+                }
+            }
+        });
+        if (noWidgets)
+            this.session.lineWidgets = null;
+    };
+    this.$registerLineWidget = function (w) {
+        if (!this.session.lineWidgets)
+            this.session.lineWidgets = new Array(this.session.getLength());
+        var old = this.session.lineWidgets[w.row];
+        if (old) {
+            w.$oldWidget = old;
+            if (old.el && old.el.parentNode) {
+                old.el.parentNode.removeChild(old.el);
+                old._inDocument = false;
+            }
+        }
+        this.session.lineWidgets[w.row] = w;
+        return w;
+    };
+    this.addLineWidget = function (w) {
+        this.$registerLineWidget(w);
+        w.session = this.session;
+        if (!this.editor)
+            return w;
+        var renderer = this.editor.renderer;
+        if (w.html && !w.el) {
+            w.el = dom.createElement("div");
+            w.el.innerHTML = w.html;
+        }
+        if (w.text && !w.el) {
+            w.el = dom.createElement("div");
+            w.el.textContent = w.text;
+        }
+        if (w.el) {
+            dom.addCssClass(w.el, "ace_lineWidgetContainer");
+            if (w.className) {
+                dom.addCssClass(w.el, w.className);
+            }
+            w.el.style.position = "absolute";
+            w.el.style.zIndex = 5;
+            renderer.container.appendChild(w.el);
+            w._inDocument = true;
+            if (!w.coverGutter) {
+                w.el.style.zIndex = 3;
+            }
+            if (w.pixelHeight == null) {
+                w.pixelHeight = w.el.offsetHeight;
+            }
+        }
+        if (w.rowCount == null) {
+            w.rowCount = w.pixelHeight / renderer.layerConfig.lineHeight;
+        }
+        var fold = this.session.getFoldAt(w.row, 0);
+        w.$fold = fold;
+        if (fold) {
+            var lineWidgets = this.session.lineWidgets;
+            if (w.row == fold.end.row && !lineWidgets[fold.start.row])
+                lineWidgets[fold.start.row] = w;
+            else
+                w.hidden = true;
+        }
+        this.session._emit("changeFold", { data: { start: { row: w.row } } });
+        this.$updateRows();
+        this.renderWidgets(null, renderer);
+        this.onWidgetChanged(w);
+        return w;
+    };
+    this.removeLineWidget = function (w) {
+        w._inDocument = false;
+        w.session = null;
+        if (w.el && w.el.parentNode)
+            w.el.parentNode.removeChild(w.el);
+        if (w.editor && w.editor.destroy)
+            try {
+                w.editor.destroy();
+            }
+            catch (e) { }
+        if (this.session.lineWidgets) {
+            var w1 = this.session.lineWidgets[w.row];
+            if (w1 == w) {
+                this.session.lineWidgets[w.row] = w.$oldWidget;
+                if (w.$oldWidget)
+                    this.onWidgetChanged(w.$oldWidget);
+            }
+            else {
+                while (w1) {
+                    if (w1.$oldWidget == w) {
+                        w1.$oldWidget = w.$oldWidget;
+                        break;
+                    }
+                    w1 = w1.$oldWidget;
+                }
+            }
+        }
+        this.session._emit("changeFold", { data: { start: { row: w.row } } });
+        this.$updateRows();
+    };
+    this.getWidgetsAtRow = function (row) {
+        var lineWidgets = this.session.lineWidgets;
+        var w = lineWidgets && lineWidgets[row];
+        var list = [];
+        while (w) {
+            list.push(w);
+            w = w.$oldWidget;
+        }
+        return list;
+    };
+    this.onWidgetChanged = function (w) {
+        this.session._changedWidgets.push(w);
+        this.editor && this.editor.renderer.updateFull();
+    };
+    this.measureWidgets = function (e, renderer) {
+        var changedWidgets = this.session._changedWidgets;
+        var config = renderer.layerConfig;
+        if (!changedWidgets || !changedWidgets.length)
+            return;
+        var min = Infinity;
+        for (var i = 0; i < changedWidgets.length; i++) {
+            var w = changedWidgets[i];
+            if (!w || !w.el)
+                continue;
+            if (w.session != this.session)
+                continue;
+            if (!w._inDocument) {
+                if (this.session.lineWidgets[w.row] != w)
+                    continue;
+                w._inDocument = true;
+                renderer.container.appendChild(w.el);
+            }
+            w.h = w.el.offsetHeight;
+            if (!w.fixedWidth) {
+                w.w = w.el.offsetWidth;
+                w.screenWidth = Math.ceil(w.w / config.characterWidth);
+            }
+            var rowCount = w.h / config.lineHeight;
+            if (w.coverLine) {
+                rowCount -= this.session.getRowLineCount(w.row);
+                if (rowCount < 0)
+                    rowCount = 0;
+            }
+            if (w.rowCount != rowCount) {
+                w.rowCount = rowCount;
+                if (w.row < min)
+                    min = w.row;
+            }
+        }
+        if (min != Infinity) {
+            this.session._emit("changeFold", { data: { start: { row: min } } });
+            this.session.lineWidgetWidth = null;
+        }
+        this.session._changedWidgets = [];
+    };
+    this.renderWidgets = function (e, renderer) {
+        var config = renderer.layerConfig;
+        var lineWidgets = this.session.lineWidgets;
+        if (!lineWidgets)
+            return;
+        var first = Math.min(this.firstRow, config.firstRow);
+        var last = Math.max(this.lastRow, config.lastRow, lineWidgets.length);
+        while (first > 0 && !lineWidgets[first])
+            first--;
+        this.firstRow = config.firstRow;
+        this.lastRow = config.lastRow;
+        renderer.$cursorLayer.config = config;
+        for (var i = first; i <= last; i++) {
+            var w = lineWidgets[i];
+            if (!w || !w.el)
+                continue;
+            if (w.hidden) {
+                w.el.style.top = -100 - (w.pixelHeight || 0) + "px";
+                continue;
+            }
+            if (!w._inDocument) {
+                w._inDocument = true;
+                renderer.container.appendChild(w.el);
+            }
+            var top = renderer.$cursorLayer.getPixelPosition({ row: i, column: 0 }, true).top;
+            if (!w.coverLine)
+                top += config.lineHeight * this.session.getRowLineCount(w.row);
+            w.el.style.top = top - config.offset + "px";
+            var left = w.coverGutter ? 0 : renderer.gutterWidth;
+            if (!w.fixedWidth)
+                left -= renderer.scrollLeft;
+            w.el.style.left = left + "px";
+            if (w.fullWidth && w.screenWidth) {
+                w.el.style.minWidth = config.width + 2 * config.padding + "px";
+            }
+            if (w.fixedWidth) {
+                w.el.style.right = renderer.scrollBar.getWidth() + "px";
+            }
+            else {
+                w.el.style.right = "";
+            }
+        }
+    };
+}).call(LineWidgets.prototype);
+exports.LineWidgets = LineWidgets;
+
+});
+
+define("ace/editor",["require","exports","module","ace/lib/oop","ace/lib/dom","ace/lib/lang","ace/lib/useragent","ace/keyboard/textinput","ace/mouse/mouse_handler","ace/mouse/fold_handler","ace/keyboard/keybinding","ace/edit_session","ace/search","ace/range","ace/lib/event_emitter","ace/commands/command_manager","ace/commands/default_commands","ace/config","ace/token_iterator","ace/line_widgets","ace/clipboard"], function(require, exports, module){"use strict";
 var __values = (this && this.__values) || function(o) {
     var s = typeof Symbol === "function" && Symbol.iterator, m = s && o[s], i = 0;
     if (m) return m.call(o);
@@ -11762,6 +12118,7 @@ var CommandManager = require("./commands/command_manager").CommandManager;
 var defaultCommands = require("./commands/default_commands").commands;
 var config = require("./config");
 var TokenIterator = require("./token_iterator").TokenIterator;
+var LineWidgets = require("./line_widgets").LineWidgets;
 var clipboard = require("./clipboard");
 var Editor = function (renderer, session, options) {
     this.$toDestroy = [];
@@ -12638,6 +12995,18 @@ Editor.$uid = 0;
         this.insert("\n");
         this.moveCursorToPosition(cursor);
     };
+    this.setGhostText = function (text, position) {
+        if (!this.session.widgetManager) {
+            this.session.widgetManager = new LineWidgets(this.session);
+            this.session.widgetManager.attach(this);
+        }
+        this.renderer.setGhostText(text, position);
+    };
+    this.removeGhostText = function () {
+        if (!this.session.widgetManager)
+            return;
+        this.renderer.removeGhostText();
+    };
     this.transposeLetters = function () {
         if (!this.selection.isEmpty()) {
             return;
@@ -13494,7 +13863,7 @@ Editor.$uid = 0;
     };
     this.prompt = function (message, options, callback) {
         var editor = this;
-        config.loadModule("./ext/prompt", function (module) {
+        config.loadModule("ace/ext/prompt", function (module) {
             module.prompt(editor, message, options, callback);
         });
     };
@@ -14800,7 +15169,6 @@ var Text = function (parentEl) {
     this.SPACE_CHAR = "\xB7";
     this.$padding = 0;
     this.MAX_LINE_LENGTH = 10000;
-    this.MAX_CHUNK_LENGTH = 250;
     this.$updateEolChar = function () {
         var doc = this.session.doc;
         var unixMode = doc.getNewLineCharacter() == "\n" && doc.getNewLineMode() != "windows";
@@ -15020,7 +15388,6 @@ var Text = function (parentEl) {
             }
             else {
                 lineEl.className = "ace_line";
-                lineEl.setAttribute("role", "option");
             }
             fragment.push(line);
             row++;
@@ -15041,18 +15408,6 @@ var Text = function (parentEl) {
         "text": true,
         "rparen": true,
         "lparen": true
-    };
-    this.$renderTokenInChunks = function (parent, screenColumn, token, value) {
-        var newScreenColumn;
-        for (var i = 0; i < value.length; i += this.MAX_CHUNK_LENGTH) {
-            var valueChunk = value.substring(i, i + this.MAX_CHUNK_LENGTH);
-            var tokenChunk = {
-                type: token.type,
-                value: valueChunk
-            };
-            newScreenColumn = this.$renderToken(parent, screenColumn + i, tokenChunk, valueChunk);
-        }
-        return newScreenColumn;
     };
     this.$renderToken = function (parent, screenColumn, token, value) {
         var self = this;
@@ -15113,15 +15468,18 @@ var Text = function (parentEl) {
             }
         }
         valueFragment.appendChild(this.dom.createTextNode(i ? value.slice(i) : value, this.element));
-        var span = this.dom.createElement("span");
         if (!this.$textToken[token.type]) {
             var classes = "ace_" + token.type.replace(/\./g, " ace_");
+            var span = this.dom.createElement("span");
             if (token.type == "fold")
                 span.style.width = (token.value.length * this.config.characterWidth) + "px";
             span.className = classes;
+            span.appendChild(valueFragment);
+            parent.appendChild(span);
         }
-        span.appendChild(valueFragment);
-        parent.appendChild(span);
+        else {
+            parent.appendChild(valueFragment);
+        }
         return screenColumn + value.length;
     };
     this.renderIndentGuide = function (parent, value, max) {
@@ -15278,12 +15636,12 @@ var Text = function (parentEl) {
                 chars -= value.length;
             }
             if (chars + value.length < splitChars) {
-                screenColumn = this.$renderTokenInChunks(lineEl, screenColumn, token, value);
+                screenColumn = this.$renderToken(lineEl, screenColumn, token, value);
                 chars += value.length;
             }
             else {
                 while (chars + value.length >= splitChars) {
-                    screenColumn = this.$renderTokenInChunks(lineEl, screenColumn, token, value.substring(0, splitChars - chars));
+                    screenColumn = this.$renderToken(lineEl, screenColumn, token, value.substring(0, splitChars - chars));
                     value = value.substring(splitChars - chars);
                     chars = splitChars;
                     lineEl = this.$createLineElement();
@@ -15295,7 +15653,7 @@ var Text = function (parentEl) {
                 }
                 if (value.length != 0) {
                     chars += value.length;
-                    screenColumn = this.$renderTokenInChunks(lineEl, screenColumn, token, value);
+                    screenColumn = this.$renderToken(lineEl, screenColumn, token, value);
                 }
             }
         }
@@ -15312,17 +15670,13 @@ var Text = function (parentEl) {
                 if (!value)
                     continue;
             }
-            if (screenColumn + value.length > this.MAX_LINE_LENGTH) {
-                this.$renderOverflowMessage(parent, screenColumn, token, value);
-                return;
-            }
-            screenColumn = this.$renderTokenInChunks(parent, screenColumn, token, value);
+            if (screenColumn + value.length > this.MAX_LINE_LENGTH)
+                return this.$renderOverflowMessage(parent, screenColumn, token, value);
+            screenColumn = this.$renderToken(parent, screenColumn, token, value);
         }
     };
     this.$renderOverflowMessage = function (parent, screenColumn, token, value, hide) {
-        if (token) {
-            this.$renderTokenInChunks(parent, screenColumn, token, value.slice(0, this.MAX_LINE_LENGTH - screenColumn));
-        }
+        token && this.$renderToken(parent, screenColumn, token, value.slice(0, this.MAX_LINE_LENGTH - screenColumn));
         var overflowEl = this.dom.createElement("span");
         overflowEl.className = "ace_inline_button ace_keyword ace_toggle_wrap";
         overflowEl.textContent = hide ? "<hide>" : "<click to see more...>";
@@ -16016,11 +16370,10 @@ var lang = require("../lib/lang");
 var event = require("../lib/event");
 var useragent = require("../lib/useragent");
 var EventEmitter = require("../lib/event_emitter").EventEmitter;
-var DEFAULT_CHAR_COUNT = 250;
+var CHAR_COUNT = 512;
 var USE_OBSERVER = typeof ResizeObserver == "function";
 var L = 200;
-var FontMetrics = exports.FontMetrics = function (parentEl, charCount) {
-    this.charCount = charCount || DEFAULT_CHAR_COUNT;
+var FontMetrics = exports.FontMetrics = function (parentEl) {
     this.el = dom.createElement("div");
     this.$setMeasureNodeStyles(this.el.style, true);
     this.$main = dom.createElement("div");
@@ -16030,7 +16383,7 @@ var FontMetrics = exports.FontMetrics = function (parentEl, charCount) {
     this.el.appendChild(this.$main);
     this.el.appendChild(this.$measureNode);
     parentEl.appendChild(this.el);
-    this.$measureNode.textContent = lang.stringRepeat("X", this.charCount);
+    this.$measureNode.textContent = lang.stringRepeat("X", CHAR_COUNT);
     this.$characterSize = { width: 0, height: 0 };
     if (USE_OBSERVER)
         this.$addObserver();
@@ -16093,20 +16446,18 @@ var FontMetrics = exports.FontMetrics = function (parentEl, charCount) {
         }
     };
     this.$measureSizes = function (node) {
-        node = node || this.$measureNode;
-        var rect = node.getBoundingClientRect();
-        var charSize = {
-            height: rect.height,
-            width: rect.width / this.charCount
+        var size = {
+            height: (node || this.$measureNode).clientHeight,
+            width: (node || this.$measureNode).clientWidth / CHAR_COUNT
         };
-        if (charSize.width === 0 || charSize.height === 0)
+        if (size.width === 0 || size.height === 0)
             return null;
-        return charSize;
+        return size;
     };
     this.$measureCharWidth = function (ch) {
-        this.$main.textContent = lang.stringRepeat(ch, this.charCount);
+        this.$main.textContent = lang.stringRepeat(ch, CHAR_COUNT);
         var rect = this.$main.getBoundingClientRect();
-        return rect.width / this.charCount;
+        return rect.width / CHAR_COUNT;
     };
     this.getCharacterWidth = function (ch) {
         var w = this.charSizes[ch];
@@ -16177,7 +16528,18 @@ var FontMetrics = exports.FontMetrics = function (parentEl, charCount) {
 
 });
 
-define("ace/css/editor.css",["require","exports","module"], function(require, exports, module){module.exports = "/*\nstyles = []\nfor (var i = 1; i < 16; i++) {\n    styles.push(\".ace_br\" + i + \"{\" + (\n        [\"top-left\", \"top-right\", \"bottom-right\", \"bottom-left\"]\n    ).map(function(x, j) {\n        return i & (1<<j) ? \"border-\" + x + \"-radius: 3px;\" : \"\" \n    }).filter(Boolean).join(\" \") + \"}\")\n}\nstyles.join(\"\\n\")\n*/\n.ace_br1 {border-top-left-radius    : 3px;}\n.ace_br2 {border-top-right-radius   : 3px;}\n.ace_br3 {border-top-left-radius    : 3px; border-top-right-radius:    3px;}\n.ace_br4 {border-bottom-right-radius: 3px;}\n.ace_br5 {border-top-left-radius    : 3px; border-bottom-right-radius: 3px;}\n.ace_br6 {border-top-right-radius   : 3px; border-bottom-right-radius: 3px;}\n.ace_br7 {border-top-left-radius    : 3px; border-top-right-radius:    3px; border-bottom-right-radius: 3px;}\n.ace_br8 {border-bottom-left-radius : 3px;}\n.ace_br9 {border-top-left-radius    : 3px; border-bottom-left-radius:  3px;}\n.ace_br10{border-top-right-radius   : 3px; border-bottom-left-radius:  3px;}\n.ace_br11{border-top-left-radius    : 3px; border-top-right-radius:    3px; border-bottom-left-radius:  3px;}\n.ace_br12{border-bottom-right-radius: 3px; border-bottom-left-radius:  3px;}\n.ace_br13{border-top-left-radius    : 3px; border-bottom-right-radius: 3px; border-bottom-left-radius:  3px;}\n.ace_br14{border-top-right-radius   : 3px; border-bottom-right-radius: 3px; border-bottom-left-radius:  3px;}\n.ace_br15{border-top-left-radius    : 3px; border-top-right-radius:    3px; border-bottom-right-radius: 3px; border-bottom-left-radius: 3px;}\n\n\n.ace_editor {\n    position: relative;\n    overflow: hidden;\n    padding: 0;\n    font: 12px/normal 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;\n    direction: ltr;\n    text-align: left;\n    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);\n}\n\n.ace_scroller {\n    position: absolute;\n    overflow: hidden;\n    top: 0;\n    bottom: 0;\n    background-color: inherit;\n    -ms-user-select: none;\n    -moz-user-select: none;\n    -webkit-user-select: none;\n    user-select: none;\n    cursor: text;\n}\n\n.ace_content {\n    position: absolute;\n    box-sizing: border-box;\n    min-width: 100%;\n    contain: style size layout;\n    font-variant-ligatures: no-common-ligatures;\n}\n\n.ace_dragging .ace_scroller:before{\n    position: absolute;\n    top: 0;\n    left: 0;\n    right: 0;\n    bottom: 0;\n    content: '';\n    background: rgba(250, 250, 250, 0.01);\n    z-index: 1000;\n}\n.ace_dragging.ace_dark .ace_scroller:before{\n    background: rgba(0, 0, 0, 0.01);\n}\n\n.ace_gutter {\n    position: absolute;\n    overflow : hidden;\n    width: auto;\n    top: 0;\n    bottom: 0;\n    left: 0;\n    cursor: default;\n    z-index: 4;\n    -ms-user-select: none;\n    -moz-user-select: none;\n    -webkit-user-select: none;\n    user-select: none;\n    contain: style size layout;\n}\n\n.ace_gutter-active-line {\n    position: absolute;\n    left: 0;\n    right: 0;\n}\n\n.ace_scroller.ace_scroll-left {\n    box-shadow: 17px 0 16px -16px rgba(0, 0, 0, 0.4) inset;\n}\n\n.ace_gutter-cell {\n    position: absolute;\n    top: 0;\n    left: 0;\n    right: 0;\n    padding-left: 19px;\n    padding-right: 6px;\n    background-repeat: no-repeat;\n}\n\n.ace_gutter-cell.ace_error {\n    background-image: url(\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAABOFBMVEX/////////QRswFAb/Ui4wFAYwFAYwFAaWGAfDRymzOSH/PxswFAb/SiUwFAYwFAbUPRvjQiDllog5HhHdRybsTi3/Tyv9Tir+Syj/UC3////XurebMBIwFAb/RSHbPx/gUzfdwL3kzMivKBAwFAbbvbnhPx66NhowFAYwFAaZJg8wFAaxKBDZurf/RB6mMxb/SCMwFAYwFAbxQB3+RB4wFAb/Qhy4Oh+4QifbNRcwFAYwFAYwFAb/QRzdNhgwFAYwFAbav7v/Uy7oaE68MBK5LxLewr/r2NXewLswFAaxJw4wFAbkPRy2PyYwFAaxKhLm1tMwFAazPiQwFAaUGAb/QBrfOx3bvrv/VC/maE4wFAbRPBq6MRO8Qynew8Dp2tjfwb0wFAbx6eju5+by6uns4uH9/f36+vr/GkHjAAAAYnRSTlMAGt+64rnWu/bo8eAA4InH3+DwoN7j4eLi4xP99Nfg4+b+/u9B/eDs1MD1mO7+4PHg2MXa347g7vDizMLN4eG+Pv7i5evs/v79yu7S3/DV7/498Yv24eH+4ufQ3Ozu/v7+y13sRqwAAADLSURBVHjaZc/XDsFgGIBhtDrshlitmk2IrbHFqL2pvXf/+78DPokj7+Fz9qpU/9UXJIlhmPaTaQ6QPaz0mm+5gwkgovcV6GZzd5JtCQwgsxoHOvJO15kleRLAnMgHFIESUEPmawB9ngmelTtipwwfASilxOLyiV5UVUyVAfbG0cCPHig+GBkzAENHS0AstVF6bacZIOzgLmxsHbt2OecNgJC83JERmePUYq8ARGkJx6XtFsdddBQgZE2nPR6CICZhawjA4Fb/chv+399kfR+MMMDGOQAAAABJRU5ErkJggg==\");\n    background-repeat: no-repeat;\n    background-position: 2px center;\n}\n\n.ace_gutter-cell.ace_warning {\n    background-image: url(\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAmVBMVEX///8AAAD///8AAAAAAABPSzb/5sAAAAB/blH/73z/ulkAAAAAAAD85pkAAAAAAAACAgP/vGz/rkDerGbGrV7/pkQICAf////e0IsAAAD/oED/qTvhrnUAAAD/yHD/njcAAADuv2r/nz//oTj/p064oGf/zHAAAAA9Nir/tFIAAAD/tlTiuWf/tkIAAACynXEAAAAAAAAtIRW7zBpBAAAAM3RSTlMAABR1m7RXO8Ln31Z36zT+neXe5OzooRDfn+TZ4p3h2hTf4t3k3ucyrN1K5+Xaks52Sfs9CXgrAAAAjklEQVR42o3PbQ+CIBQFYEwboPhSYgoYunIqqLn6/z8uYdH8Vmdnu9vz4WwXgN/xTPRD2+sgOcZjsge/whXZgUaYYvT8QnuJaUrjrHUQreGczuEafQCO/SJTufTbroWsPgsllVhq3wJEk2jUSzX3CUEDJC84707djRc5MTAQxoLgupWRwW6UB5fS++NV8AbOZgnsC7BpEAAAAABJRU5ErkJggg==\");\n    background-position: 2px center;\n}\n\n.ace_gutter-cell.ace_info {\n    background-image: url(\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAAAAAA6mKC9AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAAJ0Uk5TAAB2k804AAAAPklEQVQY02NgIB68QuO3tiLznjAwpKTgNyDbMegwisCHZUETUZV0ZqOquBpXj2rtnpSJT1AEnnRmL2OgGgAAIKkRQap2htgAAAAASUVORK5CYII=\");\n    background-position: 2px center;\n}\n.ace_dark .ace_gutter-cell.ace_info {\n    background-image: url(\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAJFBMVEUAAAChoaGAgIAqKiq+vr6tra1ZWVmUlJSbm5s8PDxubm56enrdgzg3AAAAAXRSTlMAQObYZgAAAClJREFUeNpjYMAPdsMYHegyJZFQBlsUlMFVCWUYKkAZMxZAGdxlDMQBAG+TBP4B6RyJAAAAAElFTkSuQmCC\");\n}\n\n.ace_scrollbar {\n    contain: strict;\n    position: absolute;\n    right: 0;\n    bottom: 0;\n    z-index: 6;\n}\n\n.ace_scrollbar-inner {\n    position: absolute;\n    cursor: text;\n    left: 0;\n    top: 0;\n}\n\n.ace_scrollbar-v{\n    overflow-x: hidden;\n    overflow-y: scroll;\n    top: 0;\n}\n\n.ace_scrollbar-h {\n    overflow-x: scroll;\n    overflow-y: hidden;\n    left: 0;\n}\n\n.ace_print-margin {\n    position: absolute;\n    height: 100%;\n}\n\n.ace_text-input {\n    position: absolute;\n    z-index: 0;\n    width: 0.5em;\n    height: 1em;\n    opacity: 0;\n    background: transparent;\n    -moz-appearance: none;\n    appearance: none;\n    border: none;\n    resize: none;\n    outline: none;\n    overflow: hidden;\n    font: inherit;\n    padding: 0 1px;\n    margin: 0 -1px;\n    contain: strict;\n    -ms-user-select: text;\n    -moz-user-select: text;\n    -webkit-user-select: text;\n    user-select: text;\n    /*with `pre-line` chrome inserts &nbsp; instead of space*/\n    white-space: pre!important;\n}\n.ace_text-input.ace_composition {\n    background: transparent;\n    color: inherit;\n    z-index: 1000;\n    opacity: 1;\n}\n.ace_composition_placeholder { color: transparent }\n.ace_composition_marker { \n    border-bottom: 1px solid;\n    position: absolute;\n    border-radius: 0;\n    margin-top: 1px;\n}\n\n[ace_nocontext=true] {\n    transform: none!important;\n    filter: none!important;\n    clip-path: none!important;\n    mask : none!important;\n    contain: none!important;\n    perspective: none!important;\n    mix-blend-mode: initial!important;\n    z-index: auto;\n}\n\n.ace_layer {\n    z-index: 1;\n    position: absolute;\n    overflow: hidden;\n    /* workaround for chrome bug https://github.com/ajaxorg/ace/issues/2312*/\n    word-wrap: normal;\n    white-space: pre;\n    height: 100%;\n    width: 100%;\n    box-sizing: border-box;\n    /* setting pointer-events: auto; on node under the mouse, which changes\n        during scroll, will break mouse wheel scrolling in Safari */\n    pointer-events: none;\n}\n\n.ace_gutter-layer {\n    position: relative;\n    width: auto;\n    text-align: right;\n    pointer-events: auto;\n    height: 1000000px;\n    contain: style size layout;\n}\n\n.ace_text-layer {\n    font: inherit !important;\n    position: absolute;\n    height: 1000000px;\n    width: 1000000px;\n    contain: style size layout;\n}\n\n.ace_text-layer > .ace_line, .ace_text-layer > .ace_line_group {\n    contain: style size layout;\n    position: absolute;\n    top: 0;\n    left: 0;\n    right: 0;\n}\n\n.ace_hidpi .ace_text-layer,\n.ace_hidpi .ace_gutter-layer,\n.ace_hidpi .ace_content,\n.ace_hidpi .ace_gutter {\n    contain: strict;\n    will-change: transform;\n}\n.ace_hidpi .ace_text-layer > .ace_line, \n.ace_hidpi .ace_text-layer > .ace_line_group {\n    contain: strict;\n}\n\n.ace_cjk {\n    display: inline-block;\n    text-align: center;\n}\n\n.ace_cursor-layer {\n    z-index: 4;\n}\n\n.ace_cursor {\n    z-index: 4;\n    position: absolute;\n    box-sizing: border-box;\n    border-left: 2px solid;\n    /* workaround for smooth cursor repaintng whole screen in chrome */\n    transform: translatez(0);\n}\n\n.ace_multiselect .ace_cursor {\n    border-left-width: 1px;\n}\n\n.ace_slim-cursors .ace_cursor {\n    border-left-width: 1px;\n}\n\n.ace_overwrite-cursors .ace_cursor {\n    border-left-width: 0;\n    border-bottom: 1px solid;\n}\n\n.ace_hidden-cursors .ace_cursor {\n    opacity: 0.2;\n}\n\n.ace_hasPlaceholder .ace_hidden-cursors .ace_cursor {\n    opacity: 0;\n}\n\n.ace_smooth-blinking .ace_cursor {\n    transition: opacity 0.18s;\n}\n\n.ace_animate-blinking .ace_cursor {\n    animation-duration: 1000ms;\n    animation-timing-function: step-end;\n    animation-name: blink-ace-animate;\n    animation-iteration-count: infinite;\n}\n\n.ace_animate-blinking.ace_smooth-blinking .ace_cursor {\n    animation-duration: 1000ms;\n    animation-timing-function: ease-in-out;\n    animation-name: blink-ace-animate-smooth;\n}\n    \n@keyframes blink-ace-animate {\n    from, to { opacity: 1; }\n    60% { opacity: 0; }\n}\n\n@keyframes blink-ace-animate-smooth {\n    from, to { opacity: 1; }\n    45% { opacity: 1; }\n    60% { opacity: 0; }\n    85% { opacity: 0; }\n}\n\n.ace_marker-layer .ace_step, .ace_marker-layer .ace_stack {\n    position: absolute;\n    z-index: 3;\n}\n\n.ace_marker-layer .ace_selection {\n    position: absolute;\n    z-index: 5;\n}\n\n.ace_marker-layer .ace_bracket {\n    position: absolute;\n    z-index: 6;\n}\n\n.ace_marker-layer .ace_error_bracket {\n    position: absolute;\n    border-bottom: 1px solid #DE5555;\n    border-radius: 0;\n}\n\n.ace_marker-layer .ace_active-line {\n    position: absolute;\n    z-index: 2;\n}\n\n.ace_marker-layer .ace_selected-word {\n    position: absolute;\n    z-index: 4;\n    box-sizing: border-box;\n}\n\n.ace_line .ace_fold {\n    box-sizing: border-box;\n\n    display: inline-block;\n    height: 11px;\n    margin-top: -2px;\n    vertical-align: middle;\n\n    background-image:\n        url(\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABEAAAAJCAYAAADU6McMAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAJpJREFUeNpi/P//PwOlgAXGYGRklAVSokD8GmjwY1wasKljQpYACtpCFeADcHVQfQyMQAwzwAZI3wJKvCLkfKBaMSClBlR7BOQikCFGQEErIH0VqkabiGCAqwUadAzZJRxQr/0gwiXIal8zQQPnNVTgJ1TdawL0T5gBIP1MUJNhBv2HKoQHHjqNrA4WO4zY0glyNKLT2KIfIMAAQsdgGiXvgnYAAAAASUVORK5CYII=\"),\n        url(\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAA3CAYAAADNNiA5AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAACJJREFUeNpi+P//fxgTAwPDBxDxD078RSX+YeEyDFMCIMAAI3INmXiwf2YAAAAASUVORK5CYII=\");\n    background-repeat: no-repeat, repeat-x;\n    background-position: center center, top left;\n    color: transparent;\n\n    border: 1px solid black;\n    border-radius: 2px;\n\n    cursor: pointer;\n    pointer-events: auto;\n}\n\n.ace_dark .ace_fold {\n}\n\n.ace_fold:hover{\n    background-image:\n        url(\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABEAAAAJCAYAAADU6McMAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAJpJREFUeNpi/P//PwOlgAXGYGRklAVSokD8GmjwY1wasKljQpYACtpCFeADcHVQfQyMQAwzwAZI3wJKvCLkfKBaMSClBlR7BOQikCFGQEErIH0VqkabiGCAqwUadAzZJRxQr/0gwiXIal8zQQPnNVTgJ1TdawL0T5gBIP1MUJNhBv2HKoQHHjqNrA4WO4zY0glyNKLT2KIfIMAAQsdgGiXvgnYAAAAASUVORK5CYII=\"),\n        url(\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAA3CAYAAADNNiA5AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAACBJREFUeNpi+P//fz4TAwPDZxDxD5X4i5fLMEwJgAADAEPVDbjNw87ZAAAAAElFTkSuQmCC\");\n}\n\n.ace_tooltip {\n    background-color: #FFF;\n    background-image: linear-gradient(to bottom, transparent, rgba(0, 0, 0, 0.1));\n    border: 1px solid gray;\n    border-radius: 1px;\n    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);\n    color: black;\n    max-width: 100%;\n    padding: 3px 4px;\n    position: fixed;\n    z-index: 999999;\n    box-sizing: border-box;\n    cursor: default;\n    white-space: pre;\n    word-wrap: break-word;\n    line-height: normal;\n    font-style: normal;\n    font-weight: normal;\n    letter-spacing: normal;\n    pointer-events: none;\n}\n\n.ace_folding-enabled > .ace_gutter-cell {\n    padding-right: 13px;\n}\n\n.ace_fold-widget {\n    box-sizing: border-box;\n\n    margin: 0 -12px 0 1px;\n    display: none;\n    width: 11px;\n    vertical-align: top;\n\n    background-image: url(\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAANElEQVR42mWKsQ0AMAzC8ixLlrzQjzmBiEjp0A6WwBCSPgKAXoLkqSot7nN3yMwR7pZ32NzpKkVoDBUxKAAAAABJRU5ErkJggg==\");\n    background-repeat: no-repeat;\n    background-position: center;\n\n    border-radius: 3px;\n    \n    border: 1px solid transparent;\n    cursor: pointer;\n}\n\n.ace_folding-enabled .ace_fold-widget {\n    display: inline-block;   \n}\n\n.ace_fold-widget.ace_end {\n    background-image: url(\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAANElEQVR42m3HwQkAMAhD0YzsRchFKI7sAikeWkrxwScEB0nh5e7KTPWimZki4tYfVbX+MNl4pyZXejUO1QAAAABJRU5ErkJggg==\");\n}\n\n.ace_fold-widget.ace_closed {\n    background-image: url(\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAMAAAAGCAYAAAAG5SQMAAAAOUlEQVR42jXKwQkAMAgDwKwqKD4EwQ26sSOkVWjgIIHAzPiCgaqiqnJHZnKICBERHN194O5b9vbLuAVRL+l0YWnZAAAAAElFTkSuQmCCXA==\");\n}\n\n.ace_fold-widget:hover {\n    border: 1px solid rgba(0, 0, 0, 0.3);\n    background-color: rgba(255, 255, 255, 0.2);\n    box-shadow: 0 1px 1px rgba(255, 255, 255, 0.7);\n}\n\n.ace_fold-widget:active {\n    border: 1px solid rgba(0, 0, 0, 0.4);\n    background-color: rgba(0, 0, 0, 0.05);\n    box-shadow: 0 1px 1px rgba(255, 255, 255, 0.8);\n}\n/**\n * Dark version for fold widgets\n */\n.ace_dark .ace_fold-widget {\n    background-image: url(\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHklEQVQIW2P4//8/AzoGEQ7oGCaLLAhWiSwB146BAQCSTPYocqT0AAAAAElFTkSuQmCC\");\n}\n.ace_dark .ace_fold-widget.ace_end {\n    background-image: url(\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAH0lEQVQIW2P4//8/AxQ7wNjIAjDMgC4AxjCVKBirIAAF0kz2rlhxpAAAAABJRU5ErkJggg==\");\n}\n.ace_dark .ace_fold-widget.ace_closed {\n    background-image: url(\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAMAAAAFCAYAAACAcVaiAAAAHElEQVQIW2P4//+/AxAzgDADlOOAznHAKgPWAwARji8UIDTfQQAAAABJRU5ErkJggg==\");\n}\n.ace_dark .ace_fold-widget:hover {\n    box-shadow: 0 1px 1px rgba(255, 255, 255, 0.2);\n    background-color: rgba(255, 255, 255, 0.1);\n}\n.ace_dark .ace_fold-widget:active {\n    box-shadow: 0 1px 1px rgba(255, 255, 255, 0.2);\n}\n\n.ace_inline_button {\n    border: 1px solid lightgray;\n    display: inline-block;\n    margin: -1px 8px;\n    padding: 0 5px;\n    pointer-events: auto;\n    cursor: pointer;\n}\n.ace_inline_button:hover {\n    border-color: gray;\n    background: rgba(200,200,200,0.2);\n    display: inline-block;\n    pointer-events: auto;\n}\n\n.ace_fold-widget.ace_invalid {\n    background-color: #FFB4B4;\n    border-color: #DE5555;\n}\n\n.ace_fade-fold-widgets .ace_fold-widget {\n    transition: opacity 0.4s ease 0.05s;\n    opacity: 0;\n}\n\n.ace_fade-fold-widgets:hover .ace_fold-widget {\n    transition: opacity 0.05s ease 0.05s;\n    opacity:1;\n}\n\n.ace_underline {\n    text-decoration: underline;\n}\n\n.ace_bold {\n    font-weight: bold;\n}\n\n.ace_nobold .ace_bold {\n    font-weight: normal;\n}\n\n.ace_italic {\n    font-style: italic;\n}\n\n\n.ace_error-marker {\n    background-color: rgba(255, 0, 0,0.2);\n    position: absolute;\n    z-index: 9;\n}\n\n.ace_highlight-marker {\n    background-color: rgba(255, 255, 0,0.2);\n    position: absolute;\n    z-index: 8;\n}\n\n.ace_mobile-menu {\n    position: absolute;\n    line-height: 1.5;\n    border-radius: 4px;\n    -ms-user-select: none;\n    -moz-user-select: none;\n    -webkit-user-select: none;\n    user-select: none;\n    background: white;\n    box-shadow: 1px 3px 2px grey;\n    border: 1px solid #dcdcdc;\n    color: black;\n}\n.ace_dark > .ace_mobile-menu {\n    background: #333;\n    color: #ccc;\n    box-shadow: 1px 3px 2px grey;\n    border: 1px solid #444;\n\n}\n.ace_mobile-button {\n    padding: 2px;\n    cursor: pointer;\n    overflow: hidden;\n}\n.ace_mobile-button:hover {\n    background-color: #eee;\n    opacity:1;\n}\n.ace_mobile-button:active {\n    background-color: #ddd;\n}\n\n.ace_placeholder {\n    font-family: arial;\n    transform: scale(0.9);\n    transform-origin: left;\n    white-space: pre;\n    opacity: 0.7;\n    margin: 0 10px;\n}";
+define("ace/css/editor.css",["require","exports","module"], function(require, exports, module){/*
+styles = []
+for (var i = 1; i < 16; i++) {
+    styles.push(".ace_br" + i + "{" + (
+        ["top-left", "top-right", "bottom-right", "bottom-left"]
+    ).map(function(x, j) {
+        return i & (1<<j) ? "border-" + x + "-radius: 3px;" : ""
+    }).filter(Boolean).join(" ") + "}")
+}
+styles.join("\\n")
+*/
+module.exports = "\n.ace_br1 {border-top-left-radius    : 3px;}\n.ace_br2 {border-top-right-radius   : 3px;}\n.ace_br3 {border-top-left-radius    : 3px; border-top-right-radius:    3px;}\n.ace_br4 {border-bottom-right-radius: 3px;}\n.ace_br5 {border-top-left-radius    : 3px; border-bottom-right-radius: 3px;}\n.ace_br6 {border-top-right-radius   : 3px; border-bottom-right-radius: 3px;}\n.ace_br7 {border-top-left-radius    : 3px; border-top-right-radius:    3px; border-bottom-right-radius: 3px;}\n.ace_br8 {border-bottom-left-radius : 3px;}\n.ace_br9 {border-top-left-radius    : 3px; border-bottom-left-radius:  3px;}\n.ace_br10{border-top-right-radius   : 3px; border-bottom-left-radius:  3px;}\n.ace_br11{border-top-left-radius    : 3px; border-top-right-radius:    3px; border-bottom-left-radius:  3px;}\n.ace_br12{border-bottom-right-radius: 3px; border-bottom-left-radius:  3px;}\n.ace_br13{border-top-left-radius    : 3px; border-bottom-right-radius: 3px; border-bottom-left-radius:  3px;}\n.ace_br14{border-top-right-radius   : 3px; border-bottom-right-radius: 3px; border-bottom-left-radius:  3px;}\n.ace_br15{border-top-left-radius    : 3px; border-top-right-radius:    3px; border-bottom-right-radius: 3px; border-bottom-left-radius: 3px;}\n\n\n.ace_editor {\n    position: relative;\n    overflow: hidden;\n    padding: 0;\n    font: 12px/normal 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;\n    direction: ltr;\n    text-align: left;\n    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);\n}\n\n.ace_scroller {\n    position: absolute;\n    overflow: hidden;\n    top: 0;\n    bottom: 0;\n    background-color: inherit;\n    -ms-user-select: none;\n    -moz-user-select: none;\n    -webkit-user-select: none;\n    user-select: none;\n    cursor: text;\n}\n\n.ace_content {\n    position: absolute;\n    box-sizing: border-box;\n    min-width: 100%;\n    contain: style size layout;\n    font-variant-ligatures: no-common-ligatures;\n}\n\n.ace_dragging .ace_scroller:before{\n    position: absolute;\n    top: 0;\n    left: 0;\n    right: 0;\n    bottom: 0;\n    content: '';\n    background: rgba(250, 250, 250, 0.01);\n    z-index: 1000;\n}\n.ace_dragging.ace_dark .ace_scroller:before{\n    background: rgba(0, 0, 0, 0.01);\n}\n\n.ace_gutter {\n    position: absolute;\n    overflow : hidden;\n    width: auto;\n    top: 0;\n    bottom: 0;\n    left: 0;\n    cursor: default;\n    z-index: 4;\n    -ms-user-select: none;\n    -moz-user-select: none;\n    -webkit-user-select: none;\n    user-select: none;\n    contain: style size layout;\n}\n\n.ace_gutter-active-line {\n    position: absolute;\n    left: 0;\n    right: 0;\n}\n\n.ace_scroller.ace_scroll-left:after {\n    content: \"\";\n    position: absolute;\n    top: 0;\n    right: 0;\n    bottom: 0;\n    left: 0;\n    box-shadow: 17px 0 16px -16px rgba(0, 0, 0, 0.4) inset;\n    pointer-events: none;\n}\n\n.ace_gutter-cell {\n    position: absolute;\n    top: 0;\n    left: 0;\n    right: 0;\n    padding-left: 19px;\n    padding-right: 6px;\n    background-repeat: no-repeat;\n}\n\n.ace_gutter-cell.ace_error {\n    background-image: url(\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAABOFBMVEX/////////QRswFAb/Ui4wFAYwFAYwFAaWGAfDRymzOSH/PxswFAb/SiUwFAYwFAbUPRvjQiDllog5HhHdRybsTi3/Tyv9Tir+Syj/UC3////XurebMBIwFAb/RSHbPx/gUzfdwL3kzMivKBAwFAbbvbnhPx66NhowFAYwFAaZJg8wFAaxKBDZurf/RB6mMxb/SCMwFAYwFAbxQB3+RB4wFAb/Qhy4Oh+4QifbNRcwFAYwFAYwFAb/QRzdNhgwFAYwFAbav7v/Uy7oaE68MBK5LxLewr/r2NXewLswFAaxJw4wFAbkPRy2PyYwFAaxKhLm1tMwFAazPiQwFAaUGAb/QBrfOx3bvrv/VC/maE4wFAbRPBq6MRO8Qynew8Dp2tjfwb0wFAbx6eju5+by6uns4uH9/f36+vr/GkHjAAAAYnRSTlMAGt+64rnWu/bo8eAA4InH3+DwoN7j4eLi4xP99Nfg4+b+/u9B/eDs1MD1mO7+4PHg2MXa347g7vDizMLN4eG+Pv7i5evs/v79yu7S3/DV7/498Yv24eH+4ufQ3Ozu/v7+y13sRqwAAADLSURBVHjaZc/XDsFgGIBhtDrshlitmk2IrbHFqL2pvXf/+78DPokj7+Fz9qpU/9UXJIlhmPaTaQ6QPaz0mm+5gwkgovcV6GZzd5JtCQwgsxoHOvJO15kleRLAnMgHFIESUEPmawB9ngmelTtipwwfASilxOLyiV5UVUyVAfbG0cCPHig+GBkzAENHS0AstVF6bacZIOzgLmxsHbt2OecNgJC83JERmePUYq8ARGkJx6XtFsdddBQgZE2nPR6CICZhawjA4Fb/chv+399kfR+MMMDGOQAAAABJRU5ErkJggg==\");\n    background-repeat: no-repeat;\n    background-position: 2px center;\n}\n\n.ace_gutter-cell.ace_warning {\n    background-image: url(\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAmVBMVEX///8AAAD///8AAAAAAABPSzb/5sAAAAB/blH/73z/ulkAAAAAAAD85pkAAAAAAAACAgP/vGz/rkDerGbGrV7/pkQICAf////e0IsAAAD/oED/qTvhrnUAAAD/yHD/njcAAADuv2r/nz//oTj/p064oGf/zHAAAAA9Nir/tFIAAAD/tlTiuWf/tkIAAACynXEAAAAAAAAtIRW7zBpBAAAAM3RSTlMAABR1m7RXO8Ln31Z36zT+neXe5OzooRDfn+TZ4p3h2hTf4t3k3ucyrN1K5+Xaks52Sfs9CXgrAAAAjklEQVR42o3PbQ+CIBQFYEwboPhSYgoYunIqqLn6/z8uYdH8Vmdnu9vz4WwXgN/xTPRD2+sgOcZjsge/whXZgUaYYvT8QnuJaUrjrHUQreGczuEafQCO/SJTufTbroWsPgsllVhq3wJEk2jUSzX3CUEDJC84707djRc5MTAQxoLgupWRwW6UB5fS++NV8AbOZgnsC7BpEAAAAABJRU5ErkJggg==\");\n    background-position: 2px center;\n}\n\n.ace_gutter-cell.ace_info {\n    background-image: url(\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAAAAAA6mKC9AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAAJ0Uk5TAAB2k804AAAAPklEQVQY02NgIB68QuO3tiLznjAwpKTgNyDbMegwisCHZUETUZV0ZqOquBpXj2rtnpSJT1AEnnRmL2OgGgAAIKkRQap2htgAAAAASUVORK5CYII=\");\n    background-position: 2px center;\n}\n.ace_dark .ace_gutter-cell.ace_info {\n    background-image: url(\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAJFBMVEUAAAChoaGAgIAqKiq+vr6tra1ZWVmUlJSbm5s8PDxubm56enrdgzg3AAAAAXRSTlMAQObYZgAAAClJREFUeNpjYMAPdsMYHegyJZFQBlsUlMFVCWUYKkAZMxZAGdxlDMQBAG+TBP4B6RyJAAAAAElFTkSuQmCC\");\n}\n\n.ace_scrollbar {\n    contain: strict;\n    position: absolute;\n    right: 0;\n    bottom: 0;\n    z-index: 6;\n}\n\n.ace_scrollbar-inner {\n    position: absolute;\n    cursor: text;\n    left: 0;\n    top: 0;\n}\n\n.ace_scrollbar-v{\n    overflow-x: hidden;\n    overflow-y: scroll;\n    top: 0;\n}\n\n.ace_scrollbar-h {\n    overflow-x: scroll;\n    overflow-y: hidden;\n    left: 0;\n}\n\n.ace_print-margin {\n    position: absolute;\n    height: 100%;\n}\n\n.ace_text-input {\n    position: absolute;\n    z-index: 0;\n    width: 0.5em;\n    height: 1em;\n    opacity: 0;\n    background: transparent;\n    -moz-appearance: none;\n    appearance: none;\n    border: none;\n    resize: none;\n    outline: none;\n    overflow: hidden;\n    font: inherit;\n    padding: 0 1px;\n    margin: 0 -1px;\n    contain: strict;\n    -ms-user-select: text;\n    -moz-user-select: text;\n    -webkit-user-select: text;\n    user-select: text;\n    /*with `pre-line` chrome inserts &nbsp; instead of space*/\n    white-space: pre!important;\n}\n.ace_text-input.ace_composition {\n    background: transparent;\n    color: inherit;\n    z-index: 1000;\n    opacity: 1;\n}\n.ace_composition_placeholder { color: transparent }\n.ace_composition_marker { \n    border-bottom: 1px solid;\n    position: absolute;\n    border-radius: 0;\n    margin-top: 1px;\n}\n\n[ace_nocontext=true] {\n    transform: none!important;\n    filter: none!important;\n    clip-path: none!important;\n    mask : none!important;\n    contain: none!important;\n    perspective: none!important;\n    mix-blend-mode: initial!important;\n    z-index: auto;\n}\n\n.ace_layer {\n    z-index: 1;\n    position: absolute;\n    overflow: hidden;\n    /* workaround for chrome bug https://github.com/ajaxorg/ace/issues/2312*/\n    word-wrap: normal;\n    white-space: pre;\n    height: 100%;\n    width: 100%;\n    box-sizing: border-box;\n    /* setting pointer-events: auto; on node under the mouse, which changes\n        during scroll, will break mouse wheel scrolling in Safari */\n    pointer-events: none;\n}\n\n.ace_gutter-layer {\n    position: relative;\n    width: auto;\n    text-align: right;\n    pointer-events: auto;\n    height: 1000000px;\n    contain: style size layout;\n}\n\n.ace_text-layer {\n    font: inherit !important;\n    position: absolute;\n    height: 1000000px;\n    width: 1000000px;\n    contain: style size layout;\n}\n\n.ace_text-layer > .ace_line, .ace_text-layer > .ace_line_group {\n    contain: style size layout;\n    position: absolute;\n    top: 0;\n    left: 0;\n    right: 0;\n}\n\n.ace_hidpi .ace_text-layer,\n.ace_hidpi .ace_gutter-layer,\n.ace_hidpi .ace_content,\n.ace_hidpi .ace_gutter {\n    contain: strict;\n    will-change: transform;\n}\n.ace_hidpi .ace_text-layer > .ace_line, \n.ace_hidpi .ace_text-layer > .ace_line_group {\n    contain: strict;\n}\n\n.ace_cjk {\n    display: inline-block;\n    text-align: center;\n}\n\n.ace_cursor-layer {\n    z-index: 4;\n}\n\n.ace_cursor {\n    z-index: 4;\n    position: absolute;\n    box-sizing: border-box;\n    border-left: 2px solid;\n    /* workaround for smooth cursor repaintng whole screen in chrome */\n    transform: translatez(0);\n}\n\n.ace_multiselect .ace_cursor {\n    border-left-width: 1px;\n}\n\n.ace_slim-cursors .ace_cursor {\n    border-left-width: 1px;\n}\n\n.ace_overwrite-cursors .ace_cursor {\n    border-left-width: 0;\n    border-bottom: 1px solid;\n}\n\n.ace_hidden-cursors .ace_cursor {\n    opacity: 0.2;\n}\n\n.ace_hasPlaceholder .ace_hidden-cursors .ace_cursor {\n    opacity: 0;\n}\n\n.ace_smooth-blinking .ace_cursor {\n    transition: opacity 0.18s;\n}\n\n.ace_animate-blinking .ace_cursor {\n    animation-duration: 1000ms;\n    animation-timing-function: step-end;\n    animation-name: blink-ace-animate;\n    animation-iteration-count: infinite;\n}\n\n.ace_animate-blinking.ace_smooth-blinking .ace_cursor {\n    animation-duration: 1000ms;\n    animation-timing-function: ease-in-out;\n    animation-name: blink-ace-animate-smooth;\n}\n    \n@keyframes blink-ace-animate {\n    from, to { opacity: 1; }\n    60% { opacity: 0; }\n}\n\n@keyframes blink-ace-animate-smooth {\n    from, to { opacity: 1; }\n    45% { opacity: 1; }\n    60% { opacity: 0; }\n    85% { opacity: 0; }\n}\n\n.ace_marker-layer .ace_step, .ace_marker-layer .ace_stack {\n    position: absolute;\n    z-index: 3;\n}\n\n.ace_marker-layer .ace_selection {\n    position: absolute;\n    z-index: 5;\n}\n\n.ace_marker-layer .ace_bracket {\n    position: absolute;\n    z-index: 6;\n}\n\n.ace_marker-layer .ace_error_bracket {\n    position: absolute;\n    border-bottom: 1px solid #DE5555;\n    border-radius: 0;\n}\n\n.ace_marker-layer .ace_active-line {\n    position: absolute;\n    z-index: 2;\n}\n\n.ace_marker-layer .ace_selected-word {\n    position: absolute;\n    z-index: 4;\n    box-sizing: border-box;\n}\n\n.ace_line .ace_fold {\n    box-sizing: border-box;\n\n    display: inline-block;\n    height: 11px;\n    margin-top: -2px;\n    vertical-align: middle;\n\n    background-image:\n        url(\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABEAAAAJCAYAAADU6McMAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAJpJREFUeNpi/P//PwOlgAXGYGRklAVSokD8GmjwY1wasKljQpYACtpCFeADcHVQfQyMQAwzwAZI3wJKvCLkfKBaMSClBlR7BOQikCFGQEErIH0VqkabiGCAqwUadAzZJRxQr/0gwiXIal8zQQPnNVTgJ1TdawL0T5gBIP1MUJNhBv2HKoQHHjqNrA4WO4zY0glyNKLT2KIfIMAAQsdgGiXvgnYAAAAASUVORK5CYII=\"),\n        url(\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAA3CAYAAADNNiA5AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAACJJREFUeNpi+P//fxgTAwPDBxDxD078RSX+YeEyDFMCIMAAI3INmXiwf2YAAAAASUVORK5CYII=\");\n    background-repeat: no-repeat, repeat-x;\n    background-position: center center, top left;\n    color: transparent;\n\n    border: 1px solid black;\n    border-radius: 2px;\n\n    cursor: pointer;\n    pointer-events: auto;\n}\n\n.ace_dark .ace_fold {\n}\n\n.ace_fold:hover{\n    background-image:\n        url(\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABEAAAAJCAYAAADU6McMAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAJpJREFUeNpi/P//PwOlgAXGYGRklAVSokD8GmjwY1wasKljQpYACtpCFeADcHVQfQyMQAwzwAZI3wJKvCLkfKBaMSClBlR7BOQikCFGQEErIH0VqkabiGCAqwUadAzZJRxQr/0gwiXIal8zQQPnNVTgJ1TdawL0T5gBIP1MUJNhBv2HKoQHHjqNrA4WO4zY0glyNKLT2KIfIMAAQsdgGiXvgnYAAAAASUVORK5CYII=\"),\n        url(\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAA3CAYAAADNNiA5AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAACBJREFUeNpi+P//fz4TAwPDZxDxD5X4i5fLMEwJgAADAEPVDbjNw87ZAAAAAElFTkSuQmCC\");\n}\n\n.ace_tooltip {\n    background-color: #FFF;\n    background-image: linear-gradient(to bottom, transparent, rgba(0, 0, 0, 0.1));\n    border: 1px solid gray;\n    border-radius: 1px;\n    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);\n    color: black;\n    max-width: 100%;\n    padding: 3px 4px;\n    position: fixed;\n    z-index: 999999;\n    box-sizing: border-box;\n    cursor: default;\n    white-space: pre;\n    word-wrap: break-word;\n    line-height: normal;\n    font-style: normal;\n    font-weight: normal;\n    letter-spacing: normal;\n    pointer-events: none;\n}\n\n.ace_folding-enabled > .ace_gutter-cell {\n    padding-right: 13px;\n}\n\n.ace_fold-widget {\n    box-sizing: border-box;\n\n    margin: 0 -12px 0 1px;\n    display: none;\n    width: 11px;\n    vertical-align: top;\n\n    background-image: url(\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAANElEQVR42mWKsQ0AMAzC8ixLlrzQjzmBiEjp0A6WwBCSPgKAXoLkqSot7nN3yMwR7pZ32NzpKkVoDBUxKAAAAABJRU5ErkJggg==\");\n    background-repeat: no-repeat;\n    background-position: center;\n\n    border-radius: 3px;\n    \n    border: 1px solid transparent;\n    cursor: pointer;\n}\n\n.ace_folding-enabled .ace_fold-widget {\n    display: inline-block;   \n}\n\n.ace_fold-widget.ace_end {\n    background-image: url(\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAANElEQVR42m3HwQkAMAhD0YzsRchFKI7sAikeWkrxwScEB0nh5e7KTPWimZki4tYfVbX+MNl4pyZXejUO1QAAAABJRU5ErkJggg==\");\n}\n\n.ace_fold-widget.ace_closed {\n    background-image: url(\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAMAAAAGCAYAAAAG5SQMAAAAOUlEQVR42jXKwQkAMAgDwKwqKD4EwQ26sSOkVWjgIIHAzPiCgaqiqnJHZnKICBERHN194O5b9vbLuAVRL+l0YWnZAAAAAElFTkSuQmCCXA==\");\n}\n\n.ace_fold-widget:hover {\n    border: 1px solid rgba(0, 0, 0, 0.3);\n    background-color: rgba(255, 255, 255, 0.2);\n    box-shadow: 0 1px 1px rgba(255, 255, 255, 0.7);\n}\n\n.ace_fold-widget:active {\n    border: 1px solid rgba(0, 0, 0, 0.4);\n    background-color: rgba(0, 0, 0, 0.05);\n    box-shadow: 0 1px 1px rgba(255, 255, 255, 0.8);\n}\n/**\n * Dark version for fold widgets\n */\n.ace_dark .ace_fold-widget {\n    background-image: url(\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHklEQVQIW2P4//8/AzoGEQ7oGCaLLAhWiSwB146BAQCSTPYocqT0AAAAAElFTkSuQmCC\");\n}\n.ace_dark .ace_fold-widget.ace_end {\n    background-image: url(\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAH0lEQVQIW2P4//8/AxQ7wNjIAjDMgC4AxjCVKBirIAAF0kz2rlhxpAAAAABJRU5ErkJggg==\");\n}\n.ace_dark .ace_fold-widget.ace_closed {\n    background-image: url(\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAMAAAAFCAYAAACAcVaiAAAAHElEQVQIW2P4//+/AxAzgDADlOOAznHAKgPWAwARji8UIDTfQQAAAABJRU5ErkJggg==\");\n}\n.ace_dark .ace_fold-widget:hover {\n    box-shadow: 0 1px 1px rgba(255, 255, 255, 0.2);\n    background-color: rgba(255, 255, 255, 0.1);\n}\n.ace_dark .ace_fold-widget:active {\n    box-shadow: 0 1px 1px rgba(255, 255, 255, 0.2);\n}\n\n.ace_inline_button {\n    border: 1px solid lightgray;\n    display: inline-block;\n    margin: -1px 8px;\n    padding: 0 5px;\n    pointer-events: auto;\n    cursor: pointer;\n}\n.ace_inline_button:hover {\n    border-color: gray;\n    background: rgba(200,200,200,0.2);\n    display: inline-block;\n    pointer-events: auto;\n}\n\n.ace_fold-widget.ace_invalid {\n    background-color: #FFB4B4;\n    border-color: #DE5555;\n}\n\n.ace_fade-fold-widgets .ace_fold-widget {\n    transition: opacity 0.4s ease 0.05s;\n    opacity: 0;\n}\n\n.ace_fade-fold-widgets:hover .ace_fold-widget {\n    transition: opacity 0.05s ease 0.05s;\n    opacity:1;\n}\n\n.ace_underline {\n    text-decoration: underline;\n}\n\n.ace_bold {\n    font-weight: bold;\n}\n\n.ace_nobold .ace_bold {\n    font-weight: normal;\n}\n\n.ace_italic {\n    font-style: italic;\n}\n\n\n.ace_error-marker {\n    background-color: rgba(255, 0, 0,0.2);\n    position: absolute;\n    z-index: 9;\n}\n\n.ace_highlight-marker {\n    background-color: rgba(255, 255, 0,0.2);\n    position: absolute;\n    z-index: 8;\n}\n\n.ace_mobile-menu {\n    position: absolute;\n    line-height: 1.5;\n    border-radius: 4px;\n    -ms-user-select: none;\n    -moz-user-select: none;\n    -webkit-user-select: none;\n    user-select: none;\n    background: white;\n    box-shadow: 1px 3px 2px grey;\n    border: 1px solid #dcdcdc;\n    color: black;\n}\n.ace_dark > .ace_mobile-menu {\n    background: #333;\n    color: #ccc;\n    box-shadow: 1px 3px 2px grey;\n    border: 1px solid #444;\n\n}\n.ace_mobile-button {\n    padding: 2px;\n    cursor: pointer;\n    overflow: hidden;\n}\n.ace_mobile-button:hover {\n    background-color: #eee;\n    opacity:1;\n}\n.ace_mobile-button:active {\n    background-color: #ddd;\n}\n\n.ace_placeholder {\n    font-family: arial;\n    transform: scale(0.9);\n    transform-origin: left;\n    white-space: pre;\n    opacity: 0.7;\n    margin: 0 10px;\n}\n\n.ace_ghost_text {\n    opacity: 0.5;\n    font-style: italic;\n}";
 
 });
 
@@ -16366,7 +16728,7 @@ var VirtualRenderer = function (container, theme) {
         row: 0,
         column: 0
     };
-    this.$fontMetrics = new FontMetrics(this.container, this.$textLayer.MAX_CHUNK_LENGTH);
+    this.$fontMetrics = new FontMetrics(this.container);
     this.$textLayer.$setFontMetrics(this.$fontMetrics);
     this.$textLayer.on("changeCharacterSize", function (e) {
         _self.updateCharacterSize();
@@ -17363,6 +17725,40 @@ var VirtualRenderer = function (container, theme) {
         this.$composition = null;
         this.$cursorLayer.element.style.display = "";
     };
+    this.setGhostText = function (text, position) {
+        var cursor = this.session.selection.cursor;
+        var insertPosition = position || { row: cursor.row, column: cursor.column };
+        this.removeGhostText();
+        var textLines = text.split("\n");
+        this.addToken(textLines[0], "ghost_text", insertPosition.row, insertPosition.column);
+        this.$ghostText = {
+            text: text,
+            position: {
+                row: insertPosition.row,
+                column: insertPosition.column
+            }
+        };
+        if (textLines.length > 1) {
+            this.$ghostTextWidget = {
+                text: textLines.slice(1).join("\n"),
+                row: insertPosition.row,
+                column: insertPosition.column,
+                className: "ace_ghost_text"
+            };
+            this.session.widgetManager.addLineWidget(this.$ghostTextWidget);
+        }
+    };
+    this.removeGhostText = function () {
+        if (!this.$ghostText)
+            return;
+        var position = this.$ghostText.position;
+        this.removeExtraToken(position.row, position.column);
+        if (this.$ghostTextWidget) {
+            this.session.widgetManager.removeLineWidget(this.$ghostTextWidget);
+            this.$ghostTextWidget = null;
+        }
+        this.$ghostText = null;
+    };
     this.addToken = function (text, type, row, column) {
         var session = this.session;
         session.bgTokenizer.lines[row] = null;
@@ -18243,7 +18639,7 @@ exports.defaultCommands = [{
         readOnly: true
     }, {
         name: "toggleSplitSelectionIntoLines",
-        description: "Split into lines",
+        description: "Split selection into lines",
         exec: function (editor) {
             if (editor.multiSelect.rangeCount > 1)
                 editor.multiSelect.joinSelections();
@@ -19074,337 +19470,6 @@ var FoldMode = exports.FoldMode = function () { };
         return Range.fromPoints(start, end);
     };
 }).call(FoldMode.prototype);
-
-});
-
-define("ace/line_widgets",["require","exports","module","ace/lib/dom"], function(require, exports, module){"use strict";
-var dom = require("./lib/dom");
-function LineWidgets(session) {
-    this.session = session;
-    this.session.widgetManager = this;
-    this.session.getRowLength = this.getRowLength;
-    this.session.$getWidgetScreenLength = this.$getWidgetScreenLength;
-    this.updateOnChange = this.updateOnChange.bind(this);
-    this.renderWidgets = this.renderWidgets.bind(this);
-    this.measureWidgets = this.measureWidgets.bind(this);
-    this.session._changedWidgets = [];
-    this.$onChangeEditor = this.$onChangeEditor.bind(this);
-    this.session.on("change", this.updateOnChange);
-    this.session.on("changeFold", this.updateOnFold);
-    this.session.on("changeEditor", this.$onChangeEditor);
-}
-(function () {
-    this.getRowLength = function (row) {
-        var h;
-        if (this.lineWidgets)
-            h = this.lineWidgets[row] && this.lineWidgets[row].rowCount || 0;
-        else
-            h = 0;
-        if (!this.$useWrapMode || !this.$wrapData[row]) {
-            return 1 + h;
-        }
-        else {
-            return this.$wrapData[row].length + 1 + h;
-        }
-    };
-    this.$getWidgetScreenLength = function () {
-        var screenRows = 0;
-        this.lineWidgets.forEach(function (w) {
-            if (w && w.rowCount && !w.hidden)
-                screenRows += w.rowCount;
-        });
-        return screenRows;
-    };
-    this.$onChangeEditor = function (e) {
-        this.attach(e.editor);
-    };
-    this.attach = function (editor) {
-        if (editor && editor.widgetManager && editor.widgetManager != this)
-            editor.widgetManager.detach();
-        if (this.editor == editor)
-            return;
-        this.detach();
-        this.editor = editor;
-        if (editor) {
-            editor.widgetManager = this;
-            editor.renderer.on("beforeRender", this.measureWidgets);
-            editor.renderer.on("afterRender", this.renderWidgets);
-        }
-    };
-    this.detach = function (e) {
-        var editor = this.editor;
-        if (!editor)
-            return;
-        this.editor = null;
-        editor.widgetManager = null;
-        editor.renderer.off("beforeRender", this.measureWidgets);
-        editor.renderer.off("afterRender", this.renderWidgets);
-        var lineWidgets = this.session.lineWidgets;
-        lineWidgets && lineWidgets.forEach(function (w) {
-            if (w && w.el && w.el.parentNode) {
-                w._inDocument = false;
-                w.el.parentNode.removeChild(w.el);
-            }
-        });
-    };
-    this.updateOnFold = function (e, session) {
-        var lineWidgets = session.lineWidgets;
-        if (!lineWidgets || !e.action)
-            return;
-        var fold = e.data;
-        var start = fold.start.row;
-        var end = fold.end.row;
-        var hide = e.action == "add";
-        for (var i = start + 1; i < end; i++) {
-            if (lineWidgets[i])
-                lineWidgets[i].hidden = hide;
-        }
-        if (lineWidgets[end]) {
-            if (hide) {
-                if (!lineWidgets[start])
-                    lineWidgets[start] = lineWidgets[end];
-                else
-                    lineWidgets[end].hidden = hide;
-            }
-            else {
-                if (lineWidgets[start] == lineWidgets[end])
-                    lineWidgets[start] = undefined;
-                lineWidgets[end].hidden = hide;
-            }
-        }
-    };
-    this.updateOnChange = function (delta) {
-        var lineWidgets = this.session.lineWidgets;
-        if (!lineWidgets)
-            return;
-        var startRow = delta.start.row;
-        var len = delta.end.row - startRow;
-        if (len === 0) {
-        }
-        else if (delta.action == "remove") {
-            var removed = lineWidgets.splice(startRow + 1, len);
-            if (!lineWidgets[startRow] && removed[removed.length - 1]) {
-                lineWidgets[startRow] = removed.pop();
-            }
-            removed.forEach(function (w) {
-                w && this.removeLineWidget(w);
-            }, this);
-            this.$updateRows();
-        }
-        else {
-            var args = new Array(len);
-            if (lineWidgets[startRow] && lineWidgets[startRow].column != null) {
-                if (delta.start.column > lineWidgets[startRow].column)
-                    startRow++;
-            }
-            args.unshift(startRow, 0);
-            lineWidgets.splice.apply(lineWidgets, args);
-            this.$updateRows();
-        }
-    };
-    this.$updateRows = function () {
-        var lineWidgets = this.session.lineWidgets;
-        if (!lineWidgets)
-            return;
-        var noWidgets = true;
-        lineWidgets.forEach(function (w, i) {
-            if (w) {
-                noWidgets = false;
-                w.row = i;
-                while (w.$oldWidget) {
-                    w.$oldWidget.row = i;
-                    w = w.$oldWidget;
-                }
-            }
-        });
-        if (noWidgets)
-            this.session.lineWidgets = null;
-    };
-    this.$registerLineWidget = function (w) {
-        if (!this.session.lineWidgets)
-            this.session.lineWidgets = new Array(this.session.getLength());
-        var old = this.session.lineWidgets[w.row];
-        if (old) {
-            w.$oldWidget = old;
-            if (old.el && old.el.parentNode) {
-                old.el.parentNode.removeChild(old.el);
-                old._inDocument = false;
-            }
-        }
-        this.session.lineWidgets[w.row] = w;
-        return w;
-    };
-    this.addLineWidget = function (w) {
-        this.$registerLineWidget(w);
-        w.session = this.session;
-        if (!this.editor)
-            return w;
-        var renderer = this.editor.renderer;
-        if (w.html && !w.el) {
-            w.el = dom.createElement("div");
-            w.el.innerHTML = w.html;
-        }
-        if (w.el) {
-            dom.addCssClass(w.el, "ace_lineWidgetContainer");
-            w.el.style.position = "absolute";
-            w.el.style.zIndex = 5;
-            renderer.container.appendChild(w.el);
-            w._inDocument = true;
-            if (!w.coverGutter) {
-                w.el.style.zIndex = 3;
-            }
-            if (w.pixelHeight == null) {
-                w.pixelHeight = w.el.offsetHeight;
-            }
-        }
-        if (w.rowCount == null) {
-            w.rowCount = w.pixelHeight / renderer.layerConfig.lineHeight;
-        }
-        var fold = this.session.getFoldAt(w.row, 0);
-        w.$fold = fold;
-        if (fold) {
-            var lineWidgets = this.session.lineWidgets;
-            if (w.row == fold.end.row && !lineWidgets[fold.start.row])
-                lineWidgets[fold.start.row] = w;
-            else
-                w.hidden = true;
-        }
-        this.session._emit("changeFold", { data: { start: { row: w.row } } });
-        this.$updateRows();
-        this.renderWidgets(null, renderer);
-        this.onWidgetChanged(w);
-        return w;
-    };
-    this.removeLineWidget = function (w) {
-        w._inDocument = false;
-        w.session = null;
-        if (w.el && w.el.parentNode)
-            w.el.parentNode.removeChild(w.el);
-        if (w.editor && w.editor.destroy)
-            try {
-                w.editor.destroy();
-            }
-            catch (e) { }
-        if (this.session.lineWidgets) {
-            var w1 = this.session.lineWidgets[w.row];
-            if (w1 == w) {
-                this.session.lineWidgets[w.row] = w.$oldWidget;
-                if (w.$oldWidget)
-                    this.onWidgetChanged(w.$oldWidget);
-            }
-            else {
-                while (w1) {
-                    if (w1.$oldWidget == w) {
-                        w1.$oldWidget = w.$oldWidget;
-                        break;
-                    }
-                    w1 = w1.$oldWidget;
-                }
-            }
-        }
-        this.session._emit("changeFold", { data: { start: { row: w.row } } });
-        this.$updateRows();
-    };
-    this.getWidgetsAtRow = function (row) {
-        var lineWidgets = this.session.lineWidgets;
-        var w = lineWidgets && lineWidgets[row];
-        var list = [];
-        while (w) {
-            list.push(w);
-            w = w.$oldWidget;
-        }
-        return list;
-    };
-    this.onWidgetChanged = function (w) {
-        this.session._changedWidgets.push(w);
-        this.editor && this.editor.renderer.updateFull();
-    };
-    this.measureWidgets = function (e, renderer) {
-        var changedWidgets = this.session._changedWidgets;
-        var config = renderer.layerConfig;
-        if (!changedWidgets || !changedWidgets.length)
-            return;
-        var min = Infinity;
-        for (var i = 0; i < changedWidgets.length; i++) {
-            var w = changedWidgets[i];
-            if (!w || !w.el)
-                continue;
-            if (w.session != this.session)
-                continue;
-            if (!w._inDocument) {
-                if (this.session.lineWidgets[w.row] != w)
-                    continue;
-                w._inDocument = true;
-                renderer.container.appendChild(w.el);
-            }
-            w.h = w.el.offsetHeight;
-            if (!w.fixedWidth) {
-                w.w = w.el.offsetWidth;
-                w.screenWidth = Math.ceil(w.w / config.characterWidth);
-            }
-            var rowCount = w.h / config.lineHeight;
-            if (w.coverLine) {
-                rowCount -= this.session.getRowLineCount(w.row);
-                if (rowCount < 0)
-                    rowCount = 0;
-            }
-            if (w.rowCount != rowCount) {
-                w.rowCount = rowCount;
-                if (w.row < min)
-                    min = w.row;
-            }
-        }
-        if (min != Infinity) {
-            this.session._emit("changeFold", { data: { start: { row: min } } });
-            this.session.lineWidgetWidth = null;
-        }
-        this.session._changedWidgets = [];
-    };
-    this.renderWidgets = function (e, renderer) {
-        var config = renderer.layerConfig;
-        var lineWidgets = this.session.lineWidgets;
-        if (!lineWidgets)
-            return;
-        var first = Math.min(this.firstRow, config.firstRow);
-        var last = Math.max(this.lastRow, config.lastRow, lineWidgets.length);
-        while (first > 0 && !lineWidgets[first])
-            first--;
-        this.firstRow = config.firstRow;
-        this.lastRow = config.lastRow;
-        renderer.$cursorLayer.config = config;
-        for (var i = first; i <= last; i++) {
-            var w = lineWidgets[i];
-            if (!w || !w.el)
-                continue;
-            if (w.hidden) {
-                w.el.style.top = -100 - (w.pixelHeight || 0) + "px";
-                continue;
-            }
-            if (!w._inDocument) {
-                w._inDocument = true;
-                renderer.container.appendChild(w.el);
-            }
-            var top = renderer.$cursorLayer.getPixelPosition({ row: i, column: 0 }, true).top;
-            if (!w.coverLine)
-                top += config.lineHeight * this.session.getRowLineCount(w.row);
-            w.el.style.top = top - config.offset + "px";
-            var left = w.coverGutter ? 0 : renderer.gutterWidth;
-            if (!w.fixedWidth)
-                left -= renderer.scrollLeft;
-            w.el.style.left = left + "px";
-            if (w.fullWidth && w.screenWidth) {
-                w.el.style.minWidth = config.width + 2 * config.padding + "px";
-            }
-            if (w.fixedWidth) {
-                w.el.style.right = renderer.scrollBar.getWidth() + "px";
-            }
-            else {
-                w.el.style.right = "";
-            }
-        }
-    };
-}).call(LineWidgets.prototype);
-exports.LineWidgets = LineWidgets;
 
 });
 
