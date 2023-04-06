@@ -45,6 +45,7 @@
 
 .django-ace-editor {
     position: relative;
+    flex: 1;
 }
 
 .django-ace-editor-fullscreen {

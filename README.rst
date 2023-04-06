@@ -82,6 +82,11 @@ Then browser to ``http://localhost:8000``.
 Change log
 ==========
 
+v1.15.4
+-------
+
+- Added CSS to work with new admin in Django 4.2. Now you can use `width="100%"` without breaking the layout.
+
 v1.15.3
 -------
 
