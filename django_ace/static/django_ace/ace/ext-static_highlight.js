@@ -1,4 +1,4 @@
-define("ace/ext/static.css",["require","exports","module"], function(require, exports, module){module.exports = ".ace_static_highlight {\n    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', 'Droid Sans Mono', monospace;\n    font-size: 12px;\n    white-space: pre-wrap\n}\n\n.ace_static_highlight .ace_gutter {\n    width: 2em;\n    text-align: right;\n    padding: 0 3px 0 0;\n    margin-right: 3px;\n    contain: none;\n}\n\n.ace_static_highlight.ace_show_gutter .ace_line {\n    padding-left: 2.6em;\n}\n\n.ace_static_highlight .ace_line { position: relative; }\n\n.ace_static_highlight .ace_gutter-cell {\n    -moz-user-select: -moz-none;\n    -khtml-user-select: none;\n    -webkit-user-select: none;\n    user-select: none;\n    top: 0;\n    bottom: 0;\n    left: 0;\n    position: absolute;\n}\n\n\n.ace_static_highlight .ace_gutter-cell:before {\n    content: counter(ace_line, decimal);\n    counter-increment: ace_line;\n}\n.ace_static_highlight {\n    counter-reset: ace_line;\n}\n";
+define("ace/ext/static.css",["require","exports","module"], function(require, exports, module){module.exports = ".ace_static_highlight {\n    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'Source Code Pro', 'source-code-pro', 'Droid Sans Mono', monospace;\n    font-size: 12px;\n    white-space: pre-wrap\n}\n\n.ace_static_highlight .ace_gutter {\n    width: 2em;\n    text-align: right;\n    padding: 0 3px 0 0;\n    margin-right: 3px;\n    contain: none;\n}\n\n.ace_static_highlight.ace_show_gutter .ace_line {\n    padding-left: 2.6em;\n}\n\n.ace_static_highlight .ace_line { position: relative; }\n\n.ace_static_highlight .ace_gutter-cell {\n    -moz-user-select: -moz-none;\n    -khtml-user-select: none;\n    -webkit-user-select: none;\n    user-select: none;\n    top: 0;\n    bottom: 0;\n    left: 0;\n    position: absolute;\n}\n\n\n.ace_static_highlight .ace_gutter-cell:before {\n    content: counter(ace_line, decimal);\n    counter-increment: ace_line;\n}\n.ace_static_highlight {\n    counter-reset: ace_line;\n}\n";
 
 });
 
@@ -9,39 +9,42 @@ var baseStyles = require("./static.css");
 var config = require("../config");
 var dom = require("../lib/dom");
 var escapeHTML = require("../lib/lang").escapeHTML;
-function Element(type) {
-    this.type = type;
-    this.style = {};
-    this.textContent = "";
-}
-Element.prototype.cloneNode = function () {
-    return this;
-};
-Element.prototype.appendChild = function (child) {
-    this.textContent += child.toString();
-};
-Element.prototype.toString = function () {
-    var stringBuilder = [];
-    if (this.type != "fragment") {
-        stringBuilder.push("<", this.type);
-        if (this.className)
-            stringBuilder.push(" class='", this.className, "'");
-        var styleStr = [];
-        for (var key in this.style) {
-            styleStr.push(key, ":", this.style[key]);
+var Element = /** @class */ (function () {
+    function Element(type) {
+        this.type = type;
+        this.style = {};
+        this.textContent = "";
+    }
+    Element.prototype.cloneNode = function () {
+        return this;
+    };
+    Element.prototype.appendChild = function (child) {
+        this.textContent += child.toString();
+    };
+    Element.prototype.toString = function () {
+        var stringBuilder = [];
+        if (this.type != "fragment") {
+            stringBuilder.push("<", this.type);
+            if (this.className)
+                stringBuilder.push(" class='", this.className, "'");
+            var styleStr = [];
+            for (var key in this.style) {
+                styleStr.push(key, ":", this.style[key]);
+            }
+            if (styleStr.length)
+                stringBuilder.push(" style='", styleStr.join(""), "'");
+            stringBuilder.push(">");
         }
-        if (styleStr.length)
-            stringBuilder.push(" style='", styleStr.join(""), "'");
-        stringBuilder.push(">");
-    }
-    if (this.textContent) {
-        stringBuilder.push(this.textContent);
-    }
-    if (this.type != "fragment") {
-        stringBuilder.push("</", this.type, ">");
-    }
-    return stringBuilder.join("");
-};
+        if (this.textContent) {
+            stringBuilder.push(this.textContent);
+        }
+        if (this.type != "fragment") {
+            stringBuilder.push("</", this.type, ">");
+        }
+        return stringBuilder.join("");
+    };
+    return Element;
+}());
 var simpleDom = {
     createTextNode: function (textContent, element) {
         return escapeHTML(textContent);
