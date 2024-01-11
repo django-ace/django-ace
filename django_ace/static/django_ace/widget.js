@@ -86,6 +86,7 @@
             readonly = widget.getAttribute('data-readonly'),
             showgutter = widget.getAttribute('data-showgutter'),
             behaviours = widget.getAttribute('data-behaviours'),
+            useworker = widget.getAttribute('data-useworker'),
             toolbar = prev(widget);
 
         // initialize editor and attach to widget element (for use in formset:removed)
@@ -147,6 +148,9 @@
         }
         if (behaviours == "false") {
             editor.setOption("behavioursEnabled", false);
+        }
+        if (useworker == "false") {
+            editor.setOption("useWorker", false);
         }
 
         // write data back to original textarea
