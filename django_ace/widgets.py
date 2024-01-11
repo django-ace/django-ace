@@ -1,10 +1,12 @@
 from __future__ import unicode_literals
+
 from django import forms
 
 try:
     from django.forms.utils import flatatt
 except ImportError:
     from django.forms.util import flatatt
+
 from django.utils.safestring import mark_safe
 
 
@@ -27,6 +29,7 @@ class AceWidget(forms.Textarea):
         readonly=False,
         showgutter=True,
         behaviours=True,
+        useworker=True,
         extensions=None,
         *args,
         **kwargs
@@ -48,6 +51,7 @@ class AceWidget(forms.Textarea):
         self.showgutter = showgutter
         self.usesofttabs = usesofttabs
         self.extensions = extensions
+        self.useworker = useworker
         super(AceWidget, self).__init__(*args, **kwargs)
 
     @property
@@ -60,7 +64,7 @@ class AceWidget(forms.Textarea):
             js.append("django_ace/ace/theme-%s.js" % self.theme)
         if self.extensions:
             for extension in self.extensions:
-                js.append('django_ace/ace/ext-%s.js' % extension)
+                js.append("django_ace/ace/ext-%s.js" % extension)
 
         css = {"screen": ["django_ace/widget.css"]}
 
@@ -95,6 +99,7 @@ class AceWidget(forms.Textarea):
         ace_attrs["data-showprintmargin"] = "true" if self.showprintmargin else "false"
         ace_attrs["data-showinvisibles"] = "true" if self.showinvisibles else "false"
         ace_attrs["data-usesofttabs"] = "true" if self.usesofttabs else "false"
+        ace_attrs["data-useworker"] = "true" if self.useworker else "false"
 
         textarea = super(AceWidget, self).render(name, value, attrs, renderer)
 
