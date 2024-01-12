@@ -82,6 +82,11 @@ Then browser to ``http://localhost:8000``.
 Change log
 ==========
 
+v1.32.4
+-------
+
+- Expose useworker, contributed by @mounirmesselmeni.
+
 v1.32.3
 -------
 
