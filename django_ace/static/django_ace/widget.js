@@ -87,6 +87,8 @@
             showgutter = widget.getAttribute('data-showgutter'),
             behaviours = widget.getAttribute('data-behaviours'),
             useworker = widget.getAttribute('data-useworker'),
+            basicautocompletion = widget.getAttribute('data-basicautocompletion'),
+            liveautocompletion = widget.getAttribute('data-liveautocompletion'),
             toolbar = prev(widget);
 
         // initialize editor and attach to widget element (for use in formset:removed)
@@ -110,8 +112,11 @@
 
         // options
         if (mode) {
-            var Mode = require("ace/mode/" + mode).Mode;
+            var Mode = ace.require("ace/mode/" + mode).Mode;
             editor.getSession().setMode(new Mode());
+        }
+        if (basicautocompletion == "true" || liveautocompletion == "true") {
+            ace.require("ace/ext/language_tools");
         }
         if (theme) {
             editor.setTheme("ace/theme/" + theme);
@@ -151,6 +156,16 @@
         }
         if (useworker == "false") {
             editor.setOption("useWorker", false);
+        }
+        if (basicautocompletion == "true") {
+            // Avoid calling setOption("enableBasicAutocompletion", false) without
+            // loading ext-language_tools as it gives a warning.
+            editor.setOption("enableBasicAutocompletion", true);
+        }
+        if (basicautocompletion == "true") {
+            // Avoid calling setOption("enableBasicAutocompletion", true) without
+            // loading ext-language_tools as it gives a warning.
+            editor.setOption("enableLiveAutocompletion", true);
         }
 
         // write data back to original textarea

@@ -82,6 +82,13 @@ Then browser to ``http://localhost:8000``.
 Change log
 ==========
 
+v1.37.5
+-------
+
+- Update ACE editor to version v1.37.5.
+- Use minified and non-conflict ACE instead of basic.
+- Expose two new options: enablebasicautocompletion and enableliveautocompletion.
+
 v1.36.2
 -------
 

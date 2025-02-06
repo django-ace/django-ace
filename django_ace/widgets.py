@@ -31,8 +31,10 @@ class AceWidget(forms.Textarea):
         behaviours=True,
         useworker=True,
         extensions=None,
+        basicautocompletion=False,
+        liveautocompletion=False,
         *args,
-        **kwargs
+        **kwargs,
     ):
         self.mode = mode
         self.theme = theme
@@ -52,6 +54,9 @@ class AceWidget(forms.Textarea):
         self.usesofttabs = usesofttabs
         self.extensions = extensions
         self.useworker = useworker
+        self.basicautocompletion = basicautocompletion
+        self.liveautocompletion = liveautocompletion
+
         super(AceWidget, self).__init__(*args, **kwargs)
 
     @property
@@ -59,12 +64,16 @@ class AceWidget(forms.Textarea):
         js = ["django_ace/ace/ace.js", "django_ace/widget.js"]
 
         if self.mode:
-            js.append("django_ace/ace/mode-%s.js" % self.mode)
+            js.append(f"django_ace/ace/mode-{self.mode}.js")
         if self.theme:
-            js.append("django_ace/ace/theme-%s.js" % self.theme)
+            js.append(f"django_ace/ace/theme-{self.theme}.js")
         if self.extensions:
             for extension in self.extensions:
-                js.append("django_ace/ace/ext-%s.js" % extension)
+                js.append(f"django_ace/ace/ext-{extension}.js")
+        if self.basicautocompletion or self.liveautocompletion:
+            language_tools = "django_ace/ace/ext-language_tools.js"
+            if language_tools not in js:
+                js.append(language_tools)
 
         css = {"screen": ["django_ace/widget.css"]}
 
@@ -100,6 +109,12 @@ class AceWidget(forms.Textarea):
         ace_attrs["data-showinvisibles"] = "true" if self.showinvisibles else "false"
         ace_attrs["data-usesofttabs"] = "true" if self.usesofttabs else "false"
         ace_attrs["data-useworker"] = "true" if self.useworker else "false"
+        ace_attrs["data-basicautocompletion"] = (
+            "true" if self.basicautocompletion else "false"
+        )
+        ace_attrs["data-liveautocompletion"] = (
+            "true" if self.liveautocompletion else "false"
+        )
 
         textarea = super(AceWidget, self).render(name, value, attrs, renderer)
 
