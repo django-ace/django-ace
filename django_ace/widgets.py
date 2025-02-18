@@ -1,3 +1,5 @@
+import warnings
+
 from django import forms
 
 try:
@@ -7,6 +9,8 @@ except ImportError:
 
 from django.utils.safestring import mark_safe
 
+_NOT_PROVIDED_SENTINEL = object()
+
 
 class AceWidget(forms.Textarea):
     def __init__(
@@ -14,8 +18,8 @@ class AceWidget(forms.Textarea):
         mode=None,
         theme=None,
         wordwrap=False,
-        width="500px",
-        height="300px",
+        width=_NOT_PROVIDED_SENTINEL,
+        height=_NOT_PROVIDED_SENTINEL,
         minlines=None,
         maxlines=None,
         showprintmargin=True,
@@ -37,6 +41,24 @@ class AceWidget(forms.Textarea):
         self.mode = mode
         self.theme = theme
         self.wordwrap = wordwrap
+        if width is _NOT_PROVIDED_SENTINEL:
+            width = "500px"
+            warnings.warn(
+                "Django Ace Widget: width and height argument have to be given "
+                "explicitly as their default will change, see "
+                "https://github.com/django-ace/django-ace#v1380",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+        if height is _NOT_PROVIDED_SENTINEL:
+            height = "300px"
+            warnings.warn(
+                "Django Ace Widget: width and height argument have to be given "
+                "explicitly as their default will change, see "
+                "https://github.com/django-ace/django-ace#v1380",
+                DeprecationWarning,
+                stacklevel=2,
+            )
         self.width = width
         self.height = height
         self.minlines = minlines
@@ -82,8 +104,15 @@ class AceWidget(forms.Textarea):
 
         ace_attrs = {
             "class": "django-ace-widget loading",
-            "style": "width:%s; height:%s" % (self.width, self.height),
         }
+
+        if (self.width, self.height) != (None, None):
+            style = []
+            if self.width is not None:
+                style.append(f"width:{self.width}")
+            if self.height is not None:
+                style.append(f"height:{self.height}")
+            ace_attrs["style"] = "; ".join(style)
 
         if self.mode:
             ace_attrs["data-mode"] = self.mode
@@ -119,11 +148,15 @@ class AceWidget(forms.Textarea):
         html = "<div{}><div></div></div>{}".format(flatatt(ace_attrs), textarea)
 
         if self.toolbar:
+            if self.width is not None:
+                style_width = f'style="width: {self.width}"'
+            else:
+                style_width = ""
             toolbar = (
-                '<div style="width: {}" class="django-ace-toolbar">'
+                f'<div {style_width} class="django-ace-toolbar">'
                 '<a href="./" class="django-ace-max_min"></a>'
                 "</div>"
-            ).format(self.width)
+            )
             html = toolbar + html
 
         html = '<div class="django-ace-editor">{}</div>'.format(html)
