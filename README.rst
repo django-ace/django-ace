@@ -69,10 +69,9 @@ Example Project
 There's an example project included in the source, to try it do::
 
     cd example/
-    virtualenv .env
-    . .env/bin/activate
+    python -m venv .venv
+    source .venv/bin/activate
     pip install -e ..
-    ./manage.py makemigrations app
     ./manage.py migrate
     ./manage.py runserver
 
