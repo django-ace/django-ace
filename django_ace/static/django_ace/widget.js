@@ -201,6 +201,17 @@
 
     function init() {
         var widgets = document.getElementsByClassName('django-ace-widget');
+        var useStrictCSP = undefined;
+
+        for (widget of widgets) {
+            if (useStrictCSP == undefined) { // Set it
+                useStrictCSP = widget.getAttribute('data-useStrictCSP');
+            } else { // Warn if a 2nd widget have a different CSP policy
+                if (widget.getAttribute('data-useStrictCSP') != useStrictCSP) {
+                    console.warn("Two AceWidget on this page have a different useStrictCSP values, it may not work properly. The kept value for useStrictCSP is ", useStrictCSP)
+                }
+            }
+        }
 
         for (widget of widgets) {
 

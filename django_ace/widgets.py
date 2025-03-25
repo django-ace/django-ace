@@ -35,6 +35,7 @@ class AceWidget(forms.Textarea):
         extensions=None,
         basicautocompletion=False,
         liveautocompletion=False,
+        useStrictCSP=False,
         *args,
         **kwargs,
     ):
@@ -76,17 +77,23 @@ class AceWidget(forms.Textarea):
         self.useworker = useworker
         self.basicautocompletion = basicautocompletion
         self.liveautocompletion = liveautocompletion
+        self.useStrictCSP = useStrictCSP
 
         super(AceWidget, self).__init__(*args, **kwargs)
 
     @property
     def media(self):
         js = ["django_ace/ace/ace.js", "django_ace/widget.js"]
+        css = ["django_ace/widget.css"]
 
+        if self.useStrictCSP:
+            css.append(f"django_ace/ace/css/ace.css")
         if self.mode:
             js.append(f"django_ace/ace/mode-{self.mode}.js")
         if self.theme:
             js.append(f"django_ace/ace/theme-{self.theme}.js")
+            if self.useStrictCSP:
+                css.append(f"django_ace/ace/css/theme/{self.theme}.css")
         if self.extensions:
             for extension in self.extensions:
                 js.append(f"django_ace/ace/ext-{extension}.js")
@@ -95,9 +102,7 @@ class AceWidget(forms.Textarea):
             if language_tools not in js:
                 js.append(language_tools)
 
-        css = {"screen": ["django_ace/widget.css"]}
-
-        return forms.Media(js=js, css=css)
+        return forms.Media(js=js, css={"screen": css})
 
     def render(self, name, value, attrs=None, renderer=None):
         attrs = attrs or {}

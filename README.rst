@@ -101,6 +101,14 @@ Then browser to ``http://localhost:8000``.
 Change log
 ==========
 
+v1.39.1
+-------
+
+- Update ACE editor to version v1.39.1.
+
+Add a `useStrictCSP` option.
+
+
 v1.38.0
 -------
 
