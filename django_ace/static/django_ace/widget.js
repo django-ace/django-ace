@@ -205,13 +205,16 @@
 
         for (widget of widgets) {
             if (useStrictCSP == undefined) { // Set it
-                useStrictCSP = widget.getAttribute('data-useStrictCSP');
+                useStrictCSP = widget.getAttribute('data-usestrictcsp') == "true" ? true : false;
             } else { // Warn if a 2nd widget have a different CSP policy
-                if (widget.getAttribute('data-useStrictCSP') != useStrictCSP) {
+                if ((widget.getAttribute('data-useStrictCSP') == "true" ? true : false) != useStrictCSP) {
                     console.warn("Two AceWidget on this page have a different useStrictCSP values, it may not work properly. The kept value for useStrictCSP is ", useStrictCSP)
                 }
             }
         }
+
+        if (useStrictCSP)
+            ace.config.set("useStrictCSP", true);
 
         for (widget of widgets) {
 

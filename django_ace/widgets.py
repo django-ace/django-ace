@@ -147,6 +147,7 @@ class AceWidget(forms.Textarea):
         ace_attrs["data-liveautocompletion"] = (
             "true" if self.liveautocompletion else "false"
         )
+        ace_attrs["data-usestrictcsp"] = "true" if self.useStrictCSP else "false"
 
         textarea = super(AceWidget, self).render(name, value, attrs, renderer)
 
