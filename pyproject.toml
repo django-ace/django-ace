@@ -10,12 +10,11 @@ authors = [
     {name = "Bradley Ayers", email = "bradley.ayers@gmail.com"},
     {name = "Julien Palard", email = "julien@palard.fr"},
 ]
-license = {text = "Simplified BSD"}
+license = "BSD-2-Clause"
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Environment :: Web Environment",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: BSD License",
     "Operating System :: OS Independent",
     "Programming Language :: Python",
     "Framework :: Django",
