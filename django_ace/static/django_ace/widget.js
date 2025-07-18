@@ -89,6 +89,8 @@
             useworker = widget.getAttribute('data-useworker'),
             basicautocompletion = widget.getAttribute('data-basicautocompletion'),
             liveautocompletion = widget.getAttribute('data-liveautocompletion'),
+            vimkeybinding = widget.getAttribute('data-vimkeybinding'),
+            highlightactiveline = widget.getAttribute('data-highlightactiveline'),
             toolbar = prev(widget);
 
         // initialize editor and attach to widget element (for use in formset:removed)
@@ -166,6 +168,12 @@
             // Avoid calling setOption("enableBasicAutocompletion", true) without
             // loading ext-language_tools as it gives a warning.
             editor.setOption("enableLiveAutocompletion", true);
+        }
+        if (vimkeybinding == "true") {
+            editor.setKeyboardHandler("ace/keyboard/vim");
+        }
+        if (highlightactiveline == "false") {
+            editor.setHighlightActiveLine(false);
         }
 
         // write data back to original textarea
