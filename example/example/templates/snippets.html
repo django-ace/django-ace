@@ -3,14 +3,52 @@
 <head>
     <title>An simple example with django-ace</title>
     {{ form.media }}
+    {{ vim_form.media }}
+    <style>
+        .editor-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        h2 {
+            margin-top: 0;
+        }
+        .feature-note {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 10px;
+        }
+    </style>
 </head>
 <body>
-    <form action="" method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <input type="submit"/>
-    </form>
+    <h1>Django-Ace Widget Examples</h1>
+    
+    <div class="editor-section">
+        <h2>Standard Editor</h2>
+        <p class="feature-note">HTML mode with Twilight theme</p>
+        <form action="" method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <input type="submit" name="submit_standard" value="Submit"/>
+        </form>
+    </div>
 
+    <div class="editor-section">
+        <h2>Vim Keybinding Editor</h2>
+        <p class="feature-note">
+            Python mode with Monokai theme, Vim keybindings enabled, and highlight active line disabled.<br>
+            Try pressing 'i' to enter insert mode, 'Esc' to exit, and use vim commands like 'dd', 'yy', 'p', etc.<br>
+            Notice that the current line is not highlighted (compare with the editor above).
+        </p>
+        <form action="" method="post">
+        {% csrf_token %}
+        {{ vim_form.as_p }}
+        <input type="submit" name="submit_vim" value="Submit (Demo Only)"/>
+        </form>
+    </div>
+
+    <h2>Saved Snippets</h2>
     {% for snippet in snippets %}
     <hr/>
     <pre>{{ snippet.text }}</pre>
