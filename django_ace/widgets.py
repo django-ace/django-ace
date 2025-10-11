@@ -36,6 +36,8 @@ class AceWidget(forms.Textarea):
         basicautocompletion=False,
         liveautocompletion=False,
         useStrictCSP=False,
+        vimKeyBinding=False,
+        highlightActiveLine=True,
         *args,
         **kwargs,
     ):
@@ -78,6 +80,8 @@ class AceWidget(forms.Textarea):
         self.basicautocompletion = basicautocompletion
         self.liveautocompletion = liveautocompletion
         self.useStrictCSP = useStrictCSP
+        self.vimKeyBinding = vimKeyBinding
+        self.highlightActiveLine = highlightActiveLine
 
         super(AceWidget, self).__init__(*args, **kwargs)
 
@@ -101,6 +105,8 @@ class AceWidget(forms.Textarea):
             language_tools = "django_ace/ace/ext-language_tools.js"
             if language_tools not in js:
                 js.append(language_tools)
+        if self.vimKeyBinding:
+            js.append("django_ace/ace/keybinding-vim.js")
 
         return forms.Media(js=js, css={"screen": css})
 
@@ -148,6 +154,10 @@ class AceWidget(forms.Textarea):
             "true" if self.liveautocompletion else "false"
         )
         ace_attrs["data-usestrictcsp"] = "true" if self.useStrictCSP else "false"
+        ace_attrs["data-vimkeybinding"] = "true" if self.vimKeyBinding else "false"
+        ace_attrs["data-highlightactiveline"] = (
+            "true" if self.highlightActiveLine else "false"
+        )
 
         textarea = super(AceWidget, self).render(name, value, attrs, renderer)
 

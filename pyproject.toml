@@ -20,8 +20,8 @@ classifiers = [
     "Framework :: Django",
 ]
 urls = {Homepage = "https://github.com/django-ace/django-ace"}
-dependencies = ["Django>=2"]
-requires-python = "> 2"
+dependencies = ["Django>=3.2"]
+requires-python = ">=3.8"
 dynamic = ["version"]
 
 [tool.setuptools.packages.find]
