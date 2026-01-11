@@ -101,6 +101,14 @@ Then browser to ``http://localhost:8000``.
 Change log
 ==========
 
+v1.43.5
+-------
+
+- Update ACE editor to version v143.5.
+- Added a flag to activate vim keybindings.
+- Added a flag to disable current line highlighing.
+
+
 v1.43.3
 -------
 
