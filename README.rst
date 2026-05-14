@@ -1,3 +1,5 @@
+.. highlight:: python
+
 ==========
 django-ace
 ==========
@@ -86,7 +88,9 @@ Install
 Example Project
 ===============
 
-There's an example project included in the source, to try it do::
+There's an example project included in the source, to try it do:
+
+.. code-block:: shell
 
     cd example/
     python -m venv .venv
