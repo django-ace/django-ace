@@ -164,8 +164,8 @@
             // loading ext-language_tools as it gives a warning.
             editor.setOption("enableBasicAutocompletion", true);
         }
-        if (basicautocompletion == "true") {
-            // Avoid calling setOption("enableBasicAutocompletion", true) without
+        if (liveautocompletion == "true") {
+            // Avoid calling setOption("enableLiveAutocompletion", false) without
             // loading ext-language_tools as it gives a warning.
             editor.setOption("enableLiveAutocompletion", true);
         }
